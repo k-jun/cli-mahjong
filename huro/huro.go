@@ -5,39 +5,45 @@ import (
 )
 
 type Huro interface {
-	AddSet([]*hai.Hai) error
-	AddHaiToSet(inTile *hai.Hai) error
+	Pon([3]*hai.Hai) error
+	Chi([3]*hai.Hai) error
+	Kan([4]*hai.Hai) error
+	Kakan(*hai.Hai) error
 }
 
 type huroImpl struct {
-	sets [][]*hai.Hai
+	pons [][3]*hai.Hai
+	chis [][3]*hai.Hai
+	kans [][4]*hai.Hai
 }
 
-func New() Huro {
-	return &huroImpl{sets: [][]*hai.Hai{}}
-
-}
-
-func (h *huroImpl) AddSet(set []*hai.Hai) error {
-	h.sets = append(h.sets, set)
+func (h *huroImpl) Pon(hais [3]*hai.Hai) error {
+	h.pons = append(h.pons, hais)
 	return nil
 }
 
-func (h *huroImpl) AddHaiToSet(inHai *hai.Hai) error {
-	sidx := -1
-	for idx, set := range h.sets {
-		if len(set) != 3 {
-			continue
-		}
-		if set[0] == inHai && set[1] == inHai && set[2] == inHai {
-			sidx = idx
-			break
-		}
-	}
-	if sidx == -1 {
-		return HuroNoSetFoundErr
-	}
-	h.sets[sidx] = append(h.sets[sidx], inHai)
-
+func (h *huroImpl) Chi(hais [3]*hai.Hai) error {
+	h.chis = append(h.chis, hais)
 	return nil
+}
+
+func (h *huroImpl) Kan(hais [4]*hai.Hai) error {
+	h.kans = append(h.kans, hais)
+	return nil
+}
+
+func (h *huroImpl) Kakan(inHai *hai.Hai) error {
+	for idx, pon := range h.pons {
+		if pon[0] == inHai {
+			h.pons[idx] = h.pons[0]
+			h.pons = h.pons[1:]
+
+			set := [4]*hai.Hai{}
+			set[0], set[1], set[2], set[3] = pon[0], pon[1], pon[2], inHai
+			h.kans = append(h.kans, set)
+			return nil
+		}
+	}
+
+	return HuroNotFoundErr
 }

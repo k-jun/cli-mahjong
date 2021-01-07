@@ -6,6 +6,8 @@ import (
 	"mahjong/huro"
 	"mahjong/tehai"
 	"mahjong/yama"
+
+	"github.com/google/uuid"
 )
 
 type Cha interface {
@@ -18,6 +20,7 @@ type Cha interface {
 }
 
 type chaImpl struct {
+	id      uuid.UUID
 	tumohai *hai.Hai
 	ho      ho.Ho
 	tehai   tehai.Tehai
@@ -25,13 +28,18 @@ type chaImpl struct {
 	yama    yama.Yama
 }
 
-func New(ho ho.Ho, t tehai.Tehai, y yama.Yama, hu huro.Huro) Cha {
+func New(id uuid.UUID, ho ho.Ho, t tehai.Tehai, y yama.Yama, hu huro.Huro) Cha {
 	return &chaImpl{
+		id:    id,
 		ho:    ho,
 		tehai: t,
 		yama:  y,
 		huro:  hu,
 	}
+}
+
+func (c *chaImpl) Id() uuid.UUID {
+	return c.id
 }
 
 func (c *chaImpl) Tumo() error {

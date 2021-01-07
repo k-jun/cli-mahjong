@@ -35,11 +35,14 @@ type takuCha struct {
 }
 
 func (t *takuImpl) JoinCha(c cha.Cha) (chan Taku, error) {
+	t.Lock()
+	defer t.Unlock()
 	if len(t.chas) >= t.maxNumberOfUser {
 		return nil, TakuMaxNOUErr
 	}
 	channel := make(chan Taku, t.maxNumberOfUser*3)
 	t.chas = append(t.chas, &takuCha{cha: c, channel: channel})
+
 	if len(t.chas) >= t.maxNumberOfUser {
 		t.isPlaying = true
 
@@ -49,15 +52,32 @@ func (t *takuImpl) JoinCha(c cha.Cha) (chan Taku, error) {
 	return channel, nil
 }
 
-func (t *takuImpl) LeaveCha(_ cha.Cha) error {
-	// terminate the game
-	for _, tu := range t.chas {
-		close(tu.channel)
+func (t *takuImpl) LeaveCha(c cha.Cha) error {
+	t.Lock()
+	defer t.Unlock()
+	if t.isPlaying {
+		// terminate the game
+		t.isPlaying = false
+		for _, tu := range t.chas {
+			close(tu.channel)
+		}
+		return nil
 	}
-	return nil
+
+	for i, tc := range t.chas {
+		if tc.cha == c {
+			t.chas = append(t.chas[:i], t.chas[i+1:]...)
+			go t.Broadcast()
+			return nil
+		}
+	}
+
+	return TakuChaNotFoundErr
 }
 
 func (t *takuImpl) NextTurn(idx int) error {
+	t.Lock()
+	defer t.Unlock()
 	if idx < 0 || idx >= len(t.chas) {
 		return TakuIndexOutOfRangeErr
 	}

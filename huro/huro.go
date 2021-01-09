@@ -17,6 +17,15 @@ type huroImpl struct {
 	kans [][4]*hai.Hai
 }
 
+func New() Huro {
+	return &huroImpl{
+		pons: [][3]*hai.Hai{},
+		chis: [][3]*hai.Hai{},
+		kans: [][4]*hai.Hai{},
+	}
+
+}
+
 func (h *huroImpl) Pon(hais [3]*hai.Hai) error {
 	h.pons = append(h.pons, hais)
 	return nil

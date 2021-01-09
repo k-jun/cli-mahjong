@@ -5,6 +5,10 @@ import (
 	"sync"
 )
 
+var (
+	MaxNumberOfUsers = 4
+)
+
 type Taku interface {
 	JoinCha(cha.Cha) (chan Taku, error)
 	LeaveCha(cha.Cha) error
@@ -17,7 +21,7 @@ func New(maxNOU int) Taku {
 		chas:            []*takuCha{},
 		turnIndex:       0,
 		maxNumberOfUser: maxNOU,
-		isPlaying:       false,
+		isPlaying:       true,
 	}
 }
 
@@ -43,10 +47,9 @@ func (t *takuImpl) JoinCha(c cha.Cha) (chan Taku, error) {
 	channel := make(chan Taku, t.maxNumberOfUser*3)
 	t.chas = append(t.chas, &takuCha{cha: c, channel: channel})
 
-	if len(t.chas) >= t.maxNumberOfUser {
-		t.isPlaying = true
-
-	}
+	// if len(t.chas) >= t.maxNumberOfUser {
+	// 	t.isPlaying = true
+	// }
 	go t.Broadcast()
 
 	return channel, nil
@@ -55,24 +58,34 @@ func (t *takuImpl) JoinCha(c cha.Cha) (chan Taku, error) {
 func (t *takuImpl) LeaveCha(c cha.Cha) error {
 	t.Lock()
 	defer t.Unlock()
+	// terminate the game
 	if t.isPlaying {
-		// terminate the game
 		t.isPlaying = false
 		for _, tu := range t.chas {
 			close(tu.channel)
 		}
-		return nil
+		t.chas = []*takuCha{}
 	}
+	return nil
+	// 	return nil
+	// if t.isPlaying {
+	// 	// terminate the game
+	// 	t.isPlaying = false
+	// 	for _, tu := range t.chas {
+	// 		close(tu.channel)
+	// 	}
+	// 	return nil
+	// }
+	//
+	// for i, tc := range t.chas {
+	// 	if tc.cha == c {
+	// 		t.chas = append(t.chas[:i], t.chas[i+1:]...)
+	// 		go t.Broadcast()
+	// 		return nil
+	// 	}
+	// }
 
-	for i, tc := range t.chas {
-		if tc.cha == c {
-			t.chas = append(t.chas[:i], t.chas[i+1:]...)
-			go t.Broadcast()
-			return nil
-		}
-	}
-
-	return TakuChaNotFoundErr
+	// return TakuChaNotFoundErr
 }
 
 func (t *takuImpl) NextTurn(idx int) error {

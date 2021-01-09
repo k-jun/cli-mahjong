@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"mahjong/taku"
 	"mahjong/utils"
 	"strconv"
 	"time"
@@ -10,10 +11,6 @@ import (
 	"github.com/k-jun/northpole/room"
 	"github.com/k-jun/northpole/storage"
 	"github.com/k-jun/northpole/user"
-)
-
-var (
-	MaxNumberOfUsers = 4
 )
 
 type MatchUsecase interface {
@@ -54,23 +51,24 @@ func (uc *matchUsecaseImpl) JoinRandomRoom(u user.User) (uuid.UUID, error) {
 		for {
 			if err := uc.write(""); err != nil {
 				if room != nil {
+					// connection end
 					uc.matches.LeaveRoom(u, room)
 				}
 				break
 			}
 			time.Sleep(100 * time.Millisecond)
+			if !room.IsOpen() {
+				break
+			}
 		}
 	}()
 
 	for {
 		room = <-rc
-		if room == nil {
-			return uuid.Nil, nil
-		}
-
-		if err := uc.write(roomStatus(room)); err != nil {
+		if room == nil || uc.write(roomStatus(room)) != nil {
 			return uuid.Nil, err
 		}
+
 		if !room.IsOpen() {
 			break
 		}
@@ -81,7 +79,7 @@ func (uc *matchUsecaseImpl) JoinRandomRoom(u user.User) (uuid.UUID, error) {
 
 func (uc *matchUsecaseImpl) CreateRoom(u user.User) (chan room.Room, error) {
 	newId := utils.NewUUID()
-	newRoom := room.New(newId, MaxNumberOfUsers, uc.callback)
+	newRoom := room.New(newId, taku.MaxNumberOfUsers, uc.callback)
 	return uc.matches.CreateRoom(u, newRoom)
 }
 

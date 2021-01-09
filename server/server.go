@@ -2,15 +2,13 @@ package server
 
 import (
 	"log"
-	"mahjong/handler"
+	"mahjong/server/handler"
+	"mahjong/server/usecase"
+	"mahjong/utils"
 	"net"
 
+	"github.com/google/uuid"
 	"github.com/k-jun/northpole"
-)
-
-var (
-	word1 = "wellcome to the cli-mahjong\n"
-	word2 = "please enter your random user-id in uuid\nEnter> "
 )
 
 type Server interface {
@@ -19,7 +17,7 @@ type Server interface {
 
 type serverImpl struct {
 	listener net.Listener
-	matches  *northpole.Match
+	matches  northpole.Match
 }
 
 func New(listener net.Listener) Server {
@@ -27,7 +25,7 @@ func New(listener net.Listener) Server {
 
 	return &serverImpl{
 		listener: listener,
-		matches:  &m,
+		matches:  m,
 	}
 }
 
@@ -37,7 +35,27 @@ func (s *serverImpl) Run() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		h := handler.New(conn, s.matches)
+
+		write := func(mess string) error {
+			_, err := conn.Write([]byte(mess))
+			return err
+		}
+		read := func(buffer []byte) error {
+			_, err := conn.Read(buffer)
+			return err
+		}
+
+		callback := func(id uuid.UUID) error {
+			// fmt.Println(id)
+			return nil
+		}
+		close := func() error {
+			return conn.Close()
+		}
+
+		matchUsecase := usecase.NewMatchUsecase(s.matches, write, read, callback)
+		id := utils.NewUUID()
+		h := handler.New(id, matchUsecase, close)
 		go h.Run()
 	}
 }

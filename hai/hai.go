@@ -9,6 +9,10 @@ type Hai struct {
 	name       string
 }
 
+func (h *Hai) Name() string {
+	return h.name
+}
+
 func (h *Hai) HasAttribute(attr *attribute.HaiAttribute) bool {
 	for _, a := range h.attributes {
 		if a == attr {
@@ -141,7 +145,7 @@ var (
 
 	Tyun = Hai{
 		attributes: []*attribute.HaiAttribute{&attribute.Zihai, &attribute.Sangen, &attribute.Tyun},
-		name:       "Tyun",
+		name:       "tyun",
 	}
 	Hatu = Hai{
 		attributes: []*attribute.HaiAttribute{&attribute.Zihai, &attribute.Sangen, &attribute.Hatu},

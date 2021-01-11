@@ -6,10 +6,11 @@ import (
 )
 
 var (
-	maxHaisLen = 13
+	MaxHaisLen = 13
 )
 
 type Tehai interface {
+	Len() int
 	Add(*hai.Hai) error
 	Adds([]*hai.Hai) error
 	Remove(*hai.Hai) (*hai.Hai, error)
@@ -28,8 +29,12 @@ func New() Tehai {
 	return &tehaiImpl{hais: []*hai.Hai{}}
 }
 
+func (t *tehaiImpl) Len() int {
+	return len(t.hais)
+}
+
 func (t *tehaiImpl) Add(inHai *hai.Hai) error {
-	if len(t.hais) >= maxHaisLen {
+	if len(t.hais) >= MaxHaisLen {
 		return TehaiReachMaxHaiErr
 	}
 

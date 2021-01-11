@@ -1,6 +1,9 @@
 package cha
 
-import "mahjong/hai"
+import (
+	"mahjong/hai"
+	"mahjong/yama"
+)
 
 var _ Cha = &ChaMock{}
 
@@ -13,6 +16,9 @@ func (c *ChaMock) Tumo() error {
 }
 
 func (c *ChaMock) Dahai(outHai *hai.Hai) error {
+	return c.OutError
+}
+func (c *ChaMock) SetYama(_ yama.Yama) error {
 	return c.OutError
 }
 

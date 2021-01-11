@@ -8,7 +8,7 @@ import (
 )
 
 func TestNew(t *testing.T) {
-	_ = New(all[:122], all[122:])
+	_ = New()
 }
 
 func TestTumo(t *testing.T) {

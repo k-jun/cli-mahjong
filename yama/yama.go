@@ -2,6 +2,8 @@ package yama
 
 import (
 	"mahjong/hai"
+	"math/rand"
+	"time"
 )
 
 type Yama interface {
@@ -47,10 +49,17 @@ var (
 	}
 )
 
-func New(yamaHai []*hai.Hai, wanHai []*hai.Hai) Yama {
+var (
+	TimeNowUnix = time.Now().Unix()
+)
+
+func New() Yama {
+	allHai := append([]*hai.Hai{}, all...)
+	rand.Seed(TimeNowUnix)
+	rand.Shuffle(len(allHai), func(i, j int) { allHai[i], allHai[j] = allHai[j], allHai[i] })
 	return &yamaImpl{
-		yamaHai:   yamaHai,
-		wanHai:    wanHai,
+		yamaHai:   allHai[:122],
+		wanHai:    allHai[122:],
 		omoteDora: []*hai.Hai{},
 		uraDora:   []*hai.Hai{},
 	}

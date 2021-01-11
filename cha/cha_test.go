@@ -314,3 +314,30 @@ func TestKakan(t *testing.T) {
 		assert.Equal(t, c.afterHuro, cha.huro)
 	}
 }
+
+func TestSetYama(t *testing.T) {
+	testYama := yama.New()
+	cases := []struct {
+		beforeYama yama.Yama
+		inYama     yama.Yama
+		afterYama  yama.Yama
+		outError   error
+	}{
+		{
+			beforeYama: nil,
+			inYama:     testYama,
+			afterYama:  testYama,
+			outError:   nil,
+		},
+	}
+
+	for _, c := range cases {
+		cha := chaImpl{yama: c.beforeYama}
+		err := cha.SetYama(c.inYama)
+		if err != nil {
+			assert.Equal(t, c.outError, err)
+			continue
+		}
+		assert.Equal(t, c.afterYama, cha.yama)
+	}
+}

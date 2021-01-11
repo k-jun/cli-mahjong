@@ -13,6 +13,7 @@ import (
 type Cha interface {
 	Tumo() error
 	Dahai(outHai *hai.Hai) error
+	SetYama(yama.Yama) error
 	Chi(inHai *hai.Hai, outHais [2]*hai.Hai) error
 	Pon(inHai *hai.Hai, outHais [2]*hai.Hai) error
 	Kan(inHai *hai.Hai, outHais [3]*hai.Hai) error
@@ -67,6 +68,14 @@ func (c *chaImpl) Dahai(outHai *hai.Hai) error {
 	c.tumohai = nil
 
 	return c.ho.Add(outHai)
+}
+
+func (c *chaImpl) SetYama(y yama.Yama) error {
+	if c.yama != nil {
+		return ChaAlreadyHaveYamaErr
+	}
+	c.yama = y
+	return nil
 }
 
 func (c *chaImpl) Chi(inHai *hai.Hai, outHais [2]*hai.Hai) error {

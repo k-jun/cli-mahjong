@@ -22,6 +22,10 @@ func (c *ChaMock) SetYama(_ yama.Yama) error {
 	return c.OutError
 }
 
+func (c *ChaMock) Haihai() error {
+	return c.OutError
+}
+
 func (c *ChaMock) Chi(inHai *hai.Hai, outHais [2]*hai.Hai) error {
 	return c.OutError
 }

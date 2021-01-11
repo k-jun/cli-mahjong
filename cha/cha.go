@@ -14,6 +14,7 @@ type Cha interface {
 	Tumo() error
 	Dahai(outHai *hai.Hai) error
 	SetYama(yama.Yama) error
+	Haihai() error
 	Chi(inHai *hai.Hai, outHais [2]*hai.Hai) error
 	Pon(inHai *hai.Hai, outHais [2]*hai.Hai) error
 	Kan(inHai *hai.Hai, outHais [3]*hai.Hai) error
@@ -75,6 +76,23 @@ func (c *chaImpl) SetYama(y yama.Yama) error {
 		return ChaAlreadyHaveYamaErr
 	}
 	c.yama = y
+	return nil
+}
+
+func (c *chaImpl) Haihai() error {
+	if c.tehai.Len() != 0 {
+		return ChaAlreadyDidHaihaiErr
+	}
+
+	for i := 0; i < tehai.MaxHaisLen; i++ {
+		tumoHai, err := c.yama.Tumo()
+		if err != nil {
+			return err
+		}
+		if err := c.tehai.Add(tumoHai); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

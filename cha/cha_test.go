@@ -316,7 +316,6 @@ func TestKakan(t *testing.T) {
 }
 
 func TestSetYama(t *testing.T) {
-	testYama := yama.New()
 	cases := []struct {
 		beforeYama yama.Yama
 		inYama     yama.Yama
@@ -325,9 +324,13 @@ func TestSetYama(t *testing.T) {
 	}{
 		{
 			beforeYama: nil,
-			inYama:     testYama,
-			afterYama:  testYama,
+			inYama:     &yama.YamaMock{},
+			afterYama:  &yama.YamaMock{},
 			outError:   nil,
+		},
+		{
+			beforeYama: &yama.YamaMock{},
+			outError:   ChaAlreadyHaveYamaErr,
 		},
 	}
 
@@ -339,5 +342,35 @@ func TestSetYama(t *testing.T) {
 			continue
 		}
 		assert.Equal(t, c.afterYama, cha.yama)
+	}
+}
+
+func TestHaihai(t *testing.T) {
+	cases := []struct {
+		beforeYama  yama.Yama
+		beforeTehai tehai.Tehai
+		outError    error
+	}{
+		{
+			beforeYama:  &yama.YamaMock{},
+			beforeTehai: &tehai.TehaiMock{},
+			outError:    nil,
+		},
+		{
+			beforeYama:  &yama.YamaMock{},
+			beforeTehai: &tehai.TehaiMock{ErrorMock: errors.New("")},
+			outError:    errors.New(""),
+		},
+		{
+			beforeYama:  &yama.YamaMock{},
+			beforeTehai: &tehai.TehaiMock{HaisMock: []*hai.Hai{{}}},
+			outError:    ChaAlreadyDidHaihaiErr,
+		},
+	}
+
+	for _, c := range cases {
+		cha := chaImpl{yama: c.beforeYama, tehai: c.beforeTehai}
+		err := cha.Haihai()
+		assert.Equal(t, c.outError, err)
 	}
 }

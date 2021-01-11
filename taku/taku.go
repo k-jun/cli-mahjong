@@ -2,6 +2,7 @@ package taku
 
 import (
 	"mahjong/cha"
+	"mahjong/yama"
 	"sync"
 )
 
@@ -47,9 +48,9 @@ func (t *takuImpl) JoinCha(c cha.Cha) (chan Taku, error) {
 	channel := make(chan Taku, t.maxNumberOfUser*3)
 	t.chas = append(t.chas, &takuCha{cha: c, channel: channel})
 
-	// if len(t.chas) >= t.maxNumberOfUser {
-	// 	t.isPlaying = true
-	// }
+	if len(t.chas) >= t.maxNumberOfUser {
+		t.gameStart()
+	}
 	go t.Broadcast()
 
 	return channel, nil
@@ -103,4 +104,24 @@ func (t *takuImpl) Broadcast() {
 	for _, tu := range t.chas {
 		tu.channel <- t
 	}
+}
+
+func (t *takuImpl) gameStart() error {
+	// create yama
+	y := yama.New()
+	if err := y.KanDora(); err != nil {
+		return err
+	}
+
+	// tehai assign
+	for _, tc := range t.chas {
+		if err := tc.cha.SetYama(y); err != nil {
+			return err
+		}
+		if err := tc.cha.Haihai(); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

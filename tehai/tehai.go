@@ -19,6 +19,7 @@ type Tehai interface {
 	FindChiPairs(*hai.Hai) [][2]*hai.Hai
 	FindPonPairs(*hai.Hai) [][2]*hai.Hai
 	FindKanPairs(*hai.Hai) [][3]*hai.Hai
+	Hais() []*hai.Hai
 }
 
 type tehaiImpl struct {
@@ -27,6 +28,10 @@ type tehaiImpl struct {
 
 func New() Tehai {
 	return &tehaiImpl{hais: []*hai.Hai{}}
+}
+
+func (t *tehaiImpl) Hais() []*hai.Hai {
+	return t.hais
 }
 
 func (t *tehaiImpl) Len() int {

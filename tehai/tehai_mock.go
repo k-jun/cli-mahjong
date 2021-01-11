@@ -13,6 +13,10 @@ type TehaiMock struct {
 	ErrorMock error
 }
 
+func (t *TehaiMock) Hais() []*hai.Hai {
+	return t.HaisMock
+}
+
 func (t *TehaiMock) Len() int {
 	return len(t.HaisMock)
 }

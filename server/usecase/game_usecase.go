@@ -3,7 +3,6 @@ package usecase
 import (
 	"mahjong/cha"
 	"mahjong/storage"
-	"time"
 
 	"github.com/google/uuid"
 )
@@ -38,23 +37,53 @@ func (gu *gameUsecaseImpl) JoinTaku(id uuid.UUID, c cha.Cha) error {
 		return err
 	}
 
-	// dead check
+	// input
 	go func() {
 		for {
-			if err := gu.write(""); err != nil {
+			buffer := make([]byte, 2048)
+			err := gu.read(buffer)
+			if err != nil {
 				taku.LeaveCha(c)
 				break
 			}
-			time.Sleep(100 * time.Millisecond)
+			if string(buffer) != "" {
+				if taku.IsYourTurn(c) {
+					c.Dahai(c.TumoHai())
+					// TODO huro check
+					taku.TurnChange(taku.NextTurn())
+					taku.Broadcast()
+				}
+
+			}
 		}
 	}()
 
+	// output
 	for {
 		isClose := <-ct
 		if isClose == nil {
 			break
 		}
+
+		if taku.IsYourTurn(c) && c.TumoHai() == nil {
+			err := c.Tumo()
+			if err != nil {
+				// game end
+				gu.write("thank you for playing!" + "\n")
+				taku.LeaveCha(c)
+			}
+		}
+
 		// TODO shell art
+		tehaistr := ""
+		for _, h := range c.Tehai().Hais() {
+			tehaistr += h.Name()
+		}
+
+		if c.TumoHai() != nil {
+			tehaistr += " " + c.TumoHai().Name()
+		}
+		gu.write(tehaistr + "\n")
 	}
 	return nil
 }

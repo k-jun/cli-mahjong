@@ -17,6 +17,10 @@ func (t *TehaiMock) Hais() []*hai.Hai {
 	return t.HaisMock
 }
 
+func (t *TehaiMock) Sort() error {
+	return t.ErrorMock
+}
+
 func (t *TehaiMock) Len() int {
 	return len(t.HaisMock)
 }

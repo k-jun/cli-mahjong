@@ -9,6 +9,21 @@ type Hai struct {
 	name       string
 }
 
+func AtoHai(hainame string) *Hai {
+	all := append([]*Hai{}, Manzu...)
+	all = append(all, Pinzu...)
+	all = append(all, Souzu...)
+	all = append(all, KazeHai...)
+	all = append(all, YakuHai...)
+
+	for _, hai := range all {
+		if hai.name == hainame {
+			return hai
+		}
+	}
+	return nil
+}
+
 func (h *Hai) Name() string {
 	return h.name
 }
@@ -24,9 +39,11 @@ func (h *Hai) HasAttribute(attr *attribute.HaiAttribute) bool {
 }
 
 var (
-	Manzu = []*Hai{&Manzu1, &Manzu2, &Manzu3, &Manzu4, &Manzu5, &Manzu6, &Manzu7, &Manzu8, &Manzu9}
-	Pinzu = []*Hai{&Pinzu1, &Pinzu2, &Pinzu3, &Pinzu4, &Pinzu5, &Pinzu6, &Pinzu7, &Pinzu8, &Pinzu9}
-	Souzu = []*Hai{&Souzu1, &Souzu2, &Souzu3, &Souzu4, &Souzu5, &Souzu6, &Souzu7, &Souzu8, &Souzu9}
+	Manzu   = []*Hai{&Manzu1, &Manzu2, &Manzu3, &Manzu4, &Manzu5, &Manzu6, &Manzu7, &Manzu8, &Manzu9}
+	Pinzu   = []*Hai{&Pinzu1, &Pinzu2, &Pinzu3, &Pinzu4, &Pinzu5, &Pinzu6, &Pinzu7, &Pinzu8, &Pinzu9}
+	Souzu   = []*Hai{&Souzu1, &Souzu2, &Souzu3, &Souzu4, &Souzu5, &Souzu6, &Souzu7, &Souzu8, &Souzu9}
+	KazeHai = []*Hai{&Ton, &Nan, &Sha, &Pei}
+	YakuHai = []*Hai{&Haku, &Hatu, &Tyun}
 )
 
 var (
@@ -145,30 +162,30 @@ var (
 
 	Tyun = Hai{
 		attributes: []*attribute.HaiAttribute{&attribute.Zihai, &attribute.Sangen, &attribute.Tyun},
-		name:       "tyun",
+		name:       "中",
 	}
 	Hatu = Hai{
 		attributes: []*attribute.HaiAttribute{&attribute.Zihai, &attribute.Sangen, &attribute.Hatu},
-		name:       "hatu",
+		name:       "発",
 	}
 	Haku = Hai{
 		attributes: []*attribute.HaiAttribute{&attribute.Zihai, &attribute.Sangen, &attribute.Haku},
-		name:       "haku",
+		name:       "白",
 	}
 	Ton = Hai{
 		attributes: []*attribute.HaiAttribute{&attribute.Zihai, &attribute.Kaze, &attribute.Ton},
-		name:       "ton",
+		name:       "東",
 	}
 	Nan = Hai{
 		attributes: []*attribute.HaiAttribute{&attribute.Zihai, &attribute.Kaze, &attribute.Nan},
-		name:       "nan",
+		name:       "南",
 	}
 	Sha = Hai{
 		attributes: []*attribute.HaiAttribute{&attribute.Zihai, &attribute.Kaze, &attribute.Sha},
-		name:       "sha",
+		name:       "西",
 	}
 	Pei = Hai{
 		attributes: []*attribute.HaiAttribute{&attribute.Zihai, &attribute.Kaze, &attribute.Pei},
-		name:       "pei",
+		name:       "北",
 	}
 )

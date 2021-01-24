@@ -3,6 +3,7 @@ package tehai
 import (
 	"mahjong/attribute"
 	"mahjong/hai"
+	"sort"
 )
 
 var (
@@ -15,6 +16,7 @@ type Tehai interface {
 	Adds([]*hai.Hai) error
 	Remove(*hai.Hai) (*hai.Hai, error)
 	Removes([]*hai.Hai) ([]*hai.Hai, error)
+	Sort() error
 	Replace(*hai.Hai, *hai.Hai) (*hai.Hai, error)
 	FindChiPairs(*hai.Hai) [][2]*hai.Hai
 	FindPonPairs(*hai.Hai) [][2]*hai.Hai
@@ -36,6 +38,13 @@ func (t *tehaiImpl) Hais() []*hai.Hai {
 
 func (t *tehaiImpl) Len() int {
 	return len(t.hais)
+}
+
+func (t *tehaiImpl) Sort() error {
+	sort.Slice(t.hais, func(i int, j int) bool {
+		return t.hais[i].Name() > t.hais[j].Name()
+	})
+	return nil
 }
 
 func (t *tehaiImpl) Add(inHai *hai.Hai) error {

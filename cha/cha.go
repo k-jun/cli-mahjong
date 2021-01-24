@@ -103,6 +103,10 @@ func (c *chaImpl) Haihai() error {
 			return err
 		}
 	}
+
+	if err := c.tehai.Sort(); err != nil {
+		return err
+	}
 	return nil
 }
 

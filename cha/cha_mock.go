@@ -11,10 +11,15 @@ var _ Cha = &ChaMock{}
 type ChaMock struct {
 	ErrorMock error
 	TehaiMock tehai.Tehai
+	HaiMock   *hai.Hai
 }
 
 func (c *ChaMock) Tehai() tehai.Tehai {
 	return c.TehaiMock
+}
+
+func (c *ChaMock) TumoHai() *hai.Hai {
+	return c.HaiMock
 }
 
 func (c *ChaMock) Tumo() error {

@@ -13,6 +13,7 @@ import (
 type Cha interface {
 	Tehai() tehai.Tehai
 	Tumo() error
+	TumoHai() *hai.Hai
 	Dahai(outHai *hai.Hai) error
 	SetYama(yama.Yama) error
 	Haihai() error
@@ -47,6 +48,10 @@ func (c *chaImpl) Id() uuid.UUID {
 
 func (c *chaImpl) Tehai() tehai.Tehai {
 	return c.tehai
+}
+
+func (c *chaImpl) TumoHai() *hai.Hai {
+	return c.tumohai
 }
 
 func (c *chaImpl) Tumo() error {

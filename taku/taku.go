@@ -14,7 +14,10 @@ type Taku interface {
 	JoinCha(cha.Cha) (chan Taku, error)
 	LeaveCha(cha.Cha) error
 	Broadcast()
-	NextTurn(int) error
+	TurnChange(int) error
+	CurrentTurn() int
+	NextTurn() int
+	IsYourTurn(cha.Cha) bool
 }
 
 func New(maxNOU int) Taku {
@@ -39,6 +42,10 @@ type takuCha struct {
 	cha     cha.Cha
 }
 
+func (t *takuImpl) IsYourTurn(c cha.Cha) bool {
+	return t.chas[t.turnIndex].cha == c
+}
+
 func (t *takuImpl) JoinCha(c cha.Cha) (chan Taku, error) {
 	t.Lock()
 	defer t.Unlock()
@@ -50,8 +57,8 @@ func (t *takuImpl) JoinCha(c cha.Cha) (chan Taku, error) {
 
 	if len(t.chas) >= t.maxNumberOfUser {
 		t.gameStart()
+		go t.Broadcast()
 	}
-	go t.Broadcast()
 
 	return channel, nil
 }
@@ -85,11 +92,18 @@ func (t *takuImpl) LeaveCha(c cha.Cha) error {
 	// 		return nil
 	// 	}
 	// }
-
 	// return TakuChaNotFoundErr
 }
 
-func (t *takuImpl) NextTurn(idx int) error {
+func (t *takuImpl) CurrentTurn() int {
+	return t.turnIndex
+}
+
+func (t *takuImpl) NextTurn() int {
+	return (t.turnIndex + 1) % t.maxNumberOfUser
+}
+
+func (t *takuImpl) TurnChange(idx int) error {
 	t.Lock()
 	defer t.Unlock()
 	if idx < 0 || idx >= len(t.chas) {

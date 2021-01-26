@@ -41,7 +41,9 @@ func (h *handlerImpl) Run() {
 	hu := huro.New()
 	ho := ho.New()
 	cha := cha.New(h.id, ho, t, nil, hu)
-	err = h.gameUsecase.JoinTaku(roomId, cha)
+	roomChan, err := h.gameUsecase.JoinTaku(roomId, cha)
+	go h.gameUsecase.InputController(roomId, cha)
+	h.gameUsecase.OutputController(roomId, cha, roomChan)
 	if err != nil {
 		return
 	}

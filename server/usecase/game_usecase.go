@@ -1,14 +1,21 @@
 package usecase
 
 import (
+	"bytes"
+	"fmt"
 	"mahjong/cha"
+	"mahjong/hai"
 	"mahjong/storage"
+	"mahjong/taku"
+	"strings"
 
 	"github.com/google/uuid"
 )
 
 type GameUsecase interface {
-	JoinTaku(uuid.UUID, cha.Cha) error
+	JoinTaku(uuid.UUID, cha.Cha) (chan taku.Taku, error)
+	InputController(uuid.UUID, cha.Cha) error
+	OutputController(uuid.UUID, cha.Cha, chan taku.Taku) error
 }
 
 type gameUsecaseImpl struct {
@@ -23,44 +30,50 @@ func NewGameUsecase(ts storage.TakuStorage, write func(string) error, read func(
 		read:        read,
 		write:       write,
 	}
-
 }
 
-func (gu *gameUsecaseImpl) JoinTaku(id uuid.UUID, c cha.Cha) error {
+func (gu *gameUsecaseImpl) InputController(id uuid.UUID, c cha.Cha) error {
+	taku, err := gu.takuStorage.Find(id)
+	if err != nil {
+		return err
+
+	}
+	for {
+		buffer := make([]byte, 1024)
+		err := gu.read(buffer)
+		if err != nil {
+			// dead check
+			taku.LeaveCha(c)
+			break
+		}
+		if string(buffer) != "" {
+			if taku.IsYourTurn(c) {
+				buffer = bytes.Trim(buffer, "\x00")
+				buffer = bytes.Trim(buffer, "\x10")
+				haiName := strings.TrimSpace(string(buffer))
+				outHai := hai.AtoHai(haiName)
+				fmt.Println("outhai:", outHai.Name)
+				if outHai == nil {
+					continue
+				}
+				c.Dahai(outHai)
+				// TODO huro check
+				taku.TurnChange(taku.NextTurn())
+				taku.Broadcast()
+			}
+		}
+	}
+
+	return nil
+}
+
+func (gu *gameUsecaseImpl) OutputController(id uuid.UUID, c cha.Cha, channel chan taku.Taku) error {
 	taku, err := gu.takuStorage.Find(id)
 	if err != nil {
 		return err
 	}
-
-	ct, err := taku.JoinCha(c)
-	if err != nil {
-		return err
-	}
-
-	// input
-	go func() {
-		for {
-			buffer := make([]byte, 2048)
-			err := gu.read(buffer)
-			if err != nil {
-				taku.LeaveCha(c)
-				break
-			}
-			if string(buffer) != "" {
-				if taku.IsYourTurn(c) {
-					c.Dahai(c.TumoHai())
-					// TODO huro check
-					taku.TurnChange(taku.NextTurn())
-					taku.Broadcast()
-				}
-
-			}
-		}
-	}()
-
-	// output
 	for {
-		isClose := <-ct
+		isClose := <-channel
 		if isClose == nil {
 			break
 		}
@@ -77,13 +90,23 @@ func (gu *gameUsecaseImpl) JoinTaku(id uuid.UUID, c cha.Cha) error {
 		// TODO shell art
 		tehaistr := ""
 		for _, h := range c.Tehai().Hais() {
-			tehaistr += h.Name()
+			tehaistr += " " + h.Name()
 		}
 
 		if c.TumoHai() != nil {
-			tehaistr += " " + c.TumoHai().Name()
+			tehaistr += " | " + c.TumoHai().Name()
 		}
 		gu.write(tehaistr + "\n")
 	}
+
 	return nil
+}
+
+func (gu *gameUsecaseImpl) JoinTaku(id uuid.UUID, c cha.Cha) (chan taku.Taku, error) {
+	taku, err := gu.takuStorage.Find(id)
+	if err != nil {
+		return nil, err
+	}
+
+	return taku.JoinCha(c)
 }

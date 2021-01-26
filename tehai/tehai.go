@@ -42,7 +42,7 @@ func (t *tehaiImpl) Len() int {
 
 func (t *tehaiImpl) Sort() error {
 	sort.Slice(t.hais, func(i int, j int) bool {
-		return t.hais[i].Name() > t.hais[j].Name()
+		return t.hais[i].Name() < t.hais[j].Name()
 	})
 	return nil
 }

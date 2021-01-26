@@ -75,24 +75,6 @@ func (t *takuImpl) LeaveCha(c cha.Cha) error {
 		t.chas = []*takuCha{}
 	}
 	return nil
-	// 	return nil
-	// if t.isPlaying {
-	// 	// terminate the game
-	// 	t.isPlaying = false
-	// 	for _, tu := range t.chas {
-	// 		close(tu.channel)
-	// 	}
-	// 	return nil
-	// }
-	//
-	// for i, tc := range t.chas {
-	// 	if tc.cha == c {
-	// 		t.chas = append(t.chas[:i], t.chas[i+1:]...)
-	// 		go t.Broadcast()
-	// 		return nil
-	// 	}
-	// }
-	// return TakuChaNotFoundErr
 }
 
 func (t *takuImpl) CurrentTurn() int {

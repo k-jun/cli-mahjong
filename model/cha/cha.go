@@ -22,7 +22,7 @@ type Cha interface {
 	Pon(inHai *hai.Hai, outHais [2]*hai.Hai) error
 	Kan(inHai *hai.Hai, outHais [3]*hai.Hai) error
 	Kakan(inHai *hai.Hai) error
-	CanTsumo() bool
+	CanRichi() []*hai.Hai
 }
 
 type chaImpl struct {
@@ -148,7 +148,7 @@ func (c *chaImpl) Kan(inHai *hai.Hai, outHais [3]*hai.Hai) error {
 	}
 	set := [4]*hai.Hai{inHai, hais[0], hais[1], hais[2]}
 
-	return c.huro.Kan(set)
+	return c.huro.MinKan(set)
 }
 
 func (c *chaImpl) Kakan(inHai *hai.Hai) error {
@@ -158,32 +158,156 @@ func (c *chaImpl) Kakan(inHai *hai.Hai) error {
 	return c.huro.Kakan(inHai)
 }
 
-func (c *chaImpl) CanTsumo() bool {
+func (c *chaImpl) CanRichi() []*hai.Hai {
+	outHais := []*hai.Hai{}
+	if len(c.huro.GetChi()) != 0 || len(c.huro.GetPon()) != 0 || len(c.huro.GetMinKan()) != 0 {
+		return outHais
+	}
+
 	hais := c.tehai.Hais()
 	hais = append(hais, c.tumohai)
 
-	zihai := []*hai.Hai{}
-	manzu := []*hai.Hai{}
-	pinzu := []*hai.Hai{}
-	souzu := []*hai.Hai{}
+	for _, eh := range hais {
+		hs := append([]*hai.Hai{}, hais...)
+		hs = removeHai(hs, eh)
+
+		if isRichi(hs) && !haiContain(hs, eh) {
+			outHais = append(outHais, eh)
+		}
+	}
+	// TODO make uniq
+
+	return outHais
+}
+
+func haiContain(a []*hai.Hai, h *hai.Hai) bool {
+	for _, hi := range a {
+		if h == hi {
+			return true
+		}
+	}
+	return false
+
+}
+
+func isRichi(hais []*hai.Hai) bool {
+	cnt := map[*hai.Hai]int{}
 	for _, h := range hais {
-		if h.HasAttribute(&attribute.Zihai) {
-			zihai = append(zihai, h)
-		}
-		if h.HasAttribute(&attribute.Manzu) {
-			zihai = append(manzu, h)
-		}
-		if h.HasAttribute(&attribute.Pinzu) {
-			zihai = append(pinzu, h)
-		}
-		if h.HasAttribute(&attribute.Souzu) {
-			zihai = append(souzu, h)
+		cnt[h] += 1
+	}
+
+	for k, v := range cnt {
+		hais := append([]*hai.Hai{}, hais...)
+		if v < 2 {
+			// 単騎
+			for {
+				anko := findAnko(hais)
+				syuntu := findSyuntu(hais)
+				if len(anko) != 0 {
+					hais = removeHais(hais, anko)
+				}
+				if len(syuntu) != 0 {
+					hais = removeHais(hais, syuntu)
+				}
+
+				if len(syuntu) == 0 && len(anko) == 0 {
+					break
+				}
+			}
+			if len(hais) == 1 {
+				return true
+			}
+		} else {
+			// 両面, 嵌張, 双碰
+			hais = removeHais(hais, []*hai.Hai{k, k})
+			for {
+				anko := findAnko(hais)
+				syuntu := findSyuntu(hais)
+				if len(anko) != 0 {
+					hais = removeHais(hais, anko)
+				}
+				if len(syuntu) != 0 {
+					hais = removeHais(hais, syuntu)
+				}
+
+				if len(syuntu) == 0 && len(anko) == 0 {
+					break
+				}
+			}
+			if len(hais) == 2 && isMati([2]*hai.Hai{hais[0], hais[1]}) {
+				return true
+			}
 		}
 	}
 
 	return false
 }
 
-// func countMentuToitu(hs []*hai.Hai) [2]int {
-//
-// }
+func isMati(hais [2]*hai.Hai) bool {
+	if hais[0] == hais[1] {
+		return true
+	}
+	num1 := hai.HaitoI(hais[0])
+	num2 := hai.HaitoI(hais[1])
+	if num1 == 0 || num2 == 0 {
+		return false
+	}
+	if num2 > num1 {
+		return num2-num1 <= 2
+	} else {
+		return num1-num2 <= 2
+	}
+}
+
+func removeHais(hais []*hai.Hai, outHais []*hai.Hai) []*hai.Hai {
+	for _, hai := range outHais {
+		hais = removeHai(hais, hai)
+	}
+	return hais
+}
+
+func removeHai(hais []*hai.Hai, hai *hai.Hai) []*hai.Hai {
+	for i, h := range hais {
+		if h == hai {
+			hais = append(hais[:i], hais[i+1:]...)
+			return hais
+		}
+	}
+	panic(ChaHaiNotFoundErr)
+}
+
+func findSyuntu(hais []*hai.Hai) []*hai.Hai {
+	for _, h := range hais {
+		if h.HasAttribute(&attribute.Zihai) {
+			continue
+		}
+		suit := hai.HaitoSuits(h)
+		num := hai.HaitoI(h)
+		// find left pair
+		if num <= 7 && hasHai(hais, suit[num+1]) && hasHai(hais, suit[num+2]) {
+			// removeHais(hais, []*hai.Hai{h, suit[num+1], suit[num+2]})
+			return []*hai.Hai{h, suit[num+1], suit[num+2]}
+		}
+	}
+	return []*hai.Hai{}
+}
+
+func findAnko(hais []*hai.Hai) []*hai.Hai {
+	cnt := map[*hai.Hai]int{}
+	for _, h := range hais {
+		cnt[h] += 1
+		if cnt[h] >= 3 {
+			return []*hai.Hai{h, h, h}
+		}
+	}
+	return []*hai.Hai{}
+}
+
+func hasHai(hais []*hai.Hai, hai *hai.Hai) bool {
+	for _, h := range hais {
+		if h == hai {
+			return true
+		}
+	}
+	return false
+}

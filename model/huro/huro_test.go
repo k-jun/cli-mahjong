@@ -75,13 +75,13 @@ func TestKan(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		h := huroImpl{kans: c.beforeKans}
-		err := h.Kan(c.inKan)
+		h := huroImpl{minkans: c.beforeKans}
+		err := h.MinKan(c.inKan)
 		if err != nil {
 			assert.Equal(t, c.outError, err)
 			continue
 		}
-		assert.Equal(t, c.afterKans, h.kans)
+		assert.Equal(t, c.afterKans, h.minkans)
 	}
 }
 
@@ -115,6 +115,6 @@ func TestKakan(t *testing.T) {
 			continue
 		}
 		assert.Equal(t, c.afterPons, h.pons)
-		assert.Equal(t, c.afterKans, h.kans)
+		assert.Equal(t, c.afterKans, h.minkans)
 	}
 }

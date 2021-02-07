@@ -51,13 +51,13 @@ func TestAdds(t *testing.T) {
 	}{
 		{
 			beforeHais: copy(hai.Manzu),
-			inHais:     hai.Pinzu[:4],
-			afterHais:  append(copy(hai.Manzu), hai.Pinzu[:4]...),
+			inHais:     hai.Pinzu[:3],
+			afterHais:  append(copy(hai.Manzu), hai.Pinzu[:3]...),
 			outError:   nil,
 		},
 		{
 			beforeHais: copy(hai.Manzu),
-			inHais:     hai.Pinzu[:5],
+			inHais:     hai.Pinzu[:4],
 			outError:   TehaiReachMaxHaiErr,
 		},
 	}
@@ -83,9 +83,9 @@ func TestRemove(t *testing.T) {
 	}{
 		{
 			beforeHais: copy(hai.Manzu),
-			inHai:      &hai.Manzu1,
-			afterHais:  hai.Manzu[1:],
-			outHai:     &hai.Manzu1,
+			inHai:      &hai.Manzu9,
+			afterHais:  hai.Manzu[:9],
+			outHai:     &hai.Manzu9,
 			outError:   nil,
 		},
 		{
@@ -154,7 +154,7 @@ func TestReplace(t *testing.T) {
 			beforeHais: copy(hai.Manzu),
 			inInHai:    &hai.Souzu1,
 			inOutHai:   &hai.Manzu9,
-			afterHais:  append(copy(hai.Manzu[:8]), &hai.Souzu1),
+			afterHais:  append(copy(hai.Manzu[:9]), &hai.Souzu1),
 			outHai:     &hai.Manzu9,
 			outError:   nil,
 		},

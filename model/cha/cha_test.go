@@ -226,7 +226,7 @@ func TestKan(t *testing.T) {
 			beforeTumohai: &hai.Haku,
 			inHai:         &hai.Haku,
 			inHais:        [3]*hai.Hai{},
-			afterHuro:     &huro.HuroMock{KanMock: [4]*hai.Hai{&hai.Haku, &hai.Haku, &hai.Haku, &hai.Haku}},
+			afterHuro:     &huro.HuroMock{MinKanMock: [4]*hai.Hai{&hai.Haku, &hai.Haku, &hai.Haku, &hai.Haku}},
 			afterTumohai:  nil,
 			outError:      nil,
 		},
@@ -278,7 +278,7 @@ func TestKakan(t *testing.T) {
 			beforeHuro:    &huro.HuroMock{PonMock: [3]*hai.Hai{&hai.Haku, &hai.Haku, &hai.Haku}},
 			beforeTumohai: &hai.Haku,
 			inHai:         &hai.Haku,
-			afterHuro:     &huro.HuroMock{KanMock: [4]*hai.Hai{&hai.Haku, &hai.Haku, &hai.Haku, &hai.Haku}},
+			afterHuro:     &huro.HuroMock{MinKanMock: [4]*hai.Hai{&hai.Haku, &hai.Haku, &hai.Haku, &hai.Haku}},
 			afterTomohai:  nil,
 			outError:      nil,
 		},
@@ -286,7 +286,7 @@ func TestKakan(t *testing.T) {
 			beforeHuro:    &huro.HuroMock{PonMock: [3]*hai.Hai{&hai.Haku, &hai.Haku, &hai.Haku}},
 			beforeTumohai: nil,
 			inHai:         &hai.Haku,
-			afterHuro:     &huro.HuroMock{KanMock: [4]*hai.Hai{&hai.Haku, &hai.Haku, &hai.Haku, &hai.Haku}},
+			afterHuro:     &huro.HuroMock{MinKanMock: [4]*hai.Hai{&hai.Haku, &hai.Haku, &hai.Haku, &hai.Haku}},
 			afterTomohai:  nil,
 			outError:      nil,
 		},
@@ -374,3 +374,81 @@ func TestHaihai(t *testing.T) {
 		assert.Equal(t, c.outError, err)
 	}
 }
+
+func TestCanRichi(t *testing.T) {
+	cases := []struct {
+		name           string
+		beforeHuro     huro.Huro
+		beforeTehai    tehai.Tehai
+		beforeTsumohai *hai.Hai
+		outHais        []*hai.Hai
+	}{
+		{
+			name:       "両面",
+			beforeHuro: &huro.HuroMock{},
+			beforeTehai: &tehai.TehaiMock{
+				HaisMock: []*hai.Hai{
+					&hai.Manzu1, &hai.Manzu2, &hai.Manzu3, &hai.Manzu4, &hai.Manzu5, &hai.Manzu6,
+					&hai.Manzu7, &hai.Manzu8, &hai.Manzu9, &hai.Haku, &hai.Pinzu2, &hai.Pinzu3,
+					&hai.Hatu,
+				},
+			},
+			beforeTsumohai: &hai.Hatu,
+			outHais:        []*hai.Hai{&hai.Haku},
+		},
+		{
+			name:       "嵌張",
+			beforeHuro: &huro.HuroMock{},
+			beforeTehai: &tehai.TehaiMock{
+				HaisMock: []*hai.Hai{
+					&hai.Manzu1, &hai.Manzu1, &hai.Manzu1, &hai.Manzu4, &hai.Manzu5, &hai.Manzu6,
+					&hai.Manzu7, &hai.Manzu8, &hai.Manzu9, &hai.Haku, &hai.Pinzu5, &hai.Pinzu3,
+					&hai.Hatu,
+				},
+			},
+			beforeTsumohai: &hai.Hatu,
+			outHais:        []*hai.Hai{&hai.Haku},
+		},
+		{
+			name:       "双碰",
+			beforeHuro: &huro.HuroMock{},
+			beforeTehai: &tehai.TehaiMock{
+				HaisMock: []*hai.Hai{
+					&hai.Manzu1, &hai.Manzu1, &hai.Manzu1, &hai.Manzu4, &hai.Manzu5, &hai.Manzu6,
+					&hai.Manzu7, &hai.Manzu8, &hai.Manzu9, &hai.Haku, &hai.Pinzu3, &hai.Pinzu3,
+					&hai.Hatu,
+				},
+			},
+			beforeTsumohai: &hai.Hatu,
+			outHais:        []*hai.Hai{&hai.Haku},
+		},
+		{
+			name:       "単騎",
+			beforeHuro: &huro.HuroMock{},
+			beforeTehai: &tehai.TehaiMock{
+				HaisMock: []*hai.Hai{
+					&hai.Manzu1, &hai.Manzu1, &hai.Manzu1, &hai.Manzu4, &hai.Manzu5, &hai.Manzu6,
+					&hai.Manzu7, &hai.Manzu8, &hai.Manzu9, &hai.Pinzu1, &hai.Pinzu2, &hai.Pinzu3,
+					&hai.Hatu,
+				},
+			},
+			beforeTsumohai: &hai.Haku,
+			outHais:        []*hai.Hai{&hai.Hatu, &hai.Haku},
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			cha := chaImpl{tehai: c.beforeTehai, tumohai: c.beforeTsumohai, huro: c.beforeHuro}
+			hais := cha.CanRichi()
+			assert.Equal(t, c.outHais, hais)
+		})
+	}
+}
+
+// func TestRemoveHai(t *testing.T) {
+// 	hais := []*hai.Hai{&hai.Haku, &hai.Hatu, &hai.Tyun}
+// 	outHai := &hai.Haku
+// 	hais, _ = removeHai(hais, outHai)
+// 	fmt.Println(hais)
+// }

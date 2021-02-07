@@ -97,8 +97,8 @@ func (gu *gameUsecaseImpl) OutputController(id string, c cha.Cha, channel chan t
 		}
 
 		// TODO add actions rechi, or tsumo
-		if c.CanTsumo() {
-			tehaistr += "\n" + "1 tsumo: "
+		if len(c.CanRichi()) != 0 {
+			tehaistr += "\n" + "do you do richi?: "
 		}
 		gu.write(tehaistr + "\n")
 	}

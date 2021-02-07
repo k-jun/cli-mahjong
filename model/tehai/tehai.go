@@ -70,8 +70,9 @@ func (t *tehaiImpl) Remove(outHai *hai.Hai) (*hai.Hai, error) {
 	for idx, hai := range t.hais {
 		if hai == outHai {
 			outHai = t.hais[idx]
-			t.hais[idx] = t.hais[0]
-			t.hais = t.hais[1:]
+			// t.hais[idx] = t.hais[0]
+			// t.hais = t.hai[1:]
+			t.hais = append(t.hais[:idx], t.hais[idx+1:]...)
 			return outHai, nil
 		}
 
@@ -141,23 +142,9 @@ func (t *tehaiImpl) FindChiPairs(inHai *hai.Hai) [][2]*hai.Hai {
 		return pairs
 	}
 	// detect suit
-	suit := []*hai.Hai{}
-	if inHai.HasAttribute(&attribute.Manzu) {
-		suit = hai.Manzu
-	}
-	if inHai.HasAttribute(&attribute.Pinzu) {
-		suit = hai.Pinzu
-	}
-	if inHai.HasAttribute(&attribute.Souzu) {
-		suit = hai.Souzu
-	}
+	suit := hai.HaitoSuits(inHai)
 	// detect hai's number
-	num := 0
-	for idx, h := range suit {
-		if h == inHai {
-			num = idx
-		}
-	}
+	num := hai.HaitoI(inHai)
 
 	// find right pair
 	if num >= 3 && t.hasHai(suit[num-2]) && t.hasHai(suit[num-1]) {

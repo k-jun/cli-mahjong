@@ -2,25 +2,23 @@ package storage
 
 import (
 	"mahjong/taku"
-
-	"github.com/google/uuid"
 )
 
 type TakuStorage interface {
-	Add(uuid.UUID, taku.Taku) error
-	Remove(uuid.UUID) error
-	Find(uuid.UUID) (taku.Taku, error)
+	Add(string, taku.Taku) error
+	Remove(string) error
+	Find(string) (taku.Taku, error)
 }
 
 type takuStorageImpl struct {
-	takus map[uuid.UUID]taku.Taku
+	takus map[string]taku.Taku
 }
 
 func NewTakuStorage() TakuStorage {
-	return &takuStorageImpl{takus: make(map[uuid.UUID]taku.Taku)}
+	return &takuStorageImpl{takus: make(map[string]taku.Taku)}
 }
 
-func (ts *takuStorageImpl) Add(id uuid.UUID, t taku.Taku) error {
+func (ts *takuStorageImpl) Add(id string, t taku.Taku) error {
 	if ts.takus[id] != nil {
 		return TakuStorageAlreadyExistErr
 	}
@@ -29,7 +27,7 @@ func (ts *takuStorageImpl) Add(id uuid.UUID, t taku.Taku) error {
 	return nil
 }
 
-func (ts *takuStorageImpl) Remove(id uuid.UUID) error {
+func (ts *takuStorageImpl) Remove(id string) error {
 	if ts.takus[id] == nil {
 		return TakuStorageNotExistErr
 	}
@@ -38,7 +36,7 @@ func (ts *takuStorageImpl) Remove(id uuid.UUID) error {
 	return nil
 }
 
-func (ts *takuStorageImpl) Find(id uuid.UUID) (taku.Taku, error) {
+func (ts *takuStorageImpl) Find(id string) (taku.Taku, error) {
 	if ts.takus[id] == nil {
 		return nil, TakuStorageNotExistErr
 	}

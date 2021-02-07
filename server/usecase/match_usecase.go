@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/k-jun/northpole"
 	"github.com/k-jun/northpole/room"
 	"github.com/k-jun/northpole/storage"
@@ -14,17 +13,17 @@ import (
 )
 
 type MatchUsecase interface {
-	JoinRandomRoom(user.User) (uuid.UUID, error)
+	JoinRandomRoom(user.User) (string, error)
 }
 
 type matchUsecaseImpl struct {
 	matches  northpole.Match
 	write    func(string) error
 	read     func([]byte) error
-	callback func(uuid.UUID) error
+	callback func(string) error
 }
 
-func NewMatchUsecase(matches northpole.Match, write func(string) error, read func([]byte) error, callback func(uuid.UUID) error) MatchUsecase {
+func NewMatchUsecase(matches northpole.Match, write func(string) error, read func([]byte) error, callback func(string) error) MatchUsecase {
 	return &matchUsecaseImpl{
 		matches:  matches,
 		read:     read,
@@ -34,14 +33,14 @@ func NewMatchUsecase(matches northpole.Match, write func(string) error, read fun
 
 }
 
-func (uc *matchUsecaseImpl) JoinRandomRoom(u user.User) (uuid.UUID, error) {
+func (uc *matchUsecaseImpl) JoinRandomRoom(u user.User) (string, error) {
 	var room room.Room
 	rc, err := uc.matches.JoinRandomRoom(u)
 	if err != nil {
 		if err == storage.RoomStorageRoomNotFound {
 			rc, err = uc.CreateRoom(u)
 			if err != nil {
-				return uuid.Nil, err
+				return "", err
 			}
 		}
 	}
@@ -64,9 +63,9 @@ func (uc *matchUsecaseImpl) JoinRandomRoom(u user.User) (uuid.UUID, error) {
 	}()
 
 	for {
-		room = <-rc
-		if room == nil || uc.write(roomStatus(room)) != nil {
-			return uuid.Nil, err
+		room, isClose := <-rc
+		if isClose || uc.write(roomStatus(room)) != nil {
+			return "", err
 		}
 
 		if !room.IsOpen() {
@@ -79,7 +78,7 @@ func (uc *matchUsecaseImpl) JoinRandomRoom(u user.User) (uuid.UUID, error) {
 
 func (uc *matchUsecaseImpl) CreateRoom(u user.User) (chan room.Room, error) {
 	newId := utils.NewUUID()
-	newRoom := room.New(newId, taku.MaxNumberOfUsers, uc.callback)
+	newRoom := room.New(newId.String(), taku.MaxNumberOfUsers, uc.callback)
 	return uc.matches.CreateRoom(u, newRoom)
 }
 

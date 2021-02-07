@@ -9,7 +9,6 @@ import (
 	"mahjong/utils"
 	"net"
 
-	"github.com/google/uuid"
 	"github.com/k-jun/northpole"
 )
 
@@ -50,7 +49,7 @@ func (s *serverImpl) Run() {
 			return err
 		}
 
-		callback := func(id uuid.UUID) error {
+		callback := func(id string) error {
 			taku := taku.New(taku.MaxNumberOfUsers)
 			s.takuStorage.Add(id, taku)
 			return nil

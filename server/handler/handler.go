@@ -30,7 +30,7 @@ func New(id uuid.UUID, matchUsecase usecase.MatchUsecase, gameUsecase usecase.Ga
 
 func (h *handlerImpl) Run() {
 	defer h.close()
-	user := user.New(h.id)
+	user := user.New(h.id.String())
 
 	roomId, err := h.matchUsecase.JoinRandomRoom(user)
 	if err != nil {

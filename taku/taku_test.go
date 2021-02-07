@@ -19,7 +19,7 @@ func TestJoinCha(t *testing.T) {
 	}{
 		{
 			beforeChas:             []*takuCha{},
-			beforeMaxNumberOfUsers: 3,
+			beforeMaxNumberOfUsers: 1,
 			beforeIsPlaying:        true,
 			inCha:                  &cha.ChaMock{},
 			afterChasLen:           1,
@@ -147,7 +147,7 @@ func TestLeaveCha(t *testing.T) {
 	}
 }
 
-func TestNextTurn(t *testing.T) {
+func TestTurnChange(t *testing.T) {
 	cases := []struct {
 		beforeChas      []*takuCha
 		beforeTurnIndex int
@@ -175,7 +175,7 @@ func TestNextTurn(t *testing.T) {
 			chas:      c.beforeChas,
 			turnIndex: c.beforeTurnIndex,
 		}
-		err := taku.NextTurn(c.inIndex)
+		err := taku.TurnChange(c.inIndex)
 
 		if err != nil {
 			assert.Equal(t, c.outError, err)

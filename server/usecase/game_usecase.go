@@ -8,14 +8,12 @@ import (
 	"mahjong/storage"
 	"mahjong/taku"
 	"strings"
-
-	"github.com/google/uuid"
 )
 
 type GameUsecase interface {
-	JoinTaku(uuid.UUID, cha.Cha) (chan taku.Taku, error)
-	InputController(uuid.UUID, cha.Cha) error
-	OutputController(uuid.UUID, cha.Cha, chan taku.Taku) error
+	JoinTaku(string, cha.Cha) (chan taku.Taku, error)
+	InputController(string, cha.Cha) error
+	OutputController(string, cha.Cha, chan taku.Taku) error
 }
 
 type gameUsecaseImpl struct {
@@ -32,7 +30,7 @@ func NewGameUsecase(ts storage.TakuStorage, write func(string) error, read func(
 	}
 }
 
-func (gu *gameUsecaseImpl) InputController(id uuid.UUID, c cha.Cha) error {
+func (gu *gameUsecaseImpl) InputController(id string, c cha.Cha) error {
 	taku, err := gu.takuStorage.Find(id)
 	if err != nil {
 		return err
@@ -52,8 +50,9 @@ func (gu *gameUsecaseImpl) InputController(id uuid.UUID, c cha.Cha) error {
 				buffer = bytes.Trim(buffer, "\x10")
 				haiName := strings.TrimSpace(string(buffer))
 				outHai := hai.AtoHai(haiName)
-				fmt.Println("outhai:", outHai.Name)
+				fmt.Println("outhai:", outHai.Name())
 				if outHai == nil {
+					fmt.Println("unknown hai: ", haiName)
 					continue
 				}
 				c.Dahai(outHai)
@@ -67,7 +66,7 @@ func (gu *gameUsecaseImpl) InputController(id uuid.UUID, c cha.Cha) error {
 	return nil
 }
 
-func (gu *gameUsecaseImpl) OutputController(id uuid.UUID, c cha.Cha, channel chan taku.Taku) error {
+func (gu *gameUsecaseImpl) OutputController(id string, c cha.Cha, channel chan taku.Taku) error {
 	taku, err := gu.takuStorage.Find(id)
 	if err != nil {
 		return err
@@ -102,7 +101,7 @@ func (gu *gameUsecaseImpl) OutputController(id uuid.UUID, c cha.Cha, channel cha
 	return nil
 }
 
-func (gu *gameUsecaseImpl) JoinTaku(id uuid.UUID, c cha.Cha) (chan taku.Taku, error) {
+func (gu *gameUsecaseImpl) JoinTaku(id string, c cha.Cha) (chan taku.Taku, error) {
 	taku, err := gu.takuStorage.Find(id)
 	if err != nil {
 		return nil, err

@@ -50,15 +50,14 @@ func (gu *gameUsecaseImpl) InputController(id string, c cha.Cha) error {
 				buffer = bytes.Trim(buffer, "\x10")
 				haiName := strings.TrimSpace(string(buffer))
 				outHai := hai.AtoHai(haiName)
-				fmt.Println("outhai:", outHai.Name())
 				if outHai == nil {
 					fmt.Println("unknown hai: ", haiName)
 					continue
 				}
+				fmt.Println("outhai:", outHai.Name())
 				c.Dahai(outHai)
 				// TODO huro check
 				taku.TurnChange(taku.NextTurn())
-				taku.Broadcast()
 			}
 		}
 	}

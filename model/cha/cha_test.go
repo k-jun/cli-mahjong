@@ -383,58 +383,71 @@ func TestCanRichi(t *testing.T) {
 		beforeTsumohai *hai.Hai
 		outHais        []*hai.Hai
 	}{
+		// {
+		// 	name:       "両面",
+		// 	beforeHuro: &huro.HuroMock{},
+		// 	beforeTehai: &tehai.TehaiMock{
+		// 		HaisMock: []*hai.Hai{
+		// 			&hai.Manzu1, &hai.Manzu2, &hai.Manzu3, &hai.Manzu4, &hai.Manzu5, &hai.Manzu6,
+		// 			&hai.Manzu7, &hai.Manzu8, &hai.Manzu9, &hai.Haku, &hai.Pinzu2, &hai.Pinzu3,
+		// 			&hai.Hatu,
+		// 		},
+		// 	},
+		// 	beforeTsumohai: &hai.Hatu,
+		// 	outHais:        []*hai.Hai{&hai.Haku},
+		// },
 		{
-			name:       "両面",
+			name:       "辺張",
 			beforeHuro: &huro.HuroMock{},
 			beforeTehai: &tehai.TehaiMock{
 				HaisMock: []*hai.Hai{
 					&hai.Manzu1, &hai.Manzu2, &hai.Manzu3, &hai.Manzu4, &hai.Manzu5, &hai.Manzu6,
-					&hai.Manzu7, &hai.Manzu8, &hai.Manzu9, &hai.Haku, &hai.Pinzu2, &hai.Pinzu3,
-					&hai.Hatu,
+					&hai.Pinzu8, &hai.Pinzu9, &hai.Souzu6, &hai.Souzu6, &hai.Souzu6, &hai.Souzu7,
+					&hai.Souzu7,
 				},
 			},
-			beforeTsumohai: &hai.Hatu,
-			outHais:        []*hai.Hai{&hai.Haku},
+			beforeTsumohai: &hai.Manzu1,
+			outHais:        []*hai.Hai{&hai.Manzu1},
 		},
-		{
-			name:       "嵌張",
-			beforeHuro: &huro.HuroMock{},
-			beforeTehai: &tehai.TehaiMock{
-				HaisMock: []*hai.Hai{
-					&hai.Manzu1, &hai.Manzu1, &hai.Manzu1, &hai.Manzu4, &hai.Manzu5, &hai.Manzu6,
-					&hai.Manzu7, &hai.Manzu8, &hai.Manzu9, &hai.Haku, &hai.Pinzu5, &hai.Pinzu3,
-					&hai.Hatu,
-				},
-			},
-			beforeTsumohai: &hai.Hatu,
-			outHais:        []*hai.Hai{&hai.Haku},
-		},
-		{
-			name:       "双碰",
-			beforeHuro: &huro.HuroMock{},
-			beforeTehai: &tehai.TehaiMock{
-				HaisMock: []*hai.Hai{
-					&hai.Manzu1, &hai.Manzu1, &hai.Manzu1, &hai.Manzu4, &hai.Manzu5, &hai.Manzu6,
-					&hai.Manzu7, &hai.Manzu8, &hai.Manzu9, &hai.Haku, &hai.Pinzu3, &hai.Pinzu3,
-					&hai.Hatu,
-				},
-			},
-			beforeTsumohai: &hai.Hatu,
-			outHais:        []*hai.Hai{&hai.Haku},
-		},
-		{
-			name:       "単騎",
-			beforeHuro: &huro.HuroMock{},
-			beforeTehai: &tehai.TehaiMock{
-				HaisMock: []*hai.Hai{
-					&hai.Manzu1, &hai.Manzu1, &hai.Manzu1, &hai.Manzu4, &hai.Manzu5, &hai.Manzu6,
-					&hai.Manzu7, &hai.Manzu8, &hai.Manzu9, &hai.Pinzu1, &hai.Pinzu2, &hai.Pinzu3,
-					&hai.Hatu,
-				},
-			},
-			beforeTsumohai: &hai.Haku,
-			outHais:        []*hai.Hai{&hai.Hatu, &hai.Haku},
-		},
+		// {
+		// 	name:       "嵌張",
+		// 	beforeHuro: &huro.HuroMock{},
+		// 	beforeTehai: &tehai.TehaiMock{
+		// 		HaisMock: []*hai.Hai{
+		// 			&hai.Manzu1, &hai.Manzu1, &hai.Manzu1, &hai.Manzu4, &hai.Manzu5, &hai.Manzu6,
+		// 			&hai.Manzu7, &hai.Manzu8, &hai.Manzu9, &hai.Haku, &hai.Pinzu5, &hai.Pinzu3,
+		// 			&hai.Hatu,
+		// 		},
+		// 	},
+		// 	beforeTsumohai: &hai.Hatu,
+		// 	outHais:        []*hai.Hai{&hai.Haku},
+		// },
+		// {
+		// 	name:       "双碰",
+		// 	beforeHuro: &huro.HuroMock{},
+		// 	beforeTehai: &tehai.TehaiMock{
+		// 		HaisMock: []*hai.Hai{
+		// 			&hai.Manzu1, &hai.Manzu1, &hai.Manzu1, &hai.Manzu4, &hai.Manzu5, &hai.Manzu6,
+		// 			&hai.Manzu7, &hai.Manzu8, &hai.Manzu9, &hai.Haku, &hai.Pinzu3, &hai.Pinzu3,
+		// 			&hai.Hatu,
+		// 		},
+		// 	},
+		// 	beforeTsumohai: &hai.Hatu,
+		// 	outHais:        []*hai.Hai{&hai.Haku},
+		// },
+		// {
+		// 	name:       "単騎",
+		// 	beforeHuro: &huro.HuroMock{},
+		// 	beforeTehai: &tehai.TehaiMock{
+		// 		HaisMock: []*hai.Hai{
+		// 			&hai.Manzu1, &hai.Manzu1, &hai.Manzu1, &hai.Manzu4, &hai.Manzu5, &hai.Manzu6,
+		// 			&hai.Manzu7, &hai.Manzu8, &hai.Manzu9, &hai.Pinzu1, &hai.Pinzu2, &hai.Pinzu3,
+		// 			&hai.Hatu,
+		// 		},
+		// 	},
+		// 	beforeTsumohai: &hai.Haku,
+		// 	outHais:        []*hai.Hai{&hai.Hatu, &hai.Haku},
+		// },
 	}
 
 	for _, c := range cases {

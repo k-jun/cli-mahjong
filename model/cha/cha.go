@@ -7,6 +7,7 @@ import (
 	"mahjong/model/huro"
 	"mahjong/model/tehai"
 	"mahjong/model/yama"
+	"sort"
 
 	"github.com/google/uuid"
 )
@@ -75,6 +76,9 @@ func (c *chaImpl) Dahai(outHai *hai.Hai) error {
 	if outHai != c.tumohai {
 		outHai, err = c.tehai.Replace(c.tumohai, outHai)
 		if err != nil {
+			return err
+		}
+		if err := c.tehai.Sort(); err != nil {
 			return err
 		}
 	}
@@ -160,7 +164,7 @@ func (c *chaImpl) Kakan(inHai *hai.Hai) error {
 
 func (c *chaImpl) CanRichi() []*hai.Hai {
 	outHais := []*hai.Hai{}
-	if len(c.huro.GetChi()) != 0 || len(c.huro.GetPon()) != 0 || len(c.huro.GetMinKan()) != 0 {
+	if len(c.huro.GetChi()) != 0 || len(c.huro.GetPon()) != 0 || len(c.huro.GetMinKan()) != 0 || c.tumohai == nil {
 		return outHais
 	}
 
@@ -170,13 +174,10 @@ func (c *chaImpl) CanRichi() []*hai.Hai {
 	for _, eh := range hais {
 		hs := append([]*hai.Hai{}, hais...)
 		hs = removeHai(hs, eh)
-
-		if isRichi(hs) && !haiContain(hs, eh) {
+		if isRichi(hs) && !haiContain(outHais, eh) {
 			outHais = append(outHais, eh)
 		}
 	}
-	// TODO make uniq
-
 	return outHais
 }
 
@@ -218,7 +219,7 @@ func isRichi(hais []*hai.Hai) bool {
 				return true
 			}
 		} else {
-			// 両面, 嵌張, 双碰
+			// 両面, 嵌張, 双碰, 辺張
 			hais = removeHais(hais, []*hai.Hai{k, k})
 			for {
 				anko := findAnko(hais)
@@ -277,6 +278,9 @@ func removeHai(hais []*hai.Hai, hai *hai.Hai) []*hai.Hai {
 }
 
 func findSyuntu(hais []*hai.Hai) []*hai.Hai {
+	sort.Slice(hais, func(i int, j int) bool {
+		return hais[i].Name() < hais[j].Name()
+	})
 	for _, h := range hais {
 		if h.HasAttribute(&attribute.Zihai) {
 			continue

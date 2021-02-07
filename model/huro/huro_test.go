@@ -1,7 +1,7 @@
 package huro
 
 import (
-	"mahjong/hai"
+	"mahjong/model/hai"
 	"testing"
 
 	"github.com/stretchr/testify/assert"

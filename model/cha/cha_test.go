@@ -2,11 +2,11 @@ package cha
 
 import (
 	"errors"
-	"mahjong/hai"
-	"mahjong/ho"
-	"mahjong/huro"
-	"mahjong/tehai"
-	"mahjong/yama"
+	"mahjong/model/hai"
+	"mahjong/model/ho"
+	"mahjong/model/huro"
+	"mahjong/model/tehai"
+	"mahjong/model/yama"
 	"testing"
 
 	"github.com/stretchr/testify/assert"

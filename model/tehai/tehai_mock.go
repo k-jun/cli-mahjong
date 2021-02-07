@@ -1,6 +1,6 @@
 package tehai
 
-import "mahjong/hai"
+import "mahjong/model/hai"
 
 var _ Tehai = &TehaiMock{}
 

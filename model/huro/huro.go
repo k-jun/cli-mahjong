@@ -1,7 +1,7 @@
 package huro
 
 import (
-	"mahjong/hai"
+	"mahjong/model/hai"
 )
 
 type Huro interface {

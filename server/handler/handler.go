@@ -1,11 +1,11 @@
 package handler
 
 import (
-	"mahjong/cha"
-	"mahjong/ho"
-	"mahjong/huro"
+	"mahjong/model/cha"
+	"mahjong/model/ho"
+	"mahjong/model/huro"
+	"mahjong/model/tehai"
 	"mahjong/server/usecase"
-	"mahjong/tehai"
 
 	"github.com/google/uuid"
 	"github.com/k-jun/northpole/user"

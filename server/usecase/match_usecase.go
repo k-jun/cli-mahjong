@@ -1,10 +1,9 @@
 package usecase
 
 import (
-	"mahjong/taku"
+	"mahjong/model/taku"
 	"mahjong/utils"
 	"strconv"
-	"time"
 
 	"github.com/k-jun/northpole"
 	"github.com/k-jun/northpole/room"
@@ -55,16 +54,15 @@ func (uc *matchUsecaseImpl) JoinRandomRoom(u user.User) (string, error) {
 				}
 				break
 			}
-			time.Sleep(100 * time.Millisecond)
-			if !room.IsOpen() {
+			if room != nil && !room.IsOpen() {
 				break
 			}
 		}
 	}()
 
 	for {
-		room, isClose := <-rc
-		if isClose || uc.write(roomStatus(room)) != nil {
+		room = <-rc
+		if room == nil || uc.write(roomStatus(room)) != nil {
 			return "", err
 		}
 

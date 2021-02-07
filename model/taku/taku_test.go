@@ -1,7 +1,7 @@
 package taku
 
 import (
-	"mahjong/cha"
+	"mahjong/model/cha"
 	"testing"
 
 	"github.com/stretchr/testify/assert"

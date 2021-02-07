@@ -1,11 +1,12 @@
 package cha
 
 import (
-	"mahjong/hai"
-	"mahjong/ho"
-	"mahjong/huro"
-	"mahjong/tehai"
-	"mahjong/yama"
+	"mahjong/model/attribute"
+	"mahjong/model/hai"
+	"mahjong/model/ho"
+	"mahjong/model/huro"
+	"mahjong/model/tehai"
+	"mahjong/model/yama"
 
 	"github.com/google/uuid"
 )
@@ -21,6 +22,7 @@ type Cha interface {
 	Pon(inHai *hai.Hai, outHais [2]*hai.Hai) error
 	Kan(inHai *hai.Hai, outHais [3]*hai.Hai) error
 	Kakan(inHai *hai.Hai) error
+	CanTsumo() bool
 }
 
 type chaImpl struct {
@@ -155,3 +157,33 @@ func (c *chaImpl) Kakan(inHai *hai.Hai) error {
 	}
 	return c.huro.Kakan(inHai)
 }
+
+func (c *chaImpl) CanTsumo() bool {
+	hais := c.tehai.Hais()
+	hais = append(hais, c.tumohai)
+
+	zihai := []*hai.Hai{}
+	manzu := []*hai.Hai{}
+	pinzu := []*hai.Hai{}
+	souzu := []*hai.Hai{}
+	for _, h := range hais {
+		if h.HasAttribute(&attribute.Zihai) {
+			zihai = append(zihai, h)
+		}
+		if h.HasAttribute(&attribute.Manzu) {
+			zihai = append(manzu, h)
+		}
+		if h.HasAttribute(&attribute.Pinzu) {
+			zihai = append(pinzu, h)
+		}
+		if h.HasAttribute(&attribute.Souzu) {
+			zihai = append(souzu, h)
+		}
+	}
+
+	return false
+}
+
+// func countMentuToitu(hs []*hai.Hai) [2]int {
+//
+// }

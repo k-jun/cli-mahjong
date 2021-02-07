@@ -1,7 +1,7 @@
 package ho
 
 import (
-	"mahjong/hai"
+	"mahjong/model/hai"
 )
 
 var _ Ho = &HoMock{}

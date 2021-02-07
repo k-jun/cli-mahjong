@@ -1,6 +1,6 @@
 package huro
 
-import "mahjong/hai"
+import "mahjong/model/hai"
 
 var _ Huro = &HuroMock{}
 

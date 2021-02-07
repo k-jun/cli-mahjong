@@ -1,7 +1,7 @@
 package storage
 
 import (
-	"mahjong/taku"
+	"mahjong/model/taku"
 )
 
 type TakuStorage interface {

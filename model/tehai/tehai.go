@@ -1,8 +1,8 @@
 package tehai
 
 import (
-	"mahjong/attribute"
-	"mahjong/hai"
+	"mahjong/model/attribute"
+	"mahjong/model/hai"
 	"sort"
 )
 

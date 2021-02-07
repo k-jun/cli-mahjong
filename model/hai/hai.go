@@ -1,7 +1,7 @@
 package hai
 
 import (
-	"mahjong/attribute"
+	"mahjong/model/attribute"
 )
 
 type Hai struct {

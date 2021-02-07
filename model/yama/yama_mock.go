@@ -1,6 +1,6 @@
 package yama
 
-import "mahjong/hai"
+import "mahjong/model/hai"
 
 var _ Yama = &YamaMock{}
 

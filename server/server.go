@@ -2,10 +2,10 @@ package server
 
 import (
 	"log"
+	"mahjong/model/taku"
 	"mahjong/server/handler"
 	"mahjong/server/usecase"
 	"mahjong/storage"
-	"mahjong/taku"
 	"mahjong/utils"
 	"net"
 

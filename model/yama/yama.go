@@ -1,7 +1,7 @@
 package yama
 
 import (
-	"mahjong/hai"
+	"mahjong/model/hai"
 	"math/rand"
 	"time"
 )

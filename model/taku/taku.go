@@ -1,8 +1,8 @@
 package taku
 
 import (
-	"mahjong/cha"
-	"mahjong/yama"
+	"mahjong/model/cha"
+	"mahjong/model/yama"
 	"sync"
 )
 

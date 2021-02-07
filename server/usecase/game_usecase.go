@@ -3,10 +3,10 @@ package usecase
 import (
 	"bytes"
 	"fmt"
-	"mahjong/cha"
-	"mahjong/hai"
+	"mahjong/model/cha"
+	"mahjong/model/hai"
+	"mahjong/model/taku"
 	"mahjong/storage"
-	"mahjong/taku"
 	"strings"
 )
 
@@ -94,6 +94,11 @@ func (gu *gameUsecaseImpl) OutputController(id string, c cha.Cha, channel chan t
 
 		if c.TumoHai() != nil {
 			tehaistr += " | " + c.TumoHai().Name()
+		}
+
+		// TODO add actions rechi, or tsumo
+		if c.CanTsumo() {
+			tehaistr += "\n" + "1 tsumo: "
 		}
 		gu.write(tehaistr + "\n")
 	}

@@ -1,6 +1,6 @@
 package ho
 
-import "mahjong/hai"
+import "mahjong/model/hai"
 
 type Ho interface {
 	Add(inHai *hai.Hai) error

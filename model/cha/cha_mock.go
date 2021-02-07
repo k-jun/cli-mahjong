@@ -1,9 +1,9 @@
 package cha
 
 import (
-	"mahjong/hai"
-	"mahjong/tehai"
-	"mahjong/yama"
+	"mahjong/model/hai"
+	"mahjong/model/tehai"
+	"mahjong/model/yama"
 )
 
 var _ Cha = &ChaMock{}
@@ -12,6 +12,7 @@ type ChaMock struct {
 	ErrorMock error
 	TehaiMock tehai.Tehai
 	HaiMock   *hai.Hai
+	BoolMock  bool
 }
 
 func (c *ChaMock) Tehai() tehai.Tehai {
@@ -51,4 +52,8 @@ func (c *ChaMock) Kan(inHai *hai.Hai, outHais [3]*hai.Hai) error {
 
 func (c *ChaMock) Kakan(inHai *hai.Hai) error {
 	return c.ErrorMock
+}
+
+func (c *ChaMock) CanTsumo() bool {
+	return c.BoolMock
 }

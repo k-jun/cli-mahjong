@@ -4,6 +4,14 @@ import (
 	"mahjong/model/hai"
 )
 
+type HuroAction string
+
+var (
+	Pon HuroAction = "pon"
+	Chi HuroAction = "chi"
+	Kan HuroAction = "Kan"
+)
+
 type Huro interface {
 	Pon([3]*hai.Hai) error
 	Chi([3]*hai.Hai) error

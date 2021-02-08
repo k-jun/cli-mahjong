@@ -70,8 +70,6 @@ func (t *tehaiImpl) Remove(outHai *hai.Hai) (*hai.Hai, error) {
 	for idx, hai := range t.hais {
 		if hai == outHai {
 			outHai = t.hais[idx]
-			// t.hais[idx] = t.hais[0]
-			// t.hais = t.hai[1:]
 			t.hais = append(t.hais[:idx], t.hais[idx+1:]...)
 			return outHai, nil
 		}
@@ -112,7 +110,7 @@ func (t *tehaiImpl) FindPonPairs(inHai *hai.Hai) [][2]*hai.Hai {
 	}
 
 	for k, v := range cnt {
-		if v >= 2 {
+		if v >= 2 && k == inHai {
 			pairs = append(pairs, [2]*hai.Hai{k, k})
 		}
 	}

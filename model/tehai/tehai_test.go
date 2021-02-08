@@ -189,6 +189,11 @@ func TestFindPonPairs(t *testing.T) {
 			outPairs:   [][2]*hai.Hai{{&hai.Haku, &hai.Haku}},
 		},
 		{
+			beforeHais: []*hai.Hai{&hai.Haku, &hai.Haku},
+			inHai:      &hai.Manzu1,
+			outPairs:   [][2]*hai.Hai{},
+		},
+		{
 			beforeHais: []*hai.Hai{},
 			inHai:      &hai.Haku,
 			outPairs:   [][2]*hai.Hai{},

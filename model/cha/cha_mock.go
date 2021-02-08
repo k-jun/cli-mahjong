@@ -2,6 +2,8 @@ package cha
 
 import (
 	"mahjong/model/hai"
+	"mahjong/model/ho"
+	"mahjong/model/huro"
 	"mahjong/model/tehai"
 	"mahjong/model/yama"
 )
@@ -9,15 +11,21 @@ import (
 var _ Cha = &ChaMock{}
 
 type ChaMock struct {
-	ErrorMock error
-	TehaiMock tehai.Tehai
-	HaiMock   *hai.Hai
-	HaisMock  []*hai.Hai
-	BoolMock  bool
+	ErrorMock       error
+	TehaiMock       tehai.Tehai
+	HaiMock         *hai.Hai
+	HaisMock        []*hai.Hai
+	HuroActionsMock []huro.HuroAction
+	HoMock          ho.Ho
+	BoolMock        bool
 }
 
 func (c *ChaMock) Tehai() tehai.Tehai {
 	return c.TehaiMock
+}
+
+func (c *ChaMock) Ho() ho.Ho {
+	return c.HoMock
 }
 
 func (c *ChaMock) TumoHai() *hai.Hai {
@@ -62,4 +70,7 @@ func (c *ChaMock) CanRichi() []*hai.Hai {
 func (c *ChaMock) CanTumo() bool {
 	return c.BoolMock
 
+}
+func (c *ChaMock) CanHuro(_ *hai.Hai) []huro.HuroAction {
+	return c.HuroActionsMock
 }

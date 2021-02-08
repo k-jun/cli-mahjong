@@ -56,8 +56,17 @@ func (gu *gameUsecaseImpl) InputController(id string, c cha.Cha) error {
 				}
 				fmt.Println("outhai:", outHai.Name())
 				c.Dahai(outHai)
-				// TODO huro check
-				taku.TurnChange(taku.NextTurn())
+				ok, err := taku.HasChaActions()
+				fmt.Println("ok:", ok)
+				if err != nil {
+					taku.LeaveCha(c)
+					break
+				}
+				if ok {
+					taku.TurnChange(taku.NextTurn())
+				} else {
+					taku.Broadcast()
+				}
 			}
 		}
 	}
@@ -76,7 +85,7 @@ func (gu *gameUsecaseImpl) OutputController(id string, c cha.Cha, channel chan t
 			break
 		}
 
-		if taku.IsYourTurn(c) && c.TumoHai() == nil {
+		if taku.IsYourTurn(c) && c.TumoHai() == nil && taku.ChaActionCnt() == 0 {
 			err := c.Tumo()
 			if err != nil {
 				// game end
@@ -98,6 +107,9 @@ func (gu *gameUsecaseImpl) OutputController(id string, c cha.Cha, channel chan t
 		// TODO add actions rechi, or tsumo
 		if len(c.CanRichi()) != 0 {
 			tehaistr += "\n" + "do you do richi?: "
+		}
+		if c.CanTumo() {
+			tehaistr += "\n" + "do you do tumo?: "
 		}
 		gu.write(tehaistr + "\n")
 	}

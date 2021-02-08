@@ -15,17 +15,19 @@ import (
 
 type Cha interface {
 	Tehai() tehai.Tehai
+	Ho() ho.Ho
 	Tumo() error
 	TumoHai() *hai.Hai
-	Dahai(outHai *hai.Hai) error
+	Dahai(*hai.Hai) error
 	SetYama(yama.Yama) error
 	Haihai() error
-	Chi(inHai *hai.Hai, outHais [2]*hai.Hai) error
-	Pon(inHai *hai.Hai, outHais [2]*hai.Hai) error
-	Kan(inHai *hai.Hai, outHais [3]*hai.Hai) error
-	Kakan(inHai *hai.Hai) error
+	Chi(*hai.Hai, [2]*hai.Hai) error
+	Pon(*hai.Hai, [2]*hai.Hai) error
+	Kan(*hai.Hai, [3]*hai.Hai) error
+	Kakan(*hai.Hai) error
 	CanRichi() []*hai.Hai
 	CanTumo() bool
+	CanHuro(*hai.Hai) []huro.HuroAction
 }
 
 type chaImpl struct {
@@ -53,6 +55,10 @@ func (c *chaImpl) Id() uuid.UUID {
 
 func (c *chaImpl) Tehai() tehai.Tehai {
 	return c.tehai
+}
+
+func (c *chaImpl) Ho() ho.Ho {
+	return c.ho
 }
 
 func (c *chaImpl) TumoHai() *hai.Hai {
@@ -221,6 +227,32 @@ func (c *chaImpl) CanTumo() bool {
 	return false
 }
 
+func (c *chaImpl) CanHuro(inHai *hai.Hai) []huro.HuroAction {
+	fmt.Println("inhai:", inHai)
+	actions := []huro.HuroAction{}
+	pairs := c.tehai.FindChiPairs(inHai)
+	fmt.Println("pairs:", pairs)
+	for _, pair := range pairs {
+		fmt.Println("pair:", pair[0], pair[1])
+	}
+	if len(pairs) != 0 {
+		actions = append(actions, huro.Chi)
+	}
+	pairs = c.tehai.FindPonPairs(inHai)
+	fmt.Println("pairs:", pairs)
+	for _, pair := range pairs {
+		fmt.Println("pair:", pair[0], pair[1])
+	}
+	if len(pairs) != 0 {
+		actions = append(actions, huro.Pon)
+	}
+	kanpairs := c.tehai.FindKanPairs(inHai)
+	if len(kanpairs) != 0 {
+		actions = append(actions, huro.Kan)
+	}
+	return actions
+}
+
 func haiContain(a []*hai.Hai, h *hai.Hai) bool {
 	for _, hi := range a {
 		if h == hi {
@@ -314,7 +346,11 @@ func removeHai(hais []*hai.Hai, hai *hai.Hai) []*hai.Hai {
 			return hais
 		}
 	}
-	fmt.Println("hais:", hais)
+	fmt.Print("hais:")
+	for _, h := range hais {
+		fmt.Print(h.Name())
+	}
+	fmt.Println("")
 	fmt.Println("hai:", hai)
 	panic(ChaHaiNotFoundErr)
 }

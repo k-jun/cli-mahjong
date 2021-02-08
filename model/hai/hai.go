@@ -9,7 +9,7 @@ type Hai struct {
 	name       string
 }
 
-func AtoHai(hainame string) *Hai {
+func AtoHai(hainame string) (*Hai, error) {
 	all := append([]*Hai{}, Manzu...)
 	all = append(all, Pinzu...)
 	all = append(all, Souzu...)
@@ -18,35 +18,41 @@ func AtoHai(hainame string) *Hai {
 
 	for _, hai := range all {
 		if hai.name == hainame {
-			return hai
+			return hai, nil
 		}
 	}
-	return nil
+	return nil, HaiInvalidArgumentErr
 }
 
-func HaitoI(h *Hai) int {
-	suit := HaitoSuits(h)
-	num := 0
-	for idx, hi := range suit {
-		if hi == h {
-			num = idx
+func HaitoI(h *Hai) (int, error) {
+	if h == nil {
+		return 0, HaiInvalidArgumentErr
+	}
+
+	nums := []*attribute.HaiAttribute{&attribute.One, &attribute.Two, &attribute.Three, &attribute.Four, &attribute.Five, &attribute.Six, &attribute.Seven, &attribute.Eight, &attribute.Nine}
+	for i, num := range nums {
+		if h.HasAttribute(num) {
+			return i + 1, nil
 		}
 	}
 
-	return num
+	return 0, HaiInvalidArgumentErr
 }
 
-func HaitoSuits(h *Hai) []*Hai {
+func HaitoSuits(h *Hai) ([]*Hai, error) {
+	if h == nil {
+		return []*Hai{}, HaiInvalidArgumentErr
+	}
 	if h.HasAttribute(&attribute.Manzu) {
-		return Manzu
+		return Manzu, nil
 	}
 	if h.HasAttribute(&attribute.Pinzu) {
-		return Pinzu
+		return Pinzu, nil
 	}
 	if h.HasAttribute(&attribute.Souzu) {
-		return Souzu
+		return Souzu, nil
 	}
-	return []*Hai{}
+	return []*Hai{}, HaiInvalidArgumentErr
 }
 
 func (h *Hai) Name() string {
@@ -64,153 +70,149 @@ func (h *Hai) HasAttribute(attr *attribute.HaiAttribute) bool {
 }
 
 var (
-	Manzu   = []*Hai{&Hai{}, &Manzu1, &Manzu2, &Manzu3, &Manzu4, &Manzu5, &Manzu6, &Manzu7, &Manzu8, &Manzu9}
-	Pinzu   = []*Hai{&Hai{}, &Pinzu1, &Pinzu2, &Pinzu3, &Pinzu4, &Pinzu5, &Pinzu6, &Pinzu7, &Pinzu8, &Pinzu9}
-	Souzu   = []*Hai{&Hai{}, &Souzu1, &Souzu2, &Souzu3, &Souzu4, &Souzu5, &Souzu6, &Souzu7, &Souzu8, &Souzu9}
-	KazeHai = []*Hai{&Ton, &Nan, &Sha, &Pei}
-	YakuHai = []*Hai{&Haku, &Hatu, &Tyun}
+	Manzu   = []*Hai{Manzu1, Manzu2, Manzu3, Manzu4, Manzu5, Manzu6, Manzu7, Manzu8, Manzu9}
+	Pinzu   = []*Hai{Pinzu1, Pinzu2, Pinzu3, Pinzu4, Pinzu5, Pinzu6, Pinzu7, Pinzu8, Pinzu9}
+	Souzu   = []*Hai{Souzu1, Souzu2, Souzu3, Souzu4, Souzu5, Souzu6, Souzu7, Souzu8, Souzu9}
+	KazeHai = []*Hai{Ton, Nan, Sha, Pei}
+	YakuHai = []*Hai{Haku, Hatu, Tyun}
 )
 
 var (
-	Pinzu1 = Hai{
-		attributes: []*attribute.HaiAttribute{
-			&attribute.Suhai,
-			&attribute.One,
-			&attribute.Pinzu,
-		},
-		name: "p1",
+	Pinzu1 = &Hai{
+		attributes: []*attribute.HaiAttribute{&attribute.Suhai, &attribute.One, &attribute.Pinzu},
+		name:       "p1",
 	}
-	Pinzu2 = Hai{
+	Pinzu2 = &Hai{
 		attributes: []*attribute.HaiAttribute{&attribute.Suhai, &attribute.Two, &attribute.Pinzu},
 		name:       "p2",
 	}
-	Pinzu3 = Hai{
+	Pinzu3 = &Hai{
 		attributes: []*attribute.HaiAttribute{&attribute.Suhai, &attribute.Three, &attribute.Pinzu},
 		name:       "p3",
 	}
-	Pinzu4 = Hai{
+	Pinzu4 = &Hai{
 		attributes: []*attribute.HaiAttribute{&attribute.Suhai, &attribute.Four, &attribute.Pinzu},
 		name:       "p4",
 	}
-	Pinzu5 = Hai{
+	Pinzu5 = &Hai{
 		attributes: []*attribute.HaiAttribute{&attribute.Suhai, &attribute.Five, &attribute.Pinzu},
 		name:       "p5",
 	}
-	Pinzu6 = Hai{
+	Pinzu6 = &Hai{
 		attributes: []*attribute.HaiAttribute{&attribute.Suhai, &attribute.Six, &attribute.Pinzu},
 		name:       "p6",
 	}
-	Pinzu7 = Hai{
+	Pinzu7 = &Hai{
 		attributes: []*attribute.HaiAttribute{&attribute.Suhai, &attribute.Seven, &attribute.Pinzu},
 		name:       "p7",
 	}
-	Pinzu8 = Hai{
+	Pinzu8 = &Hai{
 		attributes: []*attribute.HaiAttribute{&attribute.Suhai, &attribute.Eight, &attribute.Pinzu},
 		name:       "p8",
 	}
-	Pinzu9 = Hai{
+	Pinzu9 = &Hai{
 		attributes: []*attribute.HaiAttribute{&attribute.Suhai, &attribute.Nine, &attribute.Pinzu},
 		name:       "p9",
 	}
-	Souzu1 = Hai{
+	Souzu1 = &Hai{
 		attributes: []*attribute.HaiAttribute{&attribute.Suhai, &attribute.One, &attribute.Souzu},
 		name:       "s1",
 	}
-	Souzu2 = Hai{
+	Souzu2 = &Hai{
 		attributes: []*attribute.HaiAttribute{&attribute.Suhai, &attribute.Two, &attribute.Souzu},
 		name:       "s2",
 	}
-	Souzu3 = Hai{
+	Souzu3 = &Hai{
 		attributes: []*attribute.HaiAttribute{&attribute.Suhai, &attribute.Three, &attribute.Souzu},
 		name:       "s3",
 	}
-	Souzu4 = Hai{
+	Souzu4 = &Hai{
 		attributes: []*attribute.HaiAttribute{&attribute.Suhai, &attribute.Four, &attribute.Souzu},
 		name:       "s4",
 	}
-	Souzu5 = Hai{
+	Souzu5 = &Hai{
 		attributes: []*attribute.HaiAttribute{&attribute.Suhai, &attribute.Five, &attribute.Souzu},
 		name:       "s5",
 	}
-	Souzu6 = Hai{
+	Souzu6 = &Hai{
 		attributes: []*attribute.HaiAttribute{&attribute.Suhai, &attribute.Six, &attribute.Souzu},
 		name:       "s6",
 	}
-	Souzu7 = Hai{
+	Souzu7 = &Hai{
 		attributes: []*attribute.HaiAttribute{&attribute.Suhai, &attribute.Seven, &attribute.Souzu},
 		name:       "s7",
 	}
-	Souzu8 = Hai{
+	Souzu8 = &Hai{
 		attributes: []*attribute.HaiAttribute{&attribute.Suhai, &attribute.Eight, &attribute.Souzu},
 		name:       "s8",
 	}
-	Souzu9 = Hai{
+	Souzu9 = &Hai{
 		attributes: []*attribute.HaiAttribute{&attribute.Suhai, &attribute.Nine, &attribute.Souzu},
 		name:       "s9",
 	}
-	Manzu1 = Hai{
+	Manzu1 = &Hai{
 		attributes: []*attribute.HaiAttribute{&attribute.Suhai, &attribute.One, &attribute.Manzu},
 		name:       "m1",
 	}
-	Manzu2 = Hai{
+	Manzu2 = &Hai{
 		attributes: []*attribute.HaiAttribute{&attribute.Suhai, &attribute.Two, &attribute.Manzu},
 		name:       "m2",
 	}
-	Manzu3 = Hai{
+	Manzu3 = &Hai{
 		attributes: []*attribute.HaiAttribute{&attribute.Suhai, &attribute.Three, &attribute.Manzu},
 		name:       "m3",
 	}
-	Manzu4 = Hai{
+	Manzu4 = &Hai{
 		attributes: []*attribute.HaiAttribute{&attribute.Suhai, &attribute.Four, &attribute.Manzu},
 		name:       "m4",
 	}
-	Manzu5 = Hai{
+	Manzu5 = &Hai{
 		attributes: []*attribute.HaiAttribute{&attribute.Suhai, &attribute.Five, &attribute.Manzu},
 		name:       "m5",
 	}
-	Manzu6 = Hai{
+	Manzu6 = &Hai{
 		attributes: []*attribute.HaiAttribute{&attribute.Suhai, &attribute.Six, &attribute.Manzu},
 		name:       "m6",
 	}
-	Manzu7 = Hai{
+	Manzu7 = &Hai{
 		attributes: []*attribute.HaiAttribute{&attribute.Suhai, &attribute.Seven, &attribute.Manzu},
 		name:       "m7",
 	}
-	Manzu8 = Hai{
+	Manzu8 = &Hai{
 		attributes: []*attribute.HaiAttribute{&attribute.Suhai, &attribute.Eight, &attribute.Manzu},
 		name:       "m8",
 	}
-	Manzu9 = Hai{
+	Manzu9 = &Hai{
 		attributes: []*attribute.HaiAttribute{&attribute.Suhai, &attribute.Nine, &attribute.Manzu},
 		name:       "m9",
 	}
 
-	Tyun = Hai{
-		attributes: []*attribute.HaiAttribute{&attribute.Zihai, &attribute.Sangen, &attribute.Tyun},
+	Tyun = &Hai{
+		attributes: []*attribute.HaiAttribute{&attribute.Jihai, &attribute.Sangen, &attribute.Tyun},
 		name:       "中",
 	}
-	Hatu = Hai{
-		attributes: []*attribute.HaiAttribute{&attribute.Zihai, &attribute.Sangen, &attribute.Hatu},
+	Hatu = &Hai{
+		attributes: []*attribute.HaiAttribute{&attribute.Jihai, &attribute.Sangen, &attribute.Hatu},
 		name:       "発",
 	}
-	Haku = Hai{
-		attributes: []*attribute.HaiAttribute{&attribute.Zihai, &attribute.Sangen, &attribute.Haku},
+	Haku = &Hai{
+		attributes: []*attribute.HaiAttribute{&attribute.Jihai, &attribute.Sangen, &attribute.Haku},
 		name:       "白",
 	}
-	Ton = Hai{
-		attributes: []*attribute.HaiAttribute{&attribute.Zihai, &attribute.Kaze, &attribute.Ton},
+	Ton = &Hai{
+		attributes: []*attribute.HaiAttribute{&attribute.Jihai, &attribute.Kaze, &attribute.Ton},
 		name:       "東",
 	}
-	Nan = Hai{
-		attributes: []*attribute.HaiAttribute{&attribute.Zihai, &attribute.Kaze, &attribute.Nan},
+	Nan = &Hai{
+		attributes: []*attribute.HaiAttribute{&attribute.Jihai, &attribute.Kaze, &attribute.Nan},
 		name:       "南",
 	}
-	Sha = Hai{
-		attributes: []*attribute.HaiAttribute{&attribute.Zihai, &attribute.Kaze, &attribute.Sha},
+	Sha = &Hai{
+		attributes: []*attribute.HaiAttribute{&attribute.Jihai, &attribute.Kaze, &attribute.Sha},
 		name:       "西",
 	}
-	Pei = Hai{
-		attributes: []*attribute.HaiAttribute{&attribute.Zihai, &attribute.Kaze, &attribute.Pei},
+	Pei = &Hai{
+		attributes: []*attribute.HaiAttribute{&attribute.Jihai, &attribute.Kaze, &attribute.Pei},
 		name:       "北",
 	}
 )

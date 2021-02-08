@@ -1,6 +1,7 @@
 package cha
 
 import (
+	"fmt"
 	"mahjong/model/attribute"
 	"mahjong/model/hai"
 	"mahjong/model/ho"
@@ -24,6 +25,7 @@ type Cha interface {
 	Kan(inHai *hai.Hai, outHais [3]*hai.Hai) error
 	Kakan(inHai *hai.Hai) error
 	CanRichi() []*hai.Hai
+	CanTumo() bool
 }
 
 type chaImpl struct {
@@ -181,6 +183,44 @@ func (c *chaImpl) CanRichi() []*hai.Hai {
 	return outHais
 }
 
+func (c *chaImpl) CanTumo() bool {
+	if c.tumohai == nil {
+		return false
+	}
+	hais := c.tehai.Hais()
+	hais = append(hais, c.tumohai)
+	cnt := map[*hai.Hai]int{}
+	for _, h := range hais {
+		cnt[h] += 1
+	}
+	for k, v := range cnt {
+		if v < 2 {
+			continue
+		}
+		// deep copy
+		hais := append([]*hai.Hai{}, hais...)
+		hais = removeHais(hais, []*hai.Hai{k, k})
+		for {
+			anko := findAnko(hais)
+			syuntu := findSyuntu(hais)
+			if len(anko) != 0 {
+				hais = removeHais(hais, anko)
+			}
+			if len(syuntu) != 0 {
+				hais = removeHais(hais, syuntu)
+			}
+
+			if len(syuntu) == 0 && len(anko) == 0 {
+				break
+			}
+		}
+		if len(hais) == 0 {
+			return true
+		}
+	}
+	return false
+}
+
 func haiContain(a []*hai.Hai, h *hai.Hai) bool {
 	for _, hi := range a {
 		if h == hi {
@@ -235,7 +275,7 @@ func isRichi(hais []*hai.Hai) bool {
 					break
 				}
 			}
-			if len(hais) == 2 && isMati([2]*hai.Hai{hais[0], hais[1]}) {
+			if len(hais) == 2 && hasMati([2]*hai.Hai{hais[0], hais[1]}) {
 				return true
 			}
 		}
@@ -244,7 +284,7 @@ func isRichi(hais []*hai.Hai) bool {
 	return false
 }
 
-func isMati(hais [2]*hai.Hai) bool {
+func hasMati(hais [2]*hai.Hai) bool {
 	if hais[0] == hais[1] {
 		return true
 	}
@@ -274,6 +314,8 @@ func removeHai(hais []*hai.Hai, hai *hai.Hai) []*hai.Hai {
 			return hais
 		}
 	}
+	fmt.Println("hais:", hais)
+	fmt.Println("hai:", hai)
 	panic(ChaHaiNotFoundErr)
 }
 
@@ -287,9 +329,7 @@ func findSyuntu(hais []*hai.Hai) []*hai.Hai {
 		}
 		suit := hai.HaitoSuits(h)
 		num := hai.HaitoI(h)
-		// find left pair
 		if num <= 7 && hasHai(hais, suit[num+1]) && hasHai(hais, suit[num+2]) {
-			// removeHais(hais, []*hai.Hai{h, suit[num+1], suit[num+2]})
 			return []*hai.Hai{h, suit[num+1], suit[num+2]}
 		}
 	}

@@ -13,6 +13,7 @@ type ChaMock struct {
 	TehaiMock tehai.Tehai
 	HaiMock   *hai.Hai
 	HaisMock  []*hai.Hai
+	BoolMock  bool
 }
 
 func (c *ChaMock) Tehai() tehai.Tehai {
@@ -56,4 +57,9 @@ func (c *ChaMock) Kakan(inHai *hai.Hai) error {
 
 func (c *ChaMock) CanRichi() []*hai.Hai {
 	return c.HaisMock
+}
+
+func (c *ChaMock) CanTumo() bool {
+	return c.BoolMock
+
 }

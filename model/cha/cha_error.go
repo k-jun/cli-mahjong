@@ -3,8 +3,8 @@ package cha
 import "errors"
 
 var (
-	ChaAlreadyHaveTumohaiErr = errors.New("already have tumohai")
-	ChaAlreadyHaveYamaErr    = errors.New("already have yama")
-	ChaAlreadyDidHaihaiErr   = errors.New("already did haihai")
-	ChaHaiNotFoundErr        = errors.New("hai not found")
+	ChaAlreadyHaveTsumohaiErr = errors.New("already have tsumohai")
+	ChaAlreadyHaveYamaErr     = errors.New("already have yama")
+	ChaAlreadyDidHaipaiErr    = errors.New("already did haipai")
+	ChaHaiNotFoundErr         = errors.New("hai not found")
 )

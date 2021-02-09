@@ -11,17 +11,17 @@ var (
 )
 
 type Tehai interface {
-	Len() int
+	Hais() []*hai.Hai
+
 	Add(*hai.Hai) error
 	Adds([]*hai.Hai) error
 	Remove(*hai.Hai) (*hai.Hai, error)
 	Removes([]*hai.Hai) ([]*hai.Hai, error)
-	Sort() error
 	Replace(*hai.Hai, *hai.Hai) (*hai.Hai, error)
-	FindChiPairs(*hai.Hai) [][2]*hai.Hai
-	FindPonPairs(*hai.Hai) [][2]*hai.Hai
-	FindKanPairs(*hai.Hai) [][3]*hai.Hai
-	Hais() []*hai.Hai
+	FindChiiPairs(*hai.Hai) ([][2]*hai.Hai, error)
+	FindPonPairs(*hai.Hai) ([][2]*hai.Hai, error)
+	FindKanPairs(*hai.Hai) ([][3]*hai.Hai, error)
+	Sort() error
 }
 
 type tehaiImpl struct {
@@ -34,10 +34,6 @@ func New() Tehai {
 
 func (t *tehaiImpl) Hais() []*hai.Hai {
 	return t.hais
-}
-
-func (t *tehaiImpl) Len() int {
-	return len(t.hais)
 }
 
 func (t *tehaiImpl) Sort() error {
@@ -102,7 +98,7 @@ func (t *tehaiImpl) Replace(inHai *hai.Hai, outHai *hai.Hai) (*hai.Hai, error) {
 	return nil, TehaiHaiNotFoundErr
 }
 
-func (t *tehaiImpl) FindPonPairs(inHai *hai.Hai) [][2]*hai.Hai {
+func (t *tehaiImpl) FindPonPairs(inHai *hai.Hai) ([][2]*hai.Hai, error) {
 	pairs := [][2]*hai.Hai{}
 	cnt := map[*hai.Hai]int{}
 	for _, h := range t.hais {
@@ -115,10 +111,10 @@ func (t *tehaiImpl) FindPonPairs(inHai *hai.Hai) [][2]*hai.Hai {
 		}
 	}
 
-	return pairs
+	return pairs, nil
 }
 
-func (t *tehaiImpl) FindKanPairs(inHai *hai.Hai) [][3]*hai.Hai {
+func (t *tehaiImpl) FindKanPairs(inHai *hai.Hai) ([][3]*hai.Hai, error) {
 	pairs := [][3]*hai.Hai{}
 	cnt := map[*hai.Hai]int{}
 	for _, h := range t.hais {
@@ -126,38 +122,44 @@ func (t *tehaiImpl) FindKanPairs(inHai *hai.Hai) [][3]*hai.Hai {
 	}
 
 	for k, v := range cnt {
-		if v >= 3 {
+		if v >= 3 && k == inHai {
 			pairs = append(pairs, [3]*hai.Hai{k, k, k})
 		}
 	}
 
-	return pairs
+	return pairs, nil
 }
 
-func (t *tehaiImpl) FindChiPairs(inHai *hai.Hai) [][2]*hai.Hai {
+func (t *tehaiImpl) FindChiiPairs(inHai *hai.Hai) ([][2]*hai.Hai, error) {
 	pairs := [][2]*hai.Hai{}
 	if !inHai.HasAttribute(&attribute.Suhai) {
-		return pairs
+		return pairs, nil
 	}
 	// detect suit
-	suit := hai.HaitoSuits(inHai)
+	suit, err := hai.HaitoSuits(inHai)
+	if err != nil {
+		return pairs, nil
+	}
 	// detect hai's number
-	num := hai.HaitoI(inHai)
+	num, err := hai.HaitoI(inHai)
+	if err != nil {
+		return pairs, nil
+	}
 
 	// find right pair
-	if num >= 3 && t.hasHai(suit[num-2]) && t.hasHai(suit[num-1]) {
-		pairs = append(pairs, [2]*hai.Hai{suit[num-2], suit[num-1]})
+	if num >= 3 && t.hasHai(suit[num-3]) && t.hasHai(suit[num-2]) {
+		pairs = append(pairs, [2]*hai.Hai{suit[num-3], suit[num-2]})
 	}
 	// find center pair
-	if num >= 2 && num <= 8 && t.hasHai(suit[num-1]) && t.hasHai(suit[num+1]) {
-		pairs = append(pairs, [2]*hai.Hai{suit[num-1], suit[num+1]})
+	if num >= 2 && num <= 8 && t.hasHai(suit[num-2]) && t.hasHai(suit[num]) {
+		pairs = append(pairs, [2]*hai.Hai{suit[num-2], suit[num]})
 	}
 	// find left pair
-	if num <= 7 && t.hasHai(suit[num+1]) && t.hasHai(suit[num+2]) {
-		pairs = append(pairs, [2]*hai.Hai{suit[num+1], suit[num+2]})
+	if num <= 7 && t.hasHai(suit[num]) && t.hasHai(suit[num+1]) {
+		pairs = append(pairs, [2]*hai.Hai{suit[num], suit[num+1]})
 	}
 
-	return pairs
+	return pairs, nil
 }
 
 func (t *tehaiImpl) hasHai(inHai *hai.Hai) bool {

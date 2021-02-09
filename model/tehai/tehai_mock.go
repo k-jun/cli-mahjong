@@ -7,7 +7,7 @@ var _ Tehai = &TehaiMock{}
 type TehaiMock struct {
 	HaiMock   *hai.Hai
 	HaisMock  []*hai.Hai
-	ChiMock   [][2]*hai.Hai
+	ChiiMock  [][2]*hai.Hai
 	PonMock   [][2]*hai.Hai
 	KanMock   [][3]*hai.Hai
 	ErrorMock error
@@ -19,10 +19,6 @@ func (t *TehaiMock) Hais() []*hai.Hai {
 
 func (t *TehaiMock) Sort() error {
 	return t.ErrorMock
-}
-
-func (t *TehaiMock) Len() int {
-	return len(t.HaisMock)
 }
 
 func (t *TehaiMock) Add(_ *hai.Hai) error {
@@ -47,14 +43,14 @@ func (t *TehaiMock) Replace(inHai *hai.Hai, _ *hai.Hai) (*hai.Hai, error) {
 	return outhai, t.ErrorMock
 }
 
-func (t *TehaiMock) FindChiPairs(_ *hai.Hai) [][2]*hai.Hai {
-	return t.ChiMock
+func (t *TehaiMock) FindChiiPairs(_ *hai.Hai) ([][2]*hai.Hai, error) {
+	return t.ChiiMock, t.ErrorMock
 }
 
-func (t *TehaiMock) FindPonPairs(_ *hai.Hai) [][2]*hai.Hai {
-	return t.PonMock
+func (t *TehaiMock) FindPonPairs(_ *hai.Hai) ([][2]*hai.Hai, error) {
+	return t.PonMock, t.ErrorMock
 }
 
-func (t *TehaiMock) FindKanPairs(_ *hai.Hai) [][3]*hai.Hai {
-	return t.KanMock
+func (t *TehaiMock) FindKanPairs(_ *hai.Hai) ([][3]*hai.Hai, error) {
+	return t.KanMock, t.ErrorMock
 }

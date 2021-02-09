@@ -11,7 +11,7 @@ func TestNew(t *testing.T) {
 	_ = New()
 }
 
-func TestTumo(t *testing.T) {
+func TestDraw(t *testing.T) {
 	cases := []struct {
 		beforeYamaHai []*hai.Hai
 		beforeWanHai  []*hai.Hai
@@ -21,7 +21,7 @@ func TestTumo(t *testing.T) {
 		{
 			beforeYamaHai: all[:122],
 			beforeWanHai:  all[122:],
-			outHai:        &hai.Manzu1,
+			outHai:        hai.Manzu1,
 			outError:      nil,
 		},
 		{
@@ -34,16 +34,16 @@ func TestTumo(t *testing.T) {
 
 	for _, c := range cases {
 		yama := yamaImpl{yamaHai: c.beforeYamaHai, wanHai: c.beforeWanHai}
-		outHai, err := yama.Tumo()
+		outHai, err := yama.Draw()
 		if err != nil {
 			assert.Equal(t, c.outError, err)
 			continue
 		}
-		assert.Equal(t, &hai.Manzu1, outHai)
+		assert.Equal(t, hai.Manzu1, outHai)
 	}
 }
 
-func TestKanDora(t *testing.T) {
+func TestFlipDora(t *testing.T) {
 	cases := []struct {
 		beforeWanHai   []*hai.Hai
 		afterWanHai    []*hai.Hai
@@ -54,8 +54,8 @@ func TestKanDora(t *testing.T) {
 		{
 			beforeWanHai:   all[122:],
 			afterWanHai:    all[124:],
-			afterOmoteDora: []*hai.Hai{&hai.Sha},
-			afterUraDora:   []*hai.Hai{&hai.Pei},
+			afterOmoteDora: []*hai.Hai{hai.Sha},
+			afterUraDora:   []*hai.Hai{hai.Pei},
 			outError:       nil,
 		},
 		{
@@ -67,7 +67,7 @@ func TestKanDora(t *testing.T) {
 	for _, c := range cases {
 
 		yama := yamaImpl{wanHai: c.beforeWanHai}
-		err := yama.KanDora()
+		err := yama.Kan()
 		if err != nil {
 			assert.Equal(t, c.outError, err)
 			continue

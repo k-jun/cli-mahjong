@@ -1,7 +1,7 @@
 package cha
 
 import (
-	"fmt"
+	"log"
 	"mahjong/model/attribute"
 	"mahjong/model/hai"
 	"mahjong/model/ho"
@@ -14,29 +14,33 @@ import (
 )
 
 type Cha interface {
+	// getter
 	Tehai() tehai.Tehai
 	Ho() ho.Ho
-	Tumo() error
-	TumoHai() *hai.Hai
-	Dahai(*hai.Hai) error
+	Tsumohai() *hai.Hai
+	// setter
 	SetYama(yama.Yama) error
-	Haihai() error
-	Chi(*hai.Hai, [2]*hai.Hai) error
+	// judger
+	CanTsumoAgari() (bool, error)
+	FindRiichiHai() ([]*hai.Hai, error)
+	FindHuroActions(*hai.Hai) ([]huro.HuroAction, error)
+
+	Tsumo() error
+	Dahai(*hai.Hai) error
+	Haipai() error
+	Chii(*hai.Hai, [2]*hai.Hai) error
 	Pon(*hai.Hai, [2]*hai.Hai) error
 	Kan(*hai.Hai, [3]*hai.Hai) error
 	Kakan(*hai.Hai) error
-	CanRichi() []*hai.Hai
-	CanTumo() bool
-	CanHuro(*hai.Hai) []huro.HuroAction
 }
 
 type chaImpl struct {
-	id      uuid.UUID
-	tumohai *hai.Hai
-	ho      ho.Ho
-	tehai   tehai.Tehai
-	huro    huro.Huro
-	yama    yama.Yama
+	id       uuid.UUID
+	tsumohai *hai.Hai
+	ho       ho.Ho
+	tehai    tehai.Tehai
+	huro     huro.Huro
+	yama     yama.Yama
 }
 
 func New(id uuid.UUID, ho ho.Ho, t tehai.Tehai, y yama.Yama, hu huro.Huro) Cha {
@@ -49,10 +53,6 @@ func New(id uuid.UUID, ho ho.Ho, t tehai.Tehai, y yama.Yama, hu huro.Huro) Cha {
 	}
 }
 
-func (c *chaImpl) Id() uuid.UUID {
-	return c.id
-}
-
 func (c *chaImpl) Tehai() tehai.Tehai {
 	return c.tehai
 }
@@ -61,28 +61,28 @@ func (c *chaImpl) Ho() ho.Ho {
 	return c.ho
 }
 
-func (c *chaImpl) TumoHai() *hai.Hai {
-	return c.tumohai
+func (c *chaImpl) Tsumohai() *hai.Hai {
+	return c.tsumohai
 }
 
-func (c *chaImpl) Tumo() error {
-	if c.tumohai != nil {
-		return ChaAlreadyHaveTumohaiErr
+func (c *chaImpl) Tsumo() error {
+	if c.tsumohai != nil {
+		return ChaAlreadyHaveTsumohaiErr
 	}
 
-	tumohai, err := c.yama.Tumo()
+	tsumohai, err := c.yama.Draw()
 	if err != nil {
 		return err
 	}
 
-	c.tumohai = tumohai
+	c.tsumohai = tsumohai
 	return nil
 }
 
 func (c *chaImpl) Dahai(outHai *hai.Hai) error {
 	var err error
-	if outHai != c.tumohai {
-		outHai, err = c.tehai.Replace(c.tumohai, outHai)
+	if outHai != c.tsumohai {
+		outHai, err = c.tehai.Replace(c.tsumohai, outHai)
 		if err != nil {
 			return err
 		}
@@ -90,7 +90,7 @@ func (c *chaImpl) Dahai(outHai *hai.Hai) error {
 			return err
 		}
 	}
-	c.tumohai = nil
+	c.tsumohai = nil
 
 	return c.ho.Add(outHai)
 }
@@ -103,17 +103,17 @@ func (c *chaImpl) SetYama(y yama.Yama) error {
 	return nil
 }
 
-func (c *chaImpl) Haihai() error {
-	if c.tehai.Len() != 0 {
-		return ChaAlreadyDidHaihaiErr
+func (c *chaImpl) Haipai() error {
+	if len(c.tehai.Hais()) != 0 {
+		return ChaAlreadyDidHaipaiErr
 	}
 
 	for i := 0; i < tehai.MaxHaisLen; i++ {
-		tumoHai, err := c.yama.Tumo()
+		tsumoHai, err := c.yama.Draw()
 		if err != nil {
 			return err
 		}
-		if err := c.tehai.Add(tumoHai); err != nil {
+		if err := c.tehai.Add(tsumoHai); err != nil {
 			return err
 		}
 	}
@@ -124,77 +124,81 @@ func (c *chaImpl) Haihai() error {
 	return nil
 }
 
-func (c *chaImpl) Chi(inHai *hai.Hai, outHais [2]*hai.Hai) error {
-	if inHai == c.tumohai {
-		c.tumohai = nil
+func (c *chaImpl) Chii(inHai *hai.Hai, outHais [2]*hai.Hai) error {
+	if inHai == c.tsumohai {
+		c.tsumohai = nil
 	}
 	hais, err := c.tehai.Removes([]*hai.Hai{outHais[0], outHais[1]})
 	if err != nil {
 		return err
 	}
-	set := [3]*hai.Hai{inHai, hais[0], hais[1]}
+	meld := [3]*hai.Hai{inHai, hais[0], hais[1]}
 
-	return c.huro.Chi(set)
+	return c.huro.SetChii(meld)
 }
 
 func (c *chaImpl) Pon(inHai *hai.Hai, outHais [2]*hai.Hai) error {
-	if inHai == c.tumohai {
-		c.tumohai = nil
+	if inHai == c.tsumohai {
+		c.tsumohai = nil
 	}
 	hais, err := c.tehai.Removes([]*hai.Hai{outHais[0], outHais[1]})
 	if err != nil {
 		return err
 	}
-	set := [3]*hai.Hai{inHai, hais[0], hais[1]}
+	meld := [3]*hai.Hai{inHai, hais[0], hais[1]}
 
-	return c.huro.Pon(set)
+	return c.huro.SetPon(meld)
 }
 
 func (c *chaImpl) Kan(inHai *hai.Hai, outHais [3]*hai.Hai) error {
-	if inHai == c.tumohai {
-		c.tumohai = nil
+	if inHai == c.tsumohai {
+		c.tsumohai = nil
 	}
 	hais, err := c.tehai.Removes([]*hai.Hai{outHais[0], outHais[1]})
 	if err != nil {
 		return err
 	}
-	set := [4]*hai.Hai{inHai, hais[0], hais[1], hais[2]}
+	meld := [4]*hai.Hai{inHai, hais[0], hais[1], hais[2]}
 
-	return c.huro.MinKan(set)
+	return c.huro.SetMinKan(meld)
 }
 
 func (c *chaImpl) Kakan(inHai *hai.Hai) error {
-	if inHai == c.tumohai {
-		c.tumohai = nil
+	if inHai == c.tsumohai {
+		c.tsumohai = nil
 	}
 	return c.huro.Kakan(inHai)
 }
 
-func (c *chaImpl) CanRichi() []*hai.Hai {
+func (c *chaImpl) FindRiichiHai() ([]*hai.Hai, error) {
 	outHais := []*hai.Hai{}
-	if len(c.huro.GetChi()) != 0 || len(c.huro.GetPon()) != 0 || len(c.huro.GetMinKan()) != 0 || c.tumohai == nil {
-		return outHais
+	if len(c.huro.Chiis()) != 0 || len(c.huro.Pons()) != 0 || len(c.huro.MinKans()) != 0 || c.tsumohai == nil {
+		return outHais, nil
 	}
 
 	hais := c.tehai.Hais()
-	hais = append(hais, c.tumohai)
+	hais = append(hais, c.tsumohai)
 
 	for _, eh := range hais {
 		hs := append([]*hai.Hai{}, hais...)
 		hs = removeHai(hs, eh)
-		if isRichi(hs) && !haiContain(outHais, eh) {
+		riichi, err := isRiichi(hs)
+		if err != nil {
+			return outHais, err
+		}
+		if riichi && !haiContain(outHais, eh) {
 			outHais = append(outHais, eh)
 		}
 	}
-	return outHais
+	return outHais, nil
 }
 
-func (c *chaImpl) CanTumo() bool {
-	if c.tumohai == nil {
-		return false
+func (c *chaImpl) CanTsumoAgari() (bool, error) {
+	if c.tsumohai == nil {
+		return false, nil
 	}
 	hais := c.tehai.Hais()
-	hais = append(hais, c.tumohai)
+	hais = append(hais, c.tsumohai)
 	cnt := map[*hai.Hai]int{}
 	for _, h := range hais {
 		cnt[h] += 1
@@ -207,50 +211,62 @@ func (c *chaImpl) CanTumo() bool {
 		hais := append([]*hai.Hai{}, hais...)
 		hais = removeHais(hais, []*hai.Hai{k, k})
 		for {
-			anko := findAnko(hais)
-			syuntu := findSyuntu(hais)
-			if len(anko) != 0 {
-				hais = removeHais(hais, anko)
+			kotsu, err := findKotsu(hais)
+			if err != nil {
+				return false, err
 			}
-			if len(syuntu) != 0 {
-				hais = removeHais(hais, syuntu)
+			shuntsu, err := findShuntsu(hais)
+			if err != nil {
+				return false, err
+			}
+			if len(kotsu) != 0 {
+				hais = removeHais(hais, kotsu)
+			}
+			if len(shuntsu) != 0 {
+				hais = removeHais(hais, shuntsu)
 			}
 
-			if len(syuntu) == 0 && len(anko) == 0 {
+			if len(shuntsu) == 0 && len(kotsu) == 0 {
 				break
 			}
 		}
 		if len(hais) == 0 {
-			return true
+			return true, nil
 		}
 	}
-	return false
+	return false, nil
 }
 
-func (c *chaImpl) CanHuro(inHai *hai.Hai) []huro.HuroAction {
-	fmt.Println("inhai:", inHai)
+func (c *chaImpl) FindHuroActions(inHai *hai.Hai) ([]huro.HuroAction, error) {
 	actions := []huro.HuroAction{}
-	pairs := c.tehai.FindChiPairs(inHai)
-	fmt.Println("pairs:", pairs)
-	for _, pair := range pairs {
-		fmt.Println("pair:", pair[0], pair[1])
+
+	// chii
+	pairs, err := c.tehai.FindChiiPairs(inHai)
+	if err != nil {
+		return actions, err
 	}
 	if len(pairs) != 0 {
-		actions = append(actions, huro.Chi)
+		actions = append(actions, huro.Chii)
 	}
-	pairs = c.tehai.FindPonPairs(inHai)
-	fmt.Println("pairs:", pairs)
-	for _, pair := range pairs {
-		fmt.Println("pair:", pair[0], pair[1])
+
+	// pon
+	pairs, err = c.tehai.FindPonPairs(inHai)
+	if err != nil {
+		return actions, err
 	}
 	if len(pairs) != 0 {
 		actions = append(actions, huro.Pon)
 	}
-	kanpairs := c.tehai.FindKanPairs(inHai)
+
+	// kan
+	kanpairs, err := c.tehai.FindKanPairs(inHai)
+	if err != nil {
+		return actions, err
+	}
 	if len(kanpairs) != 0 {
 		actions = append(actions, huro.Kan)
 	}
-	return actions
+	return actions, nil
 }
 
 func haiContain(a []*hai.Hai, h *hai.Hai) bool {
@@ -263,7 +279,7 @@ func haiContain(a []*hai.Hai, h *hai.Hai) bool {
 
 }
 
-func isRichi(hais []*hai.Hai) bool {
+func isRiichi(hais []*hai.Hai) (bool, error) {
 	cnt := map[*hai.Hai]int{}
 	for _, h := range hais {
 		cnt[h] += 1
@@ -274,55 +290,77 @@ func isRichi(hais []*hai.Hai) bool {
 		if v < 2 {
 			// 単騎
 			for {
-				anko := findAnko(hais)
-				syuntu := findSyuntu(hais)
-				if len(anko) != 0 {
-					hais = removeHais(hais, anko)
+				kotsu, err := findKotsu(hais)
+				if err != nil {
+					return false, err
 				}
-				if len(syuntu) != 0 {
-					hais = removeHais(hais, syuntu)
+				shuntsu, err := findShuntsu(hais)
+				if err != nil {
+					return false, err
+
+				}
+				if len(kotsu) != 0 {
+					hais = removeHais(hais, kotsu)
+				}
+				if len(shuntsu) != 0 {
+					hais = removeHais(hais, shuntsu)
 				}
 
-				if len(syuntu) == 0 && len(anko) == 0 {
+				if len(shuntsu) == 0 && len(kotsu) == 0 {
 					break
 				}
 			}
 			if len(hais) == 1 {
-				return true
+				return true, nil
 			}
 		} else {
 			// 両面, 嵌張, 双碰, 辺張
 			hais = removeHais(hais, []*hai.Hai{k, k})
 			for {
-				anko := findAnko(hais)
-				syuntu := findSyuntu(hais)
-				if len(anko) != 0 {
-					hais = removeHais(hais, anko)
+				kotsu, err := findKotsu(hais)
+				if err != nil {
+					return false, err
+				}
+				syuntu, err := findShuntsu(hais)
+				if err != nil {
+					return false, err
+				}
+				if len(kotsu) != 0 {
+					hais = removeHais(hais, kotsu)
 				}
 				if len(syuntu) != 0 {
 					hais = removeHais(hais, syuntu)
 				}
 
-				if len(syuntu) == 0 && len(anko) == 0 {
+				if len(syuntu) == 0 && len(kotsu) == 0 {
 					break
 				}
 			}
 			if len(hais) == 2 && hasMati([2]*hai.Hai{hais[0], hais[1]}) {
-				return true
+				return true, nil
 			}
 		}
 	}
 
-	return false
+	return false, nil
 }
 
 func hasMati(hais [2]*hai.Hai) bool {
 	if hais[0] == hais[1] {
 		return true
 	}
-	num1 := hai.HaitoI(hais[0])
-	num2 := hai.HaitoI(hais[1])
-	if num1 == 0 || num2 == 0 {
+	// jihai
+	if hais[0].HasAttribute(&attribute.Jihai) && hais[1].HasAttribute(&attribute.Jihai) {
+		return hais[0] == hais[1]
+	}
+
+	// suhai
+	num1, err := hai.HaitoI(hais[0])
+	if err != nil {
+		return false
+	}
+	num2, err := hai.HaitoI(hais[1])
+	if err != nil {
 		return false
 	}
 	if num2 > num1 {
@@ -346,41 +384,47 @@ func removeHai(hais []*hai.Hai, hai *hai.Hai) []*hai.Hai {
 			return hais
 		}
 	}
-	fmt.Print("hais:")
+	log.Print("hais:")
 	for _, h := range hais {
-		fmt.Print(h.Name())
+		log.Print(h.Name())
 	}
-	fmt.Println("")
-	fmt.Println("hai:", hai)
+	log.Println("")
+	log.Println("hai:", hai)
 	panic(ChaHaiNotFoundErr)
 }
 
-func findSyuntu(hais []*hai.Hai) []*hai.Hai {
+func findShuntsu(hais []*hai.Hai) ([]*hai.Hai, error) {
 	sort.Slice(hais, func(i int, j int) bool {
 		return hais[i].Name() < hais[j].Name()
 	})
 	for _, h := range hais {
-		if h.HasAttribute(&attribute.Zihai) {
+		if h.HasAttribute(&attribute.Jihai) {
 			continue
 		}
-		suit := hai.HaitoSuits(h)
-		num := hai.HaitoI(h)
-		if num <= 7 && hasHai(hais, suit[num+1]) && hasHai(hais, suit[num+2]) {
-			return []*hai.Hai{h, suit[num+1], suit[num+2]}
+		suit, err := hai.HaitoSuits(h)
+		if err != nil {
+			return hais, err
+		}
+		num, err := hai.HaitoI(h)
+		if err != nil {
+			return hais, err
+		}
+		if num <= 7 && hasHai(hais, suit[num]) && hasHai(hais, suit[num+1]) {
+			return []*hai.Hai{h, suit[num], suit[num+1]}, nil
 		}
 	}
-	return []*hai.Hai{}
+	return []*hai.Hai{}, nil
 }
 
-func findAnko(hais []*hai.Hai) []*hai.Hai {
+func findKotsu(hais []*hai.Hai) ([]*hai.Hai, error) {
 	cnt := map[*hai.Hai]int{}
 	for _, h := range hais {
 		cnt[h] += 1
 		if cnt[h] >= 3 {
-			return []*hai.Hai{h, h, h}
+			return []*hai.Hai{h, h, h}, nil
 		}
 	}
-	return []*hai.Hai{}
+	return []*hai.Hai{}, nil
 }
 
 func hasHai(hais []*hai.Hai, hai *hai.Hai) bool {

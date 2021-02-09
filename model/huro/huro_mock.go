@@ -5,46 +5,46 @@ import "mahjong/model/hai"
 var _ Huro = &HuroMock{}
 
 type HuroMock struct {
-	ErrorMock   error
+	ErrorMock error
+
 	PonMock     [3]*hai.Hai
-	ChiMock     [3]*hai.Hai
-	MinKanMock  [4]*hai.Hai
-	AnKanMock   [4]*hai.Hai
 	PonsMock    [][3]*hai.Hai
-	ChisMock    [][3]*hai.Hai
+	ChiiMock    [3]*hai.Hai
+	ChiisMock   [][3]*hai.Hai
+	MinKanMock  [4]*hai.Hai
 	MinKansMock [][4]*hai.Hai
+	AnKanMock   [4]*hai.Hai
 	AnKansMock  [][4]*hai.Hai
 }
 
-func (h *HuroMock) GetPon() [][3]*hai.Hai {
+func (h *HuroMock) Pons() [][3]*hai.Hai {
 	return h.PonsMock
 }
-func (h *HuroMock) GetChi() [][3]*hai.Hai {
-	return h.ChisMock
+func (h *HuroMock) Chiis() [][3]*hai.Hai {
+	return h.ChiisMock
 }
-func (h *HuroMock) GetMinKan() [][4]*hai.Hai {
+func (h *HuroMock) MinKans() [][4]*hai.Hai {
 	return h.MinKansMock
 }
-func (h *HuroMock) GetAnKan() [][4]*hai.Hai {
+func (h *HuroMock) AnKans() [][4]*hai.Hai {
 	return h.AnKansMock
 }
 
-func (h *HuroMock) Pon(hais [3]*hai.Hai) error {
+func (h *HuroMock) SetPon(hais [3]*hai.Hai) error {
 	h.PonMock = hais
-
 	return h.ErrorMock
 }
 
-func (h *HuroMock) Chi(hais [3]*hai.Hai) error {
-	h.ChiMock = hais
+func (h *HuroMock) SetChii(hais [3]*hai.Hai) error {
+	h.ChiiMock = hais
 	return h.ErrorMock
 }
 
-func (h *HuroMock) MinKan(hais [4]*hai.Hai) error {
+func (h *HuroMock) SetMinKan(hais [4]*hai.Hai) error {
 	h.MinKanMock = hais
 	return h.ErrorMock
 }
-func (h *HuroMock) AnKan(hais [4]*hai.Hai) error {
+func (h *HuroMock) SetAnKan(hais [4]*hai.Hai) error {
 	h.AnKanMock = hais
 	return h.ErrorMock
 }

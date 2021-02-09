@@ -19,3 +19,7 @@ func (h *HoMock) Add(inHai *hai.Hai) error {
 func (h *HoMock) Last() (*hai.Hai, error) {
 	return h.HaiMock, h.ErrorMock
 }
+
+func (h *HoMock) RemoveLast() (*hai.Hai, error) {
+	return h.HaiMock, h.ErrorMock
+}

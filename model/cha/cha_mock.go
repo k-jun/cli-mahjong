@@ -28,11 +28,11 @@ func (c *ChaMock) Ho() ho.Ho {
 	return c.HoMock
 }
 
-func (c *ChaMock) TumoHai() *hai.Hai {
+func (c *ChaMock) Tsumohai() *hai.Hai {
 	return c.HaiMock
 }
 
-func (c *ChaMock) Tumo() error {
+func (c *ChaMock) Tsumo() error {
 	return c.ErrorMock
 }
 
@@ -43,11 +43,11 @@ func (c *ChaMock) SetYama(_ yama.Yama) error {
 	return c.ErrorMock
 }
 
-func (c *ChaMock) Haihai() error {
+func (c *ChaMock) Haipai() error {
 	return c.ErrorMock
 }
 
-func (c *ChaMock) Chi(inHai *hai.Hai, outHais [2]*hai.Hai) error {
+func (c *ChaMock) Chii(inHai *hai.Hai, outHais [2]*hai.Hai) error {
 	return c.ErrorMock
 }
 
@@ -63,14 +63,14 @@ func (c *ChaMock) Kakan(inHai *hai.Hai) error {
 	return c.ErrorMock
 }
 
-func (c *ChaMock) CanRichi() []*hai.Hai {
-	return c.HaisMock
+func (c *ChaMock) FindRiichiHai() ([]*hai.Hai, error) {
+	return c.HaisMock, c.ErrorMock
 }
 
-func (c *ChaMock) CanTumo() bool {
-	return c.BoolMock
+func (c *ChaMock) CanTsumoAgari() (bool, error) {
+	return c.BoolMock, c.ErrorMock
 
 }
-func (c *ChaMock) CanHuro(_ *hai.Hai) []huro.HuroAction {
-	return c.HuroActionsMock
+func (c *ChaMock) FindHuroActions(_ *hai.Hai) ([]huro.HuroAction, error) {
+	return c.HuroActionsMock, c.ErrorMock
 }

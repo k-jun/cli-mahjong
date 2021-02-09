@@ -74,7 +74,7 @@ var (
 	Pinzu   = []*Hai{Pinzu1, Pinzu2, Pinzu3, Pinzu4, Pinzu5, Pinzu6, Pinzu7, Pinzu8, Pinzu9}
 	Souzu   = []*Hai{Souzu1, Souzu2, Souzu3, Souzu4, Souzu5, Souzu6, Souzu7, Souzu8, Souzu9}
 	KazeHai = []*Hai{Ton, Nan, Sha, Pei}
-	YakuHai = []*Hai{Haku, Hatu, Tyun}
+	YakuHai = []*Hai{Haku, Hatsu, Chun}
 )
 
 var (
@@ -187,12 +187,12 @@ var (
 		name:       "m9",
 	}
 
-	Tyun = &Hai{
-		attributes: []*attribute.HaiAttribute{&attribute.Jihai, &attribute.Sangen, &attribute.Tyun},
+	Chun = &Hai{
+		attributes: []*attribute.HaiAttribute{&attribute.Jihai, &attribute.Sangen, &attribute.Chun},
 		name:       "中",
 	}
-	Hatu = &Hai{
-		attributes: []*attribute.HaiAttribute{&attribute.Jihai, &attribute.Sangen, &attribute.Hatu},
+	Hatsu = &Hai{
+		attributes: []*attribute.HaiAttribute{&attribute.Jihai, &attribute.Sangen, &attribute.Hatsu},
 		name:       "発",
 	}
 	Haku = &Hai{

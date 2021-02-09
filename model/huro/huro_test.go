@@ -16,15 +16,15 @@ func TestPon(t *testing.T) {
 	}{
 		{
 			beforePons: [][3]*hai.Hai{},
-			inPon:      [3]*hai.Hai{&hai.Haku, &hai.Haku, &hai.Haku},
-			afterPons:  [][3]*hai.Hai{{&hai.Haku, &hai.Haku, &hai.Haku}},
+			inPon:      [3]*hai.Hai{hai.Haku, hai.Haku, hai.Haku},
+			afterPons:  [][3]*hai.Hai{{hai.Haku, hai.Haku, hai.Haku}},
 			outError:   nil,
 		},
 	}
 
 	for _, c := range cases {
 		h := huroImpl{pons: c.beforePons}
-		err := h.Pon(c.inPon)
+		err := h.SetPon(c.inPon)
 		if err != nil {
 			assert.Equal(t, c.outError, err)
 			continue
@@ -33,29 +33,29 @@ func TestPon(t *testing.T) {
 	}
 }
 
-func TestChi(t *testing.T) {
+func TestChii(t *testing.T) {
 	cases := []struct {
-		beforeChis [][3]*hai.Hai
-		inChi      [3]*hai.Hai
-		afterChis  [][3]*hai.Hai
-		outError   error
+		beforeChiis [][3]*hai.Hai
+		inChii      [3]*hai.Hai
+		afterChiis  [][3]*hai.Hai
+		outError    error
 	}{
 		{
-			beforeChis: [][3]*hai.Hai{},
-			inChi:      [3]*hai.Hai{&hai.Haku, &hai.Haku, &hai.Haku},
-			afterChis:  [][3]*hai.Hai{{&hai.Haku, &hai.Haku, &hai.Haku}},
-			outError:   nil,
+			beforeChiis: [][3]*hai.Hai{},
+			inChii:      [3]*hai.Hai{hai.Haku, hai.Haku, hai.Haku},
+			afterChiis:  [][3]*hai.Hai{{hai.Haku, hai.Haku, hai.Haku}},
+			outError:    nil,
 		},
 	}
 
 	for _, c := range cases {
-		h := huroImpl{chis: c.beforeChis}
-		err := h.Chi(c.inChi)
+		h := huroImpl{chiis: c.beforeChiis}
+		err := h.SetChii(c.inChii)
 		if err != nil {
 			assert.Equal(t, c.outError, err)
 			continue
 		}
-		assert.Equal(t, c.afterChis, h.chis)
+		assert.Equal(t, c.afterChiis, h.chiis)
 	}
 }
 
@@ -68,20 +68,20 @@ func TestKan(t *testing.T) {
 	}{
 		{
 			beforeKans: [][4]*hai.Hai{},
-			inKan:      [4]*hai.Hai{&hai.Haku, &hai.Haku, &hai.Haku},
-			afterKans:  [][4]*hai.Hai{{&hai.Haku, &hai.Haku, &hai.Haku}},
+			inKan:      [4]*hai.Hai{hai.Haku, hai.Haku, hai.Haku},
+			afterKans:  [][4]*hai.Hai{{hai.Haku, hai.Haku, hai.Haku}},
 			outError:   nil,
 		},
 	}
 
 	for _, c := range cases {
-		h := huroImpl{minkans: c.beforeKans}
-		err := h.MinKan(c.inKan)
+		h := huroImpl{minKans: c.beforeKans}
+		err := h.SetMinKan(c.inKan)
 		if err != nil {
 			assert.Equal(t, c.outError, err)
 			continue
 		}
-		assert.Equal(t, c.afterKans, h.minkans)
+		assert.Equal(t, c.afterKans, h.minKans)
 	}
 }
 
@@ -94,15 +94,15 @@ func TestKakan(t *testing.T) {
 		outError   error
 	}{
 		{
-			beforePons: [][3]*hai.Hai{{&hai.Haku, &hai.Haku, &hai.Haku}},
-			inHai:      &hai.Haku,
+			beforePons: [][3]*hai.Hai{{hai.Haku, hai.Haku, hai.Haku}},
+			inHai:      hai.Haku,
 			afterPons:  [][3]*hai.Hai{},
-			afterKans:  [][4]*hai.Hai{{&hai.Haku, &hai.Haku, &hai.Haku, &hai.Haku}},
+			afterKans:  [][4]*hai.Hai{{hai.Haku, hai.Haku, hai.Haku, hai.Haku}},
 			outError:   nil,
 		},
 		{
-			beforePons: [][3]*hai.Hai{{&hai.Haku, &hai.Haku, &hai.Haku}},
-			inHai:      &hai.Hatu,
+			beforePons: [][3]*hai.Hai{{hai.Haku, hai.Haku, hai.Haku}},
+			inHai:      hai.Hatu,
 			outError:   HuroNotFoundErr,
 		},
 	}
@@ -115,6 +115,6 @@ func TestKakan(t *testing.T) {
 			continue
 		}
 		assert.Equal(t, c.afterPons, h.pons)
-		assert.Equal(t, c.afterKans, h.minkans)
+		assert.Equal(t, c.afterKans, h.minKans)
 	}
 }

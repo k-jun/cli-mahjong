@@ -10,7 +10,7 @@ type YamaMock struct {
 	HaisMock  []*hai.Hai
 }
 
-func (y *YamaMock) Tumo() (*hai.Hai, error) {
+func (y *YamaMock) Draw() (*hai.Hai, error) {
 	return y.HaiMock, y.ErrorMock
 }
 
@@ -22,7 +22,7 @@ func (y *YamaMock) UraDora() []*hai.Hai {
 	return y.HaisMock
 }
 
-func (y *YamaMock) KanDora() error {
+func (y *YamaMock) Kan() error {
 	return y.ErrorMock
 
 }

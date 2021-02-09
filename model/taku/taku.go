@@ -141,7 +141,7 @@ func (t *takuImpl) Broadcast() {
 func (t *takuImpl) gameStart() error {
 	// create yama
 	y := yama.New()
-	if err := y.KanDora(); err != nil {
+	if err := y.Kan(); err != nil {
 		return err
 	}
 

@@ -7,10 +7,11 @@ import (
 )
 
 type Yama interface {
-	Tumo() (*hai.Hai, error)
+	Draw() (*hai.Hai, error)
+	Kan() error
+
 	OmoteDora() []*hai.Hai
 	UraDora() []*hai.Hai
-	KanDora() error
 }
 
 type yamaImpl struct {
@@ -22,30 +23,30 @@ type yamaImpl struct {
 
 var (
 	all = []*hai.Hai{
-		&hai.Manzu1, &hai.Manzu2, &hai.Manzu3, &hai.Manzu4, &hai.Manzu5, &hai.Manzu6, &hai.Manzu7, &hai.Manzu8, &hai.Manzu9,
-		&hai.Manzu1, &hai.Manzu2, &hai.Manzu3, &hai.Manzu4, &hai.Manzu5, &hai.Manzu6, &hai.Manzu7, &hai.Manzu8, &hai.Manzu9,
-		&hai.Manzu1, &hai.Manzu2, &hai.Manzu3, &hai.Manzu4, &hai.Manzu5, &hai.Manzu6, &hai.Manzu7, &hai.Manzu8, &hai.Manzu9,
-		&hai.Manzu1, &hai.Manzu2, &hai.Manzu3, &hai.Manzu4, &hai.Manzu5, &hai.Manzu6, &hai.Manzu7, &hai.Manzu8, &hai.Manzu9,
+		hai.Manzu1, hai.Manzu2, hai.Manzu3, hai.Manzu4, hai.Manzu5, hai.Manzu6, hai.Manzu7, hai.Manzu8, hai.Manzu9,
+		hai.Manzu1, hai.Manzu2, hai.Manzu3, hai.Manzu4, hai.Manzu5, hai.Manzu6, hai.Manzu7, hai.Manzu8, hai.Manzu9,
+		hai.Manzu1, hai.Manzu2, hai.Manzu3, hai.Manzu4, hai.Manzu5, hai.Manzu6, hai.Manzu7, hai.Manzu8, hai.Manzu9,
+		hai.Manzu1, hai.Manzu2, hai.Manzu3, hai.Manzu4, hai.Manzu5, hai.Manzu6, hai.Manzu7, hai.Manzu8, hai.Manzu9,
 
-		&hai.Pinzu1, &hai.Pinzu2, &hai.Pinzu3, &hai.Pinzu4, &hai.Pinzu5, &hai.Pinzu6, &hai.Pinzu7, &hai.Pinzu8, &hai.Pinzu9,
-		&hai.Pinzu1, &hai.Pinzu2, &hai.Pinzu3, &hai.Pinzu4, &hai.Pinzu5, &hai.Pinzu6, &hai.Pinzu7, &hai.Pinzu8, &hai.Pinzu9,
-		&hai.Pinzu1, &hai.Pinzu2, &hai.Pinzu3, &hai.Pinzu4, &hai.Pinzu5, &hai.Pinzu6, &hai.Pinzu7, &hai.Pinzu8, &hai.Pinzu9,
-		&hai.Pinzu1, &hai.Pinzu2, &hai.Pinzu3, &hai.Pinzu4, &hai.Pinzu5, &hai.Pinzu6, &hai.Pinzu7, &hai.Pinzu8, &hai.Pinzu9,
+		hai.Pinzu1, hai.Pinzu2, hai.Pinzu3, hai.Pinzu4, hai.Pinzu5, hai.Pinzu6, hai.Pinzu7, hai.Pinzu8, hai.Pinzu9,
+		hai.Pinzu1, hai.Pinzu2, hai.Pinzu3, hai.Pinzu4, hai.Pinzu5, hai.Pinzu6, hai.Pinzu7, hai.Pinzu8, hai.Pinzu9,
+		hai.Pinzu1, hai.Pinzu2, hai.Pinzu3, hai.Pinzu4, hai.Pinzu5, hai.Pinzu6, hai.Pinzu7, hai.Pinzu8, hai.Pinzu9,
+		hai.Pinzu1, hai.Pinzu2, hai.Pinzu3, hai.Pinzu4, hai.Pinzu5, hai.Pinzu6, hai.Pinzu7, hai.Pinzu8, hai.Pinzu9,
 
-		&hai.Souzu1, &hai.Souzu2, &hai.Souzu3, &hai.Souzu4, &hai.Souzu5, &hai.Souzu6, &hai.Souzu7, &hai.Souzu8, &hai.Souzu9,
-		&hai.Souzu1, &hai.Souzu2, &hai.Souzu3, &hai.Souzu4, &hai.Souzu5, &hai.Souzu6, &hai.Souzu7, &hai.Souzu8, &hai.Souzu9,
-		&hai.Souzu1, &hai.Souzu2, &hai.Souzu3, &hai.Souzu4, &hai.Souzu5, &hai.Souzu6, &hai.Souzu7, &hai.Souzu8, &hai.Souzu9,
-		&hai.Souzu1, &hai.Souzu2, &hai.Souzu3, &hai.Souzu4, &hai.Souzu5, &hai.Souzu6, &hai.Souzu7, &hai.Souzu8, &hai.Souzu9,
+		hai.Souzu1, hai.Souzu2, hai.Souzu3, hai.Souzu4, hai.Souzu5, hai.Souzu6, hai.Souzu7, hai.Souzu8, hai.Souzu9,
+		hai.Souzu1, hai.Souzu2, hai.Souzu3, hai.Souzu4, hai.Souzu5, hai.Souzu6, hai.Souzu7, hai.Souzu8, hai.Souzu9,
+		hai.Souzu1, hai.Souzu2, hai.Souzu3, hai.Souzu4, hai.Souzu5, hai.Souzu6, hai.Souzu7, hai.Souzu8, hai.Souzu9,
+		hai.Souzu1, hai.Souzu2, hai.Souzu3, hai.Souzu4, hai.Souzu5, hai.Souzu6, hai.Souzu7, hai.Souzu8, hai.Souzu9,
 
-		&hai.Ton, &hai.Nan, &hai.Sha, &hai.Pei,
-		&hai.Ton, &hai.Nan, &hai.Sha, &hai.Pei,
-		&hai.Ton, &hai.Nan, &hai.Sha, &hai.Pei,
-		&hai.Ton, &hai.Nan, &hai.Sha, &hai.Pei,
+		hai.Ton, hai.Nan, hai.Sha, hai.Pei,
+		hai.Ton, hai.Nan, hai.Sha, hai.Pei,
+		hai.Ton, hai.Nan, hai.Sha, hai.Pei,
+		hai.Ton, hai.Nan, hai.Sha, hai.Pei,
 
-		&hai.Haku, &hai.Hatu, &hai.Tyun,
-		&hai.Haku, &hai.Hatu, &hai.Tyun,
-		&hai.Haku, &hai.Hatu, &hai.Tyun,
-		&hai.Haku, &hai.Hatu, &hai.Tyun,
+		hai.Haku, hai.Hatsu, hai.Chun,
+		hai.Haku, hai.Hatsu, hai.Chun,
+		hai.Haku, hai.Hatsu, hai.Chun,
+		hai.Haku, hai.Hatsu, hai.Chun,
 	}
 )
 
@@ -73,7 +74,7 @@ func (y *yamaImpl) UraDora() []*hai.Hai {
 	return y.uraDora
 }
 
-func (y *yamaImpl) Tumo() (*hai.Hai, error) {
+func (y *yamaImpl) Draw() (*hai.Hai, error) {
 	if len(y.yamaHai)+(len(y.wanHai)/3) == 4 {
 		return nil, YamaNoMoreHaiErr
 	}
@@ -83,7 +84,7 @@ func (y *yamaImpl) Tumo() (*hai.Hai, error) {
 	return outHai, nil
 }
 
-func (y *yamaImpl) KanDora() error {
+func (y *yamaImpl) Kan() error {
 	if len(y.wanHai) < 2 {
 		return YamaNoMoreHaiErr
 	}

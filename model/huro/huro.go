@@ -7,67 +7,67 @@ import (
 type HuroAction string
 
 var (
-	Pon HuroAction = "pon"
-	Chi HuroAction = "chi"
-	Kan HuroAction = "Kan"
+	Pon  HuroAction = "pon"
+	Chii HuroAction = "Chii"
+	Kan  HuroAction = "Kan"
 )
 
 type Huro interface {
-	Pon([3]*hai.Hai) error
-	Chi([3]*hai.Hai) error
-	MinKan([4]*hai.Hai) error
-	AnKan([4]*hai.Hai) error
+	SetPon([3]*hai.Hai) error
+	SetChii([3]*hai.Hai) error
+	SetMinKan([4]*hai.Hai) error
+	SetAnKan([4]*hai.Hai) error
 	Kakan(*hai.Hai) error
-	GetPon() [][3]*hai.Hai
-	GetChi() [][3]*hai.Hai
-	GetMinKan() [][4]*hai.Hai
-	GetAnKan() [][4]*hai.Hai
+	Pons() [][3]*hai.Hai
+	Chiis() [][3]*hai.Hai
+	MinKans() [][4]*hai.Hai
+	AnKans() [][4]*hai.Hai
 }
 
 type huroImpl struct {
 	pons    [][3]*hai.Hai
-	chis    [][3]*hai.Hai
-	minkans [][4]*hai.Hai
+	chiis   [][3]*hai.Hai
+	minKans [][4]*hai.Hai
 	ankans  [][4]*hai.Hai
 }
 
 func New() Huro {
 	return &huroImpl{
 		pons:    [][3]*hai.Hai{},
-		chis:    [][3]*hai.Hai{},
-		minkans: [][4]*hai.Hai{},
+		chiis:   [][3]*hai.Hai{},
+		minKans: [][4]*hai.Hai{},
 		ankans:  [][4]*hai.Hai{},
 	}
 }
 
-func (h *huroImpl) GetPon() [][3]*hai.Hai {
+func (h *huroImpl) Pons() [][3]*hai.Hai {
 	return h.pons
 }
-func (h *huroImpl) GetChi() [][3]*hai.Hai {
-	return h.chis
+func (h *huroImpl) Chiis() [][3]*hai.Hai {
+	return h.chiis
 }
-func (h *huroImpl) GetMinKan() [][4]*hai.Hai {
-	return h.minkans
+func (h *huroImpl) MinKans() [][4]*hai.Hai {
+	return h.minKans
 }
-func (h *huroImpl) GetAnKan() [][4]*hai.Hai {
+func (h *huroImpl) AnKans() [][4]*hai.Hai {
 	return h.ankans
 }
 
-func (h *huroImpl) Pon(hais [3]*hai.Hai) error {
+func (h *huroImpl) SetPon(hais [3]*hai.Hai) error {
 	h.pons = append(h.pons, hais)
 	return nil
 }
 
-func (h *huroImpl) Chi(hais [3]*hai.Hai) error {
-	h.chis = append(h.chis, hais)
+func (h *huroImpl) SetChii(hais [3]*hai.Hai) error {
+	h.chiis = append(h.chiis, hais)
 	return nil
 }
 
-func (h *huroImpl) MinKan(hais [4]*hai.Hai) error {
-	h.minkans = append(h.minkans, hais)
+func (h *huroImpl) SetMinKan(hais [4]*hai.Hai) error {
+	h.minKans = append(h.minKans, hais)
 	return nil
 }
-func (h *huroImpl) AnKan(hais [4]*hai.Hai) error {
+func (h *huroImpl) SetAnKan(hais [4]*hai.Hai) error {
 	h.ankans = append(h.ankans, hais)
 	return nil
 }
@@ -80,7 +80,7 @@ func (h *huroImpl) Kakan(inHai *hai.Hai) error {
 
 			set := [4]*hai.Hai{}
 			set[0], set[1], set[2], set[3] = pon[0], pon[1], pon[2], inHai
-			h.minkans = append(h.minkans, set)
+			h.minKans = append(h.minKans, set)
 			return nil
 		}
 	}

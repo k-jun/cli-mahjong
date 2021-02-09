@@ -17,8 +17,8 @@ func TestAdd(t *testing.T) {
 	}{
 		{
 			beforeHais: []*hai.Hai{},
-			inHai:      &hai.Haku,
-			afterHais:  []*hai.Hai{&hai.Haku},
+			inHai:      hai.Haku,
+			afterHais:  []*hai.Hai{hai.Haku},
 			outError:   nil,
 		},
 	}
@@ -42,8 +42,8 @@ func TestLast(t *testing.T) {
 		outError   error
 	}{
 		{
-			beforeHais: []*hai.Hai{&hai.Haku},
-			outHai:     &hai.Haku,
+			beforeHais: []*hai.Hai{hai.Haku},
+			outHai:     hai.Haku,
 			outError:   nil,
 		},
 		{
@@ -64,4 +64,42 @@ func TestLast(t *testing.T) {
 		assert.Equal(t, c.outHai, outHai)
 
 	}
+}
+
+func TestRemoveLast(t *testing.T) {
+	cases := []struct {
+		name       string
+		beforeHais []*hai.Hai
+		outHai     *hai.Hai
+		outError   error
+		afterHais  []*hai.Hai
+	}{
+		{
+			name:       "success",
+			beforeHais: []*hai.Hai{hai.Haku},
+			outHai:     hai.Haku,
+			afterHais:  []*hai.Hai{},
+		},
+		{
+			name:       "failure",
+			beforeHais: []*hai.Hai{},
+			outError:   HoNoHaiError,
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			ho := hoImpl{hais: c.beforeHais}
+			hai, err := ho.RemoveLast()
+			if err != nil {
+				assert.Equal(t, c.outError, err)
+				return
+			}
+			assert.Equal(t, c.outHai, hai)
+			assert.Equal(t, c.afterHais, ho.hais)
+
+		})
+
+	}
+
 }

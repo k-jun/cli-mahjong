@@ -19,7 +19,7 @@ var (
 	Nine  HaiAttribute = "9"
 
 	// zihai
-	Zihai HaiAttribute = "zihai"
+	Jihai HaiAttribute = "zihai"
 	// kaze
 	Kaze HaiAttribute = "kaze"
 	Ton  HaiAttribute = "ton"
@@ -28,7 +28,7 @@ var (
 	Pei  HaiAttribute = "pei"
 	// sangen
 	Sangen HaiAttribute = "sangen"
-	Hatu   HaiAttribute = "hatu"
+	Hatsu  HaiAttribute = "hatsu"
 	Haku   HaiAttribute = "haku"
-	Tyun   HaiAttribute = "tyun"
+	Chun   HaiAttribute = "tyun"
 )

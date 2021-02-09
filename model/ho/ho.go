@@ -5,6 +5,7 @@ import "mahjong/model/hai"
 type Ho interface {
 	Add(inHai *hai.Hai) error
 	Last() (*hai.Hai, error)
+	RemoveLast() (*hai.Hai, error)
 }
 
 type hoImpl struct {
@@ -25,8 +26,16 @@ func (h *hoImpl) Add(inHai *hai.Hai) error {
 func (h *hoImpl) Last() (*hai.Hai, error) {
 	if len(h.hais) == 0 {
 		return nil, HoNoHaiError
-
 	}
-
 	return h.hais[len(h.hais)-1], nil
+}
+
+func (h *hoImpl) RemoveLast() (*hai.Hai, error) {
+	if len(h.hais) == 0 {
+		return nil, HoNoHaiError
+	}
+	outHai := h.hais[len(h.hais)-1]
+	h.hais = h.hais[:len(h.hais)-1]
+
+	return outHai, nil
 }

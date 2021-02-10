@@ -1,7 +1,6 @@
 package taku
 
 import (
-	"fmt"
 	"mahjong/model/cha"
 	"mahjong/model/hai"
 	"mahjong/model/yama"
@@ -13,16 +12,22 @@ var (
 )
 
 type Taku interface {
+	// game
 	JoinCha(cha.Cha) (chan Taku, error)
 	LeaveCha(cha.Cha) error
 	Broadcast()
-	TurnChange(int) error
+
+	// turn
 	CurrentTurn() int
-	NextTurn() int
-	IsYourTurn(cha.Cha) bool
-	HasChaActions() (bool, error)
-	LastDahai() (*hai.Hai, error)
-	ChaActionCnt() int
+	MyTurn(cha.Cha) int
+	TurnEnd() error
+
+	// last ho
+	LastHo() (*hai.Hai, error)
+
+	// action counter
+	CancelAction() error
+	TakeAction(func(*hai.Hai) error) error
 }
 
 func New(maxNOU int) Taku {
@@ -31,7 +36,7 @@ func New(maxNOU int) Taku {
 		turnIndex:       0,
 		maxNumberOfUser: maxNOU,
 		isPlaying:       true,
-		chaActionCnt:    0,
+		actionCounter:   0,
 	}
 }
 
@@ -41,20 +46,12 @@ type takuImpl struct {
 	turnIndex       int
 	maxNumberOfUser int
 	isPlaying       bool
-	chaActionCnt    int
+	actionCounter   int
 }
 
 type takuCha struct {
 	channel chan Taku
 	cha     cha.Cha
-}
-
-func (t *takuImpl) IsYourTurn(c cha.Cha) bool {
-	return t.chas[t.turnIndex].cha == c
-}
-
-func (t *takuImpl) ChaActionCnt() int {
-	return t.chaActionCnt
 }
 
 func (t *takuImpl) JoinCha(c cha.Cha) (chan Taku, error) {
@@ -88,50 +85,6 @@ func (t *takuImpl) LeaveCha(c cha.Cha) error {
 	return nil
 }
 
-func (t *takuImpl) CurrentTurn() int {
-	return t.turnIndex
-}
-
-func (t *takuImpl) NextTurn() int {
-	return (t.turnIndex + 1) % t.maxNumberOfUser
-}
-
-func (t *takuImpl) HasChaActions() (bool, error) {
-	chaActionCnt := 0
-
-	inHai, err := t.chas[t.CurrentTurn()].cha.Ho().Last()
-	fmt.Println("inHai:", inHai)
-	if err != nil {
-		return false, err
-	}
-	for _, tc := range t.chas {
-		if tc != t.chas[t.CurrentTurn()] {
-			actions := tc.cha.CanHuro(inHai)
-			fmt.Println("actions:", actions)
-			if len(actions) != 0 {
-				chaActionCnt += 1
-			}
-		}
-	}
-	t.chaActionCnt = chaActionCnt
-	return chaActionCnt == 0, nil
-}
-
-func (t *takuImpl) LastDahai() (*hai.Hai, error) {
-	return t.chas[t.CurrentTurn()].cha.Ho().Last()
-}
-
-func (t *takuImpl) TurnChange(idx int) error {
-	t.Lock()
-	defer t.Unlock()
-	if idx < 0 || idx >= len(t.chas) {
-		return TakuIndexOutOfRangeErr
-	}
-	t.turnIndex = idx
-	go t.Broadcast()
-	return nil
-}
-
 func (t *takuImpl) Broadcast() {
 	for _, tu := range t.chas {
 		tu.channel <- t
@@ -150,10 +103,113 @@ func (t *takuImpl) gameStart() error {
 		if err := tc.cha.SetYama(y); err != nil {
 			return err
 		}
-		if err := tc.cha.Haihai(); err != nil {
+		if err := tc.cha.Haipai(); err != nil {
 			return err
 		}
 	}
 
+	return nil
+}
+
+func (t *takuImpl) CurrentTurn() int {
+	return t.turnIndex
+}
+
+func (t *takuImpl) MyTurn(c cha.Cha) int {
+	for i, tc := range t.chas {
+		if tc.cha == c {
+			return i
+		}
+	}
+	return -1
+}
+
+func (t *takuImpl) nextTurn() int {
+	return (t.turnIndex + 1) % t.maxNumberOfUser
+}
+
+func (t *takuImpl) TurnEnd() error {
+	t.Lock()
+	defer t.Unlock()
+	err := t.setActionCounter()
+	if err != nil {
+		return err
+	}
+
+	if t.actionCounter == 0 {
+		if err := t.turnChange(t.nextTurn()); err != nil {
+			return err
+		}
+	}
+	go t.Broadcast()
+	return nil
+}
+
+func (t *takuImpl) turnChange(idx int) error {
+	if idx < 0 || idx >= len(t.chas) {
+		return TakuIndexOutOfRangeErr
+	}
+	t.turnIndex = idx
+	return nil
+}
+
+func (t *takuImpl) setActionCounter() error {
+	counter := 0
+
+	inHai, err := t.chas[t.CurrentTurn()].cha.Ho().Last()
+	if err != nil {
+		return err
+	}
+	for _, tc := range t.chas {
+		if tc == t.chas[t.CurrentTurn()] {
+			continue
+		}
+		actions, err := tc.cha.FindHuroActions(inHai)
+		if err != nil {
+			return err
+		}
+		if len(actions) != 0 {
+			counter += 1
+		}
+	}
+	t.actionCounter = counter
+	return nil
+}
+
+func (t *takuImpl) LastHo() (*hai.Hai, error) {
+	return t.chas[t.CurrentTurn()].cha.Ho().Last()
+}
+
+func (t *takuImpl) CancelAction() error {
+	t.Lock()
+	defer t.Unlock()
+	if t.actionCounter == 0 {
+		return nil
+	}
+	t.actionCounter -= 1
+	if t.actionCounter == 0 {
+		if err := t.turnChange(t.nextTurn()); err != nil {
+			return err
+		}
+		go t.Broadcast()
+	}
+	return nil
+}
+
+func (t *takuImpl) TakeAction(action func(*hai.Hai) error) error {
+	t.Lock()
+	defer t.Unlock()
+	if t.actionCounter == 0 {
+		return TakuActionAlreadyTokenErr
+	}
+	t.actionCounter = 0
+	h, err := t.chas[t.CurrentTurn()].cha.Ho().RemoveLast()
+	if err != nil {
+		return err
+	}
+	if err := action(h); err != nil {
+		return err
+	}
+	go t.Broadcast()
 	return nil
 }

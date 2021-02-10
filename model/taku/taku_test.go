@@ -1,7 +1,11 @@
 package taku
 
 import (
+	"errors"
 	"mahjong/model/cha"
+	"mahjong/model/hai"
+	"mahjong/model/ho"
+	"mahjong/model/huro"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -147,41 +151,182 @@ func TestLeaveCha(t *testing.T) {
 	}
 }
 
-func TestTurnChange(t *testing.T) {
+func TestMyTurn(t *testing.T) {
+	testCha1 := &cha.ChaMock{}
+	testCha2 := &cha.ChaMock{}
 	cases := []struct {
-		beforeChas      []*takuCha
-		beforeTurnIndex int
-		inIndex         int
-		afterTurnIndex  int
-		outError        error
+		name       string
+		beforeChas []*takuCha
+		inCha      cha.Cha
+		outInt     int
 	}{
 		{
-			beforeChas:      []*takuCha{{}, {}},
-			beforeTurnIndex: 0,
-			inIndex:         1,
-			afterTurnIndex:  1,
-			outError:        nil,
+			name:       "success",
+			beforeChas: []*takuCha{&takuCha{cha: testCha1}, &takuCha{cha: testCha2}},
+			inCha:      testCha1,
+			outInt:     0,
 		},
 		{
-			beforeChas:      []*takuCha{{}, {}},
-			beforeTurnIndex: 0,
-			inIndex:         2,
-			outError:        TakuIndexOutOfRangeErr,
+			name:       "failure",
+			beforeChas: []*takuCha{&takuCha{cha: testCha1}, &takuCha{cha: testCha1}},
+			inCha:      testCha2,
+			outInt:     -1,
 		},
 	}
 
 	for _, c := range cases {
-		taku := takuImpl{
-			chas:      c.beforeChas,
-			turnIndex: c.beforeTurnIndex,
-		}
-		err := taku.TurnChange(c.inIndex)
+		t.Run(c.name, func(t *testing.T) {
+			taku := takuImpl{
+				chas: c.beforeChas,
+			}
+			turnInt := taku.MyTurn(c.inCha)
+			assert.Equal(t, c.outInt, turnInt)
+		})
+	}
+}
 
-		if err != nil {
-			assert.Equal(t, c.outError, err)
-			continue
-		}
-		assert.Equal(t, c.afterTurnIndex, taku.turnIndex)
+func TestTurnEnd(t *testing.T) {
+	testCha1 := &cha.ChaMock{HoMock: &ho.HoMock{HaiMock: hai.Haku}}
+	testCha2 := &cha.ChaMock{HuroActionsMock: []huro.HuroAction{}}
+	testCha3 := &cha.ChaMock{HuroActionsMock: []huro.HuroAction{huro.Kan}}
+	cases := []struct {
+		name               string
+		beforeChas         []*takuCha
+		beforeTurnIndex    int
+		afterActionCounter int
+		outError           error
+	}{
+		{
+			name:               "success: no actions",
+			beforeChas:         []*takuCha{&takuCha{cha: testCha1}, &takuCha{cha: testCha2}},
+			beforeTurnIndex:    0,
+			afterActionCounter: 0,
+		},
+		{
+			name:               "success: actions",
+			beforeChas:         []*takuCha{&takuCha{cha: testCha1}, &takuCha{cha: testCha3}},
+			beforeTurnIndex:    0,
+			afterActionCounter: 1,
+		},
 	}
 
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			taku := takuImpl{
+				chas:            c.beforeChas,
+				turnIndex:       c.beforeTurnIndex,
+				maxNumberOfUser: MaxNumberOfUsers,
+			}
+			err := taku.TurnEnd()
+			if err != nil {
+				assert.Equal(t, c.outError, err)
+				return
+			}
+			assert.Equal(t, c.afterActionCounter, taku.actionCounter)
+		})
+	}
+}
+
+func TestLastHo(t *testing.T) {
+	testCha1 := &cha.ChaMock{HoMock: &ho.HoMock{HaiMock: hai.Haku}}
+	testCha2 := &cha.ChaMock{HoMock: &ho.HoMock{ErrorMock: errors.New("")}}
+	cases := []struct {
+		name            string
+		beforeChas      []*takuCha
+		beforeTurnIndex int
+		outHai          *hai.Hai
+		outError        error
+	}{
+		{
+			name:            "success",
+			beforeChas:      []*takuCha{&takuCha{cha: testCha1}},
+			beforeTurnIndex: 0,
+			outHai:          hai.Haku,
+		},
+		{
+			name:            "failure",
+			beforeChas:      []*takuCha{&takuCha{cha: testCha2}},
+			beforeTurnIndex: 0,
+			outError:        errors.New(""),
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			taku := takuImpl{
+				chas:      c.beforeChas,
+				turnIndex: c.beforeTurnIndex,
+			}
+			hai, err := taku.LastHo()
+			if err != nil {
+				assert.Equal(t, c.outError, err)
+				return
+			}
+			assert.Equal(t, c.outHai, hai)
+		})
+	}
+}
+
+func TestCancelAction(t *testing.T) {
+	cases := []struct {
+		name                string
+		beforeActionCounter int
+		outError            error
+		afterActionCounter  int
+	}{
+		{
+			name:                "success",
+			beforeActionCounter: 2,
+			afterActionCounter:  1,
+		},
+		{
+			name:                "failure",
+			beforeActionCounter: 0,
+			outError:            TakuActionAlreadyTokenErr,
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			taku := takuImpl{actionCounter: c.beforeActionCounter}
+			err := taku.CancelAction()
+			if err != nil {
+				assert.Equal(t, c.outError, err)
+				return
+			}
+			assert.Equal(t, c.afterActionCounter, taku.actionCounter)
+		})
+	}
+}
+
+func TestTakeAction(t *testing.T) {
+	cases := []struct {
+		name                string
+		beforeActionCounter int
+		outError            error
+		afterActionCounter  int
+	}{
+		{
+			name:                "success",
+			beforeActionCounter: 2,
+			afterActionCounter:  1,
+		},
+		{
+			name:                "failure",
+			beforeActionCounter: 0,
+			outError:            TakuActionAlreadyTokenErr,
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			taku := takuImpl{actionCounter: c.beforeActionCounter}
+			err := taku.CancelAction()
+			if err != nil {
+				assert.Equal(t, c.outError, err)
+				return
+			}
+			assert.Equal(t, c.afterActionCounter, taku.actionCounter)
+		})
+	}
 }

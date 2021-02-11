@@ -13,6 +13,7 @@ var _ Cha = &ChaMock{}
 type ChaMock struct {
 	ErrorMock       error
 	TehaiMock       tehai.Tehai
+	HuroMock        huro.Huro
 	HaiMock         *hai.Hai
 	HaisMock        []*hai.Hai
 	HuroActionsMock []huro.HuroAction
@@ -26,6 +27,10 @@ func (c *ChaMock) Tehai() tehai.Tehai {
 
 func (c *ChaMock) Ho() ho.Ho {
 	return c.HoMock
+}
+
+func (c *ChaMock) Huro() huro.Huro {
+	return c.HuroMock
 }
 
 func (c *ChaMock) Tsumohai() *hai.Hai {

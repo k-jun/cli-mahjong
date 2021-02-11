@@ -18,6 +18,7 @@ type Cha interface {
 	Tehai() tehai.Tehai
 	Ho() ho.Ho
 	Tsumohai() *hai.Hai
+	Huro() huro.Huro
 	// setter
 	SetYama(yama.Yama) error
 	// judger
@@ -59,6 +60,10 @@ func (c *chaImpl) Tehai() tehai.Tehai {
 
 func (c *chaImpl) Ho() ho.Ho {
 	return c.ho
+}
+
+func (c *chaImpl) Huro() huro.Huro {
+	return c.huro
 }
 
 func (c *chaImpl) Tsumohai() *hai.Hai {

@@ -4,6 +4,7 @@ import "mahjong/model/hai"
 
 type Ho interface {
 	Add(inHai *hai.Hai) error
+	Hais() []*hai.Hai
 	Last() (*hai.Hai, error)
 	RemoveLast() (*hai.Hai, error)
 }
@@ -16,6 +17,10 @@ func New() Ho {
 
 	return &hoImpl{}
 
+}
+
+func (h *hoImpl) Hais() []*hai.Hai {
+	return h.hais
 }
 
 func (h *hoImpl) Add(inHai *hai.Hai) error {

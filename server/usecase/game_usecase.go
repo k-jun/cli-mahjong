@@ -2,7 +2,7 @@ package usecase
 
 import (
 	"bytes"
-	"fmt"
+	"log"
 	"mahjong/model/cha"
 	"mahjong/model/hai"
 	"mahjong/model/taku"
@@ -45,27 +45,30 @@ func (gu *gameUsecaseImpl) InputController(id string, c cha.Cha) error {
 			break
 		}
 		if string(buffer) != "" {
-			if taku.IsYourTurn(c) {
+			turnIdx, err := taku.MyTurn(c)
+			if err != nil {
+				log.Println(err)
+				taku.LeaveCha(c)
+				break
+			}
+			if taku.CurrentTurn() == turnIdx {
 				buffer = bytes.Trim(buffer, "\x00")
 				buffer = bytes.Trim(buffer, "\x10")
 				haiName := strings.TrimSpace(string(buffer))
-				outHai := hai.AtoHai(haiName)
-				if outHai == nil {
-					fmt.Println("unknown hai: ", haiName)
+				outHai, err := hai.AtoHai(haiName)
+				if err != nil {
+					log.Println(err)
 					continue
 				}
-				fmt.Println("outhai:", outHai.Name())
-				c.Dahai(outHai)
-				ok, err := taku.HasChaActions()
-				fmt.Println("ok:", ok)
+				err = c.Dahai(outHai)
 				if err != nil {
-					taku.LeaveCha(c)
-					break
+					log.Println(err)
+					continue
 				}
-				if ok {
-					taku.TurnChange(taku.NextTurn())
-				} else {
-					taku.Broadcast()
+				err = taku.TurnEnd()
+				if err != nil {
+					log.Println(err)
+					continue
 				}
 			}
 		}
@@ -85,32 +88,56 @@ func (gu *gameUsecaseImpl) OutputController(id string, c cha.Cha, channel chan t
 			break
 		}
 
-		if taku.IsYourTurn(c) && c.TumoHai() == nil && taku.ChaActionCnt() == 0 {
-			err := c.Tumo()
+		// tsumo
+		turnIdx, err := taku.MyTurn(c)
+		if err != nil {
+			log.Println(err)
+			return err
+		}
+		if taku.CurrentTurn() == turnIdx && taku.ActionCounter() == 0 {
+			err := c.Tsumo()
 			if err != nil {
 				// game end
-				gu.write("thank you for playing!" + "\n")
+				gu.write("game end" + "\n")
 				taku.LeaveCha(c)
 			}
 		}
 
-		// TODO shell art
-		tehaistr := ""
-		for _, h := range c.Tehai().Hais() {
-			tehaistr += " " + h.Name()
-		}
+		tehaistr := taku.Draw(c)
 
-		if c.TumoHai() != nil {
-			tehaistr += " | " + c.TumoHai().Name()
-		}
+		// huros
+		if taku.ActionCounter() != 0 && taku.CurrentTurn() != turnIdx {
+			hai, err := taku.LastHo()
+			if err != nil {
+				return err
+			}
+			actions, err := c.FindHuroActions(hai)
+			if err != nil {
+				return err
+			}
+			for _, a := range actions {
+				tehaistr += "\n" + "do you want " + string(a)
+			}
 
-		// TODO add actions rechi, or tsumo
-		if len(c.CanRichi()) != 0 {
+		}
+		// riichi
+		hais, err := c.FindRiichiHai()
+		if err != nil {
+			return err
+		}
+		if len(hais) != 0 {
 			tehaistr += "\n" + "do you do richi?: "
 		}
-		if c.CanTumo() {
+		// tsumo agari
+		ok, err := c.CanTsumoAgari()
+		if err != nil {
+			return err
+		}
+		if ok {
 			tehaistr += "\n" + "do you do tumo?: "
 		}
+		tehaistr += `
+		`
 		gu.write(tehaistr + "\n")
 	}
 

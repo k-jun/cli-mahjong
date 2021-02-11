@@ -9,6 +9,11 @@ var _ Ho = &HoMock{}
 type HoMock struct {
 	ErrorMock error
 	HaiMock   *hai.Hai
+	HaisMock  []*hai.Hai
+}
+
+func (h *HoMock) Hais() []*hai.Hai {
+	return h.HaisMock
 }
 
 func (h *HoMock) Add(inHai *hai.Hai) error {

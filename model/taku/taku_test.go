@@ -31,7 +31,7 @@ func TestJoinCha(t *testing.T) {
 			outError:               nil,
 		},
 		{
-			beforeChas:             []*takuCha{{cha: &cha.ChaMock{}, channel: make(chan Taku)}, {cha: &cha.ChaMock{}, channel: make(chan Taku)}},
+			beforeChas:             []*takuCha{{Cha: &cha.ChaMock{}, channel: make(chan Taku)}, {Cha: &cha.ChaMock{}, channel: make(chan Taku)}},
 			beforeMaxNumberOfUsers: 3,
 			beforeIsPlaying:        true,
 			inCha:                  &cha.ChaMock{},
@@ -40,7 +40,7 @@ func TestJoinCha(t *testing.T) {
 			outError:               nil,
 		},
 		{
-			beforeChas:             []*takuCha{{cha: &cha.ChaMock{}, channel: make(chan Taku)}, {cha: &cha.ChaMock{}, channel: make(chan Taku)}},
+			beforeChas:             []*takuCha{{Cha: &cha.ChaMock{}, channel: make(chan Taku)}, {Cha: &cha.ChaMock{}, channel: make(chan Taku)}},
 			beforeMaxNumberOfUsers: 2,
 			beforeIsPlaying:        true,
 			inCha:                  &cha.ChaMock{},
@@ -86,7 +86,7 @@ func TestLeaveCha(t *testing.T) {
 		outError               error
 	}{
 		{
-			beforeChas:             []*takuCha{{cha: testCha, channel: make(chan Taku)}},
+			beforeChas:             []*takuCha{{Cha: testCha, channel: make(chan Taku)}},
 			beforeMaxNumberOfUsers: 3,
 			beforeIsPlaying:        true,
 			inCha:                  testCha,
@@ -95,7 +95,7 @@ func TestLeaveCha(t *testing.T) {
 			outError:               nil,
 		},
 		{
-			beforeChas:             []*takuCha{{cha: testCha, channel: make(chan Taku)}, {cha: &cha.ChaMock{}, channel: make(chan Taku)}},
+			beforeChas:             []*takuCha{{Cha: testCha, channel: make(chan Taku)}, {Cha: &cha.ChaMock{}, channel: make(chan Taku)}},
 			beforeMaxNumberOfUsers: 2,
 			beforeIsPlaying:        true,
 			inCha:                  testCha,
@@ -104,7 +104,7 @@ func TestLeaveCha(t *testing.T) {
 			outError:               nil,
 		},
 		{
-			beforeChas:             []*takuCha{{cha: testCha, channel: make(chan Taku)}, {cha: &cha.ChaMock{}, channel: make(chan Taku)}},
+			beforeChas:             []*takuCha{{Cha: testCha, channel: make(chan Taku)}, {Cha: &cha.ChaMock{}, channel: make(chan Taku)}},
 			beforeMaxNumberOfUsers: 3,
 			beforeIsPlaying:        true,
 			inCha:                  testCha,
@@ -113,7 +113,7 @@ func TestLeaveCha(t *testing.T) {
 			outError:               nil,
 		},
 		{
-			beforeChas:             []*takuCha{{cha: &cha.ChaMock{}, channel: make(chan Taku)}, {cha: &cha.ChaMock{}, channel: make(chan Taku)}},
+			beforeChas:             []*takuCha{{Cha: &cha.ChaMock{}, channel: make(chan Taku)}, {Cha: &cha.ChaMock{}, channel: make(chan Taku)}},
 			beforeMaxNumberOfUsers: 2,
 			beforeIsPlaying:        true,
 			inCha:                  testCha,
@@ -162,13 +162,13 @@ func TestMyTurn(t *testing.T) {
 	}{
 		{
 			name:       "success",
-			beforeChas: []*takuCha{&takuCha{cha: testCha1}, &takuCha{cha: testCha2}},
+			beforeChas: []*takuCha{&takuCha{Cha: testCha1}, &takuCha{Cha: testCha2}},
 			inCha:      testCha1,
 			outInt:     0,
 		},
 		{
 			name:       "failure",
-			beforeChas: []*takuCha{&takuCha{cha: testCha1}, &takuCha{cha: testCha1}},
+			beforeChas: []*takuCha{&takuCha{Cha: testCha1}, &takuCha{Cha: testCha1}},
 			inCha:      testCha2,
 			outInt:     -1,
 		},
@@ -198,13 +198,13 @@ func TestTurnEnd(t *testing.T) {
 	}{
 		{
 			name:               "success: no actions",
-			beforeChas:         []*takuCha{&takuCha{cha: testCha1}, &takuCha{cha: testCha2}},
+			beforeChas:         []*takuCha{&takuCha{Cha: testCha1}, &takuCha{Cha: testCha2}},
 			beforeTurnIndex:    0,
 			afterActionCounter: 0,
 		},
 		{
 			name:               "success: actions",
-			beforeChas:         []*takuCha{&takuCha{cha: testCha1}, &takuCha{cha: testCha3}},
+			beforeChas:         []*takuCha{&takuCha{Cha: testCha1}, &takuCha{Cha: testCha3}},
 			beforeTurnIndex:    0,
 			afterActionCounter: 1,
 		},
@@ -239,13 +239,13 @@ func TestLastHo(t *testing.T) {
 	}{
 		{
 			name:            "success",
-			beforeChas:      []*takuCha{&takuCha{cha: testCha1}},
+			beforeChas:      []*takuCha{&takuCha{Cha: testCha1}},
 			beforeTurnIndex: 0,
 			outHai:          hai.Haku,
 		},
 		{
 			name:            "failure",
-			beforeChas:      []*takuCha{&takuCha{cha: testCha2}},
+			beforeChas:      []*takuCha{&takuCha{Cha: testCha2}},
 			beforeTurnIndex: 0,
 			outError:        errors.New(""),
 		},

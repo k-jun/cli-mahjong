@@ -102,7 +102,7 @@ func TestKakan(t *testing.T) {
 		},
 		{
 			beforePons: [][3]*hai.Hai{{hai.Haku, hai.Haku, hai.Haku}},
-			inHai:      hai.Hatu,
+			inHai:      hai.Hatsu,
 			outError:   HuroNotFoundErr,
 		},
 	}

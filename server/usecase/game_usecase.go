@@ -45,6 +45,9 @@ func (gu *gameUsecaseImpl) InputController(id string, c cha.Cha) error {
 			break
 		}
 		if string(buffer) != "" {
+			buffer = bytes.Trim(buffer, "\x00")
+			buffer = bytes.Trim(buffer, "\x10")
+			haiName := strings.TrimSpace(string(buffer))
 			turnIdx, err := taku.MyTurn(c)
 			if err != nil {
 				log.Println(err)
@@ -52,9 +55,6 @@ func (gu *gameUsecaseImpl) InputController(id string, c cha.Cha) error {
 				break
 			}
 			if taku.CurrentTurn() == turnIdx {
-				buffer = bytes.Trim(buffer, "\x00")
-				buffer = bytes.Trim(buffer, "\x10")
-				haiName := strings.TrimSpace(string(buffer))
 				outHai, err := hai.AtoHai(haiName)
 				if err != nil {
 					log.Println(err)
@@ -69,6 +69,37 @@ func (gu *gameUsecaseImpl) InputController(id string, c cha.Cha) error {
 				if err != nil {
 					log.Println(err)
 					continue
+				}
+			} else {
+				if haiName == "chii" {
+					taku.TakeAction(func(inHai *hai.Hai) error {
+						pairs, err := c.Tehai().FindChiiPairs(inHai)
+						if err != nil {
+							return err
+						}
+						return c.Chii(inHai, pairs[0])
+					})
+				}
+				if haiName == "pon" {
+					taku.TakeAction(func(inHai *hai.Hai) error {
+						pairs, err := c.Tehai().FindPonPairs(inHai)
+						if err != nil {
+							return err
+						}
+						return c.Pon(inHai, pairs[0])
+					})
+				}
+				if haiName == "kan" {
+					taku.TakeAction(func(inHai *hai.Hai) error {
+						pairs, err := c.Tehai().FindKanPairs(inHai)
+						if err != nil {
+							return err
+						}
+						return c.Kan(inHai, pairs[0])
+					})
+				}
+				if haiName == "no" {
+					taku.CancelAction(c)
 				}
 			}
 		}

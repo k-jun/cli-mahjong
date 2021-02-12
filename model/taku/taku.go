@@ -28,7 +28,7 @@ type Taku interface {
 
 	// action counter
 	ActionCounter() int
-	CancelAction() error
+	CancelAction(c cha.Cha) error
 	TakeAction(func(*hai.Hai) error) error
 
 	// draw
@@ -41,7 +41,7 @@ func New(maxNOU int) Taku {
 		turnIndex:       0,
 		maxNumberOfUser: maxNOU,
 		isPlaying:       true,
-		actionCounter:   0,
+		actionChas:      []*takuCha{},
 	}
 }
 
@@ -51,7 +51,7 @@ type takuImpl struct {
 	turnIndex       int
 	maxNumberOfUser int
 	isPlaying       bool
-	actionCounter   int
+	actionChas      []*takuCha
 }
 
 type takuCha struct {
@@ -141,7 +141,7 @@ func (t *takuImpl) TurnEnd() error {
 		return err
 	}
 
-	if t.actionCounter == 0 {
+	if len(t.actionChas) == 0 {
 		if err := t.turnChange(t.nextTurn()); err != nil {
 			return err
 		}
@@ -159,7 +159,7 @@ func (t *takuImpl) turnChange(idx int) error {
 }
 
 func (t *takuImpl) setActionCounter() error {
-	counter := 0
+	chas := []*takuCha{}
 
 	inHai, err := t.chas[t.CurrentTurn()].Ho().Last()
 	if err != nil {
@@ -174,10 +174,10 @@ func (t *takuImpl) setActionCounter() error {
 			return err
 		}
 		if len(actions) != 0 {
-			counter += 1
+			chas = append(chas, tc)
 		}
 	}
-	t.actionCounter = counter
+	t.actionChas = chas
 	return nil
 }
 
@@ -186,17 +186,28 @@ func (t *takuImpl) LastHo() (*hai.Hai, error) {
 }
 
 func (t *takuImpl) ActionCounter() int {
-	return t.actionCounter
+	return len(t.actionChas)
 }
 
-func (t *takuImpl) CancelAction() error {
+func (t *takuImpl) CancelAction(c cha.Cha) error {
 	t.Lock()
 	defer t.Unlock()
-	if t.actionCounter == 0 {
+	if len(t.actionChas) == 0 {
 		return nil
 	}
-	t.actionCounter -= 1
-	if t.actionCounter == 0 {
+
+	found := false
+	for i, tc := range t.actionChas {
+		if tc.Cha == c {
+			found = true
+			t.actionChas = append(t.actionChas[:i], t.actionChas[i+1:]...)
+		}
+	}
+	if !found {
+		return TakuChaNotFoundErr
+	}
+
+	if len(t.actionChas) == 0 {
 		if err := t.turnChange(t.nextTurn()); err != nil {
 			return err
 		}
@@ -208,10 +219,10 @@ func (t *takuImpl) CancelAction() error {
 func (t *takuImpl) TakeAction(action func(*hai.Hai) error) error {
 	t.Lock()
 	defer t.Unlock()
-	if t.actionCounter == 0 {
+	if len(t.actionChas) == 0 {
 		return TakuActionAlreadyTokenErr
 	}
-	t.actionCounter = 0
+	t.actionChas = []*takuCha{}
 	h, err := t.chas[t.CurrentTurn()].Ho().RemoveLast()
 	if err != nil {
 		return err
@@ -219,6 +230,8 @@ func (t *takuImpl) TakeAction(action func(*hai.Hai) error) error {
 	if err := action(h); err != nil {
 		return err
 	}
+	// TODO
+	t.CurrentTurn()
 	go t.Broadcast()
 	return nil
 }

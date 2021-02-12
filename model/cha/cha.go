@@ -249,7 +249,6 @@ func (c *chaImpl) CanTsumoAgari() (bool, error) {
 
 func (c *chaImpl) FindHuroActions(inHai *hai.Hai) ([]huro.HuroAction, error) {
 	actions := []huro.HuroAction{}
-
 	// chii
 	pairs, err := c.tehai.FindChiiPairs(inHai)
 	if err != nil {
@@ -380,10 +379,6 @@ func hasMati(hais [2]*hai.Hai) bool {
 }
 
 func removeHais(hais []*hai.Hai, outHais []*hai.Hai) []*hai.Hai {
-	for _, h := range hais {
-		log.Println("h", h)
-	}
-	log.Println("outHais", outHais)
 	for _, hai := range outHais {
 		hais = removeHai(hais, hai)
 	}
@@ -397,11 +392,9 @@ func removeHai(hais []*hai.Hai, hai *hai.Hai) []*hai.Hai {
 			return hais
 		}
 	}
-	log.Print("hais:")
 	for _, h := range hais {
 		log.Print(h.Name())
 	}
-	log.Println("")
 	log.Println("hai:", hai)
 	panic(ChaHaiNotFoundErr)
 }

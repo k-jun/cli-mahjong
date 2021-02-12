@@ -169,15 +169,33 @@ func (t *takuImpl) setActionCounter() error {
 	if err != nil {
 		return err
 	}
-	for _, tc := range t.chas {
+	for i, tc := range t.chas {
 		if tc == t.chas[t.CurrentTurn()] {
 			continue
 		}
-		actions, err := tc.FindHuroActions(inHai)
+		actionCounter := 0
+		if i == t.nextTurn() {
+			pairs, err := tc.Cha.Tehai().FindChiiPairs(inHai)
+			if err != nil {
+				return err
+			}
+			actionCounter += len(pairs)
+		}
+		pairs, err := tc.Cha.Tehai().FindPonPairs(inHai)
 		if err != nil {
 			return err
 		}
-		if len(actions) != 0 {
+		actionCounter += len(pairs)
+		kpairs, err := tc.Cha.Tehai().FindKanPairs(inHai)
+		if err != nil {
+			return err
+		}
+		actionCounter += len(kpairs)
+
+		if err != nil {
+			return err
+		}
+		if actionCounter != 0 {
 			chas = append(chas, tc)
 		}
 	}

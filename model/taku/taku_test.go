@@ -5,7 +5,7 @@ import (
 	"mahjong/model/cha"
 	"mahjong/model/hai"
 	"mahjong/model/ho"
-	"mahjong/model/huro"
+	"mahjong/model/tehai"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -192,8 +192,10 @@ func TestMyTurn(t *testing.T) {
 
 func TestTurnEnd(t *testing.T) {
 	testCha1 := &cha.ChaMock{HoMock: &ho.HoMock{HaiMock: hai.Haku}}
-	testCha2 := &cha.ChaMock{HuroActionsMock: []huro.HuroAction{}}
-	testCha3 := &cha.ChaMock{HuroActionsMock: []huro.HuroAction{huro.Kan}}
+	TehaiMock1 := &tehai.TehaiMock{ChiiMock: [][2]*hai.Hai{}}
+	TehaiMock2 := &tehai.TehaiMock{ChiiMock: [][2]*hai.Hai{{}}}
+	testCha2 := &cha.ChaMock{TehaiMock: TehaiMock1}
+	testCha3 := &cha.ChaMock{TehaiMock: TehaiMock2}
 	cases := []struct {
 		name            string
 		beforeChas      []*takuCha
@@ -284,8 +286,8 @@ func TestCancelAction(t *testing.T) {
 		{
 			name:             "success: before action taken",
 			inCha:            testCha1,
-			beforeActionChas: []*takuCha{{Cha: testCha1}},
-			afterActionCha:   []*takuCha{},
+			beforeActionChas: []*takuCha{{Cha: testCha1}, {}},
+			afterActionCha:   []*takuCha{{}},
 		},
 		{
 			name:             "success: after action taken",

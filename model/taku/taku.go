@@ -29,7 +29,7 @@ type Taku interface {
 	// action counter
 	ActionCounter() int
 	CancelAction(c cha.Cha) error
-	TakeAction(func(*hai.Hai) error) error
+	TakeAction(cha.Cha, func(*hai.Hai) error) error
 
 	// draw
 	Draw(cha.Cha) string
@@ -113,7 +113,8 @@ func (t *takuImpl) gameStart() error {
 		}
 	}
 
-	return nil
+	// tsumo
+	return t.chas[t.CurrentTurn()].Cha.Tsumo()
 }
 
 func (t *takuImpl) CurrentTurn() int {
@@ -143,6 +144,9 @@ func (t *takuImpl) TurnEnd() error {
 
 	if len(t.actionChas) == 0 {
 		if err := t.turnChange(t.nextTurn()); err != nil {
+			return err
+		}
+		if err := t.chas[t.CurrentTurn()].Cha.Tsumo(); err != nil {
 			return err
 		}
 	}
@@ -211,27 +215,45 @@ func (t *takuImpl) CancelAction(c cha.Cha) error {
 		if err := t.turnChange(t.nextTurn()); err != nil {
 			return err
 		}
+		if err := t.chas[t.CurrentTurn()].Cha.Tsumo(); err != nil {
+			return err
+		}
 		go t.Broadcast()
 	}
 	return nil
 }
 
-func (t *takuImpl) TakeAction(action func(*hai.Hai) error) error {
+func (t *takuImpl) TakeAction(c cha.Cha, action func(*hai.Hai) error) error {
 	t.Lock()
 	defer t.Unlock()
 	if len(t.actionChas) == 0 {
 		return TakuActionAlreadyTokenErr
 	}
+
+	found := false
+	for _, tc := range t.actionChas {
+		if tc.Cha == c {
+			found = true
+		}
+	}
+	if !found {
+		return TakuChaNotFoundErr
+	}
+
 	t.actionChas = []*takuCha{}
 	h, err := t.chas[t.CurrentTurn()].Ho().RemoveLast()
 	if err != nil {
 		return err
 	}
+
 	if err := action(h); err != nil {
 		return err
 	}
-	// TODO
-	t.CurrentTurn()
+
+	turnIdx, _ := t.MyTurn(c)
+	if err := t.turnChange(turnIdx); err != nil {
+		return err
+	}
 	go t.Broadcast()
 	return nil
 }

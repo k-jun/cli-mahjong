@@ -87,7 +87,12 @@ func (c *chaImpl) Tsumo() error {
 func (c *chaImpl) Dahai(outHai *hai.Hai) error {
 	var err error
 	if outHai != c.tsumohai {
-		outHai, err = c.tehai.Replace(c.tsumohai, outHai)
+		if c.tsumohai == nil {
+			outHai, err = c.tehai.Remove(outHai)
+		} else {
+			outHai, err = c.tehai.Replace(c.tsumohai, outHai)
+		}
+
 		if err != nil {
 			return err
 		}
@@ -370,12 +375,15 @@ func hasMati(hais [2]*hai.Hai) bool {
 	}
 	if num2 > num1 {
 		return num2-num1 <= 2
-	} else {
-		return num1-num2 <= 2
 	}
+	return num1-num2 <= 2
 }
 
 func removeHais(hais []*hai.Hai, outHais []*hai.Hai) []*hai.Hai {
+	for _, h := range hais {
+		log.Println("h", h)
+	}
+	log.Println("outHais", outHais)
 	for _, hai := range outHais {
 		hais = removeHai(hais, hai)
 	}

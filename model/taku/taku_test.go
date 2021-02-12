@@ -317,6 +317,7 @@ func TestTakeAction(t *testing.T) {
 		name             string
 		beforeActionChas []*takuCha
 		beforeChas       []*takuCha
+		inCha            cha.Cha
 		inFunc           func(*hai.Hai) error
 		outError         error
 		afterActionCha   []*takuCha
@@ -325,6 +326,7 @@ func TestTakeAction(t *testing.T) {
 			name:             "success",
 			beforeActionChas: []*takuCha{{Cha: testCha1}},
 			beforeChas:       []*takuCha{{Cha: testCha1}},
+			inCha:            testCha1,
 			inFunc:           func(_ *hai.Hai) error { return nil },
 
 			afterActionCha: []*takuCha{},
@@ -344,7 +346,7 @@ func TestTakeAction(t *testing.T) {
 				actionChas: c.beforeActionChas,
 				chas:       c.beforeChas,
 			}
-			err := taku.TakeAction(c.inFunc)
+			err := taku.TakeAction(c.inCha, c.inFunc)
 			if err != nil {
 				assert.Equal(t, c.outError, err)
 				return

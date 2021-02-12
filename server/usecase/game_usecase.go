@@ -72,7 +72,7 @@ func (gu *gameUsecaseImpl) InputController(id string, c cha.Cha) error {
 				}
 			} else {
 				if haiName == "chii" {
-					taku.TakeAction(func(inHai *hai.Hai) error {
+					taku.TakeAction(c, func(inHai *hai.Hai) error {
 						pairs, err := c.Tehai().FindChiiPairs(inHai)
 						if err != nil {
 							return err
@@ -81,7 +81,7 @@ func (gu *gameUsecaseImpl) InputController(id string, c cha.Cha) error {
 					})
 				}
 				if haiName == "pon" {
-					taku.TakeAction(func(inHai *hai.Hai) error {
+					taku.TakeAction(c, func(inHai *hai.Hai) error {
 						pairs, err := c.Tehai().FindPonPairs(inHai)
 						if err != nil {
 							return err
@@ -90,7 +90,7 @@ func (gu *gameUsecaseImpl) InputController(id string, c cha.Cha) error {
 					})
 				}
 				if haiName == "kan" {
-					taku.TakeAction(func(inHai *hai.Hai) error {
+					taku.TakeAction(c, func(inHai *hai.Hai) error {
 						pairs, err := c.Tehai().FindKanPairs(inHai)
 						if err != nil {
 							return err
@@ -119,19 +119,10 @@ func (gu *gameUsecaseImpl) OutputController(id string, c cha.Cha, channel chan t
 			break
 		}
 
-		// tsumo
 		turnIdx, err := taku.MyTurn(c)
 		if err != nil {
 			log.Println(err)
 			return err
-		}
-		if taku.CurrentTurn() == turnIdx && taku.ActionCounter() == 0 {
-			err := c.Tsumo()
-			if err != nil {
-				// game end
-				gu.write("game end" + "\n")
-				taku.LeaveCha(c)
-			}
 		}
 
 		tehaistr := taku.Draw(c)

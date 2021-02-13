@@ -22,6 +22,7 @@ type Cha interface {
 	SetYama(yama.Yama) error
 	// judger
 	CanTsumoAgari() (bool, error)
+	CanRon(*hai.Hai) (bool, error)
 	FindRiichiHai() ([]*hai.Hai, error)
 	FindHuroActions(*hai.Hai) ([]huro.HuroAction, error)
 
@@ -191,7 +192,7 @@ func (c *chaImpl) FindRiichiHai() ([]*hai.Hai, error) {
 	for _, eh := range hais {
 		hs := append([]*hai.Hai{}, hais...)
 		hs = removeHai(hs, eh)
-		riichi, err := isRiichi(hs)
+		riichi, err := isTempan(hs)
 		if err != nil {
 			return outHais, err
 		}
@@ -219,31 +220,41 @@ func (c *chaImpl) CanTsumoAgari() (bool, error) {
 		// deep copy
 		hais := append([]*hai.Hai{}, hais...)
 		hais = removeHais(hais, []*hai.Hai{k, k})
-		for {
-			kotsu, err := findKotsu(hais)
-			if err != nil {
-				return false, err
-			}
-			if len(kotsu) != 0 {
-				hais = removeHais(hais, kotsu)
-			}
-			shuntsu, err := findShuntsu(hais)
-			if err != nil {
-				return false, err
-			}
-			if len(shuntsu) != 0 {
-				hais = removeHais(hais, shuntsu)
-			}
-
-			if len(shuntsu) == 0 && len(kotsu) == 0 {
-				break
-			}
+		hais, err := removeMentsus(hais)
+		if err != nil {
+			return false, err
 		}
 		if len(hais) == 0 {
 			return true, nil
 		}
 	}
 	return false, nil
+}
+
+func (c *chaImpl) CanRon(inHai *hai.Hai) (bool, error) {
+	hais := c.tehai.Hais()
+	hais = append(hais, inHai)
+	cnt := map[*hai.Hai]int{}
+	for _, h := range hais {
+		cnt[h] += 1
+	}
+	for k, v := range cnt {
+		if v < 2 {
+			continue
+		}
+		// deep copy
+		hais := append([]*hai.Hai{}, hais...)
+		hais = removeHais(hais, []*hai.Hai{k, k})
+		hais, err := removeMentsus(hais)
+		if err != nil {
+			return false, err
+		}
+		if len(hais) == 0 {
+			return true, nil
+		}
+	}
+	return false, nil
+
 }
 
 func (c *chaImpl) FindHuroActions(inHai *hai.Hai) ([]huro.HuroAction, error) {
@@ -274,6 +285,15 @@ func (c *chaImpl) FindHuroActions(inHai *hai.Hai) ([]huro.HuroAction, error) {
 	if len(kanpairs) != 0 {
 		actions = append(actions, huro.Kan)
 	}
+
+	// ron
+	isRon, err := c.CanRon(inHai)
+	if err != nil {
+		return actions, err
+	}
+	if isRon {
+		actions = append(actions, huro.Ron)
+	}
 	return actions, nil
 }
 
@@ -287,67 +307,36 @@ func haiContain(a []*hai.Hai, h *hai.Hai) bool {
 
 }
 
-func isRiichi(hais []*hai.Hai) (bool, error) {
+func isTempan(hais []*hai.Hai) (bool, error) {
 	cnt := map[*hai.Hai]int{}
 	for _, h := range hais {
 		cnt[h] += 1
 	}
 
+	haisc := append([]*hai.Hai{}, hais...)
+	haisc, err := removeMentsus(haisc)
+	if err != nil {
+		return false, err
+	}
+	if len(haisc) == 1 {
+		return true, nil
+	}
+
 	for k, v := range cnt {
 		hais := append([]*hai.Hai{}, hais...)
 		if v < 2 {
-			// 単騎
-			for {
-				kotsu, err := findKotsu(hais)
-				if err != nil {
-					return false, err
-				}
-				shuntsu, err := findShuntsu(hais)
-				if err != nil {
-					return false, err
-
-				}
-				if len(kotsu) != 0 {
-					hais = removeHais(hais, kotsu)
-				}
-				if len(shuntsu) != 0 {
-					hais = removeHais(hais, shuntsu)
-				}
-
-				if len(shuntsu) == 0 && len(kotsu) == 0 {
-					break
-				}
-			}
-			if len(hais) == 1 {
-				return true, nil
-			}
-		} else {
-			// 両面, 嵌張, 双碰, 辺張
-			hais = removeHais(hais, []*hai.Hai{k, k})
-			for {
-				kotsu, err := findKotsu(hais)
-				if err != nil {
-					return false, err
-				}
-				syuntu, err := findShuntsu(hais)
-				if err != nil {
-					return false, err
-				}
-				if len(kotsu) != 0 {
-					hais = removeHais(hais, kotsu)
-				}
-				if len(syuntu) != 0 {
-					hais = removeHais(hais, syuntu)
-				}
-
-				if len(syuntu) == 0 && len(kotsu) == 0 {
-					break
-				}
-			}
-			if len(hais) == 2 && hasMati([2]*hai.Hai{hais[0], hais[1]}) {
-				return true, nil
-			}
+			continue
 		}
+		// 両面, 嵌張, 双碰, 辺張
+		hais = removeHais(hais, []*hai.Hai{k, k})
+		hais, err := removeMentsus(hais)
+		if err != nil {
+			return false, err
+		}
+		if len(hais) == 2 && hasMati([2]*hai.Hai{hais[0], hais[1]}) {
+			return true, nil
+		}
+
 	}
 
 	return false, nil
@@ -392,6 +381,30 @@ func removeHai(hais []*hai.Hai, hai *hai.Hai) []*hai.Hai {
 		}
 	}
 	panic(ChaHaiNotFoundErr)
+}
+
+func removeMentsus(hais []*hai.Hai) ([]*hai.Hai, error) {
+	for {
+		kotsu, err := findKotsu(hais)
+		if err != nil {
+			return hais, err
+		}
+		if len(kotsu) != 0 {
+			hais = removeHais(hais, kotsu)
+		}
+		shuntsu, err := findShuntsu(hais)
+		if err != nil {
+			return hais, err
+		}
+		if len(shuntsu) != 0 {
+			hais = removeHais(hais, shuntsu)
+		}
+
+		if len(shuntsu) == 0 && len(kotsu) == 0 {
+			break
+		}
+	}
+	return hais, nil
 }
 
 func findShuntsu(hais []*hai.Hai) ([]*hai.Hai, error) {

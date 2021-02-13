@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"bytes"
+	"fmt"
 	"log"
 	"mahjong/model/cha"
 	"mahjong/model/hai"
@@ -98,6 +99,18 @@ func (gu *gameUsecaseImpl) InputController(id string, c cha.Cha) error {
 						return c.Kan(inHai, pairs[0])
 					})
 				}
+				if haiName == "ron" {
+					taku.TakeAction(c, func(inHai *hai.Hai) error {
+						isRon, err := c.CanRon(inHai)
+						if err != nil {
+							return err
+						}
+						if isRon {
+							fmt.Println("TODO: Ron! GAME END")
+						}
+						return nil
+					})
+				}
 				if haiName == "no" {
 					taku.CancelAction(c)
 				}
@@ -140,7 +153,6 @@ func (gu *gameUsecaseImpl) OutputController(id string, c cha.Cha, channel chan t
 			for _, a := range actions {
 				tehaistr += "\n" + "do you want " + string(a)
 			}
-
 		}
 		// riichi
 		hais, err := c.FindRiichiHai()

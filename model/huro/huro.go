@@ -7,9 +7,10 @@ import (
 type HuroAction string
 
 var (
-	Pon  HuroAction = "pon"
 	Chii HuroAction = "Chii"
+	Pon  HuroAction = "Pon"
 	Kan  HuroAction = "Kan"
+	Ron  HuroAction = "Ron"
 )
 
 type Huro interface {

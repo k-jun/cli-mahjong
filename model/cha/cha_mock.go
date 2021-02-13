@@ -79,3 +79,7 @@ func (c *ChaMock) CanTsumoAgari() (bool, error) {
 func (c *ChaMock) FindHuroActions(_ *hai.Hai) ([]huro.HuroAction, error) {
 	return c.HuroActionsMock, c.ErrorMock
 }
+
+func (c *ChaMock) CanRon(_ *hai.Hai) (bool, error) {
+	return c.BoolMock, c.ErrorMock
+}

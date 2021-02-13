@@ -1,7 +1,6 @@
 package cha
 
 import (
-	"log"
 	"mahjong/model/attribute"
 	"mahjong/model/hai"
 	"mahjong/model/ho"
@@ -225,12 +224,12 @@ func (c *chaImpl) CanTsumoAgari() (bool, error) {
 			if err != nil {
 				return false, err
 			}
+			if len(kotsu) != 0 {
+				hais = removeHais(hais, kotsu)
+			}
 			shuntsu, err := findShuntsu(hais)
 			if err != nil {
 				return false, err
-			}
-			if len(kotsu) != 0 {
-				hais = removeHais(hais, kotsu)
 			}
 			if len(shuntsu) != 0 {
 				hais = removeHais(hais, shuntsu)
@@ -392,10 +391,6 @@ func removeHai(hais []*hai.Hai, hai *hai.Hai) []*hai.Hai {
 			return hais
 		}
 	}
-	for _, h := range hais {
-		log.Print(h.Name())
-	}
-	log.Println("hai:", hai)
 	panic(ChaHaiNotFoundErr)
 }
 

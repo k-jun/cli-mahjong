@@ -290,7 +290,20 @@ func (t *takuImpl) Draw(c cha.Cha) string {
 
 	// ho
 	draftHo := t.draftHo(c)
-	str += drawHo(draftHo[:])
+
+	for i, h := range draftTehais["kamicha"] {
+		if h == nil {
+			continue
+		}
+		draftHo[i][0] = h
+	}
+	for i, h := range draftTehais["shimocha"] {
+		if h == nil {
+			continue
+		}
+		draftHo[len(draftHo)-1-i][len(draftHo[i])-1] = h
+	}
+	str += drawHo(draftHo)
 
 	// tehai
 	str += drawTehai(draftTehais["jicha"])
@@ -298,8 +311,8 @@ func (t *takuImpl) Draw(c cha.Cha) string {
 	return str
 }
 
-func (t *takuImpl) draftTehaiAll(c cha.Cha) map[string][]*takuHai {
-	tehaiMap := map[string][]*takuHai{}
+func (t *takuImpl) draftTehaiAll(c cha.Cha) map[string][20]*takuHai {
+	tehaiMap := map[string][20]*takuHai{}
 	idx, err := t.MyTurn(c)
 	if err != nil {
 		panic(err)
@@ -315,7 +328,7 @@ func (t *takuImpl) draftTehaiAll(c cha.Cha) map[string][]*takuHai {
 	return tehaiMap
 }
 
-func reverse(s []*takuHai) []*takuHai {
+func reverse(s [20]*takuHai) [20]*takuHai {
 	for i, j := 0, len(s)-1; i < j; i, j = i+1, j-1 {
 		s[i], s[j] = s[j], s[i]
 	}
@@ -323,42 +336,40 @@ func reverse(s []*takuHai) []*takuHai {
 	return s
 }
 
-func hideTehai(v []*takuHai) []*takuHai {
-
-	hais := []*takuHai{}
-	for _, h := range v {
+func hideTehai(v [20]*takuHai) [20]*takuHai {
+	hais := [20]*takuHai{}
+	for i, h := range v {
 		if h != nil && !h.isDown {
 			h.isOpen = false
 		}
-		hais = append(hais, h)
+		hais[i] = h
 	}
 
 	return hais
 }
 
-func (t *takuImpl) draftTehai(c cha.Cha) []*takuHai {
-	hais := []*takuHai{}
-	for _, h := range c.Tehai().Hais() {
-		hais = append(hais, &takuHai{Hai: h, isOpen: true})
+func (t *takuImpl) draftTehai(c cha.Cha) [20]*takuHai {
+	hais := [20]*takuHai{}
+	for i, h := range c.Tehai().Hais() {
+		hais[i] = &takuHai{Hai: h, isOpen: true}
 	}
 	if c.Tsumohai() != nil {
-		hais = append(hais, nil)
-		hais = append(hais, &takuHai{Hai: c.Tsumohai(), isOpen: true})
-	}
-	if len(c.Huro().Chiis()) != 0 || len(c.Huro().Pons()) != 0 || len(c.Huro().AnKans()) != 0 || len(c.Huro().AnKans()) != 0 {
-		hais = append(hais, nil)
+		hais[len(c.Tehai().Hais())+1] = &takuHai{Hai: c.Tsumohai(), isOpen: true}
 	}
 
+	head := 20
 	// chii
 	for _, meld := range c.Huro().Chiis() {
 		for _, h := range meld {
-			hais = append(hais, &takuHai{Hai: h, isOpen: true, isDown: true})
+			head--
+			hais[head] = &takuHai{Hai: h, isOpen: true, isDown: true}
 		}
 	}
 	// pon
 	for _, meld := range c.Huro().Pons() {
 		for _, h := range meld {
-			hais = append(hais, &takuHai{Hai: h, isOpen: true, isDown: true})
+			head--
+			hais[head] = &takuHai{Hai: h, isOpen: true, isDown: true}
 		}
 	}
 	// ankan
@@ -368,18 +379,21 @@ func (t *takuImpl) draftTehai(c cha.Cha) []*takuHai {
 			if i == 0 || i == 3 {
 				isOpen = false
 			}
-			hais = append(hais, &takuHai{Hai: h, isOpen: isOpen, isDown: true})
+			head--
+			hais[head] = &takuHai{Hai: h, isOpen: isOpen, isDown: true}
 		}
 	}
+	// minkan
 	for _, meld := range c.Huro().MinKans() {
 		for _, h := range meld {
-			hais = append(hais, &takuHai{Hai: h, isOpen: true, isDown: true})
+			head--
+			hais[head] = &takuHai{Hai: h, isOpen: true, isDown: true}
 		}
 	}
 	return hais
 }
 
-func drawTehai(hais []*takuHai) string {
+func drawTehai(hais [20]*takuHai) string {
 	strs := []string{"", "", "", ""}
 	for _, h := range hais {
 		if h == nil {
@@ -409,11 +423,11 @@ func drawTehai(hais []*takuHai) string {
 			}
 		}
 	}
-	return strings.Join(strs, "\n")
+	return strings.Join(strs, "\n") + "\n"
 }
 
-func (t *takuImpl) draftHo(c cha.Cha) [12][12]*hai.Hai {
-	hoHais := [12][12]*hai.Hai{}
+func (t *takuImpl) draftHo(c cha.Cha) [20][20]*takuHai {
+	hoHais := [20][20]*takuHai{}
 	idx, err := t.MyTurn(c)
 	if err != nil {
 		panic(err)
@@ -424,21 +438,21 @@ func (t *takuImpl) draftHo(c cha.Cha) [12][12]*hai.Hai {
 	kamicha := t.chas[(idx+3)%t.maxNumberOfUser]
 
 	for i, h := range myself.Ho().Hais() {
-		hoHais[9+i/6][3+i%6] = h
+		hoHais[13+i/6][7+i%6] = &takuHai{Hai: h, isOpen: true, isDown: true}
 	}
 	for i, h := range shimocha.Ho().Hais() {
-		hoHais[8-i%6][9+i/6] = h
+		hoHais[12-i%6][13+i/6] = &takuHai{Hai: h, isOpen: true, isDown: true}
 	}
 	for i, h := range toimen.Ho().Hais() {
-		hoHais[2-i/6][8-i%6] = h
+		hoHais[6-i/6][12-i%6] = &takuHai{Hai: h, isOpen: true, isDown: true}
 	}
 	for i, h := range kamicha.Ho().Hais() {
-		hoHais[3+i%6][2-i/6] = h
+		hoHais[7+i%6][6-i/6] = &takuHai{Hai: h, isOpen: true, isDown: true}
 	}
 	return hoHais
 }
 
-func drawHo(hais [][12]*hai.Hai) string {
+func drawHo(hais [20][20]*takuHai) string {
 	str := ""
 	for i, _ := range hais {
 		body := ""
@@ -468,7 +482,11 @@ func drawHo(hais [][12]*hai.Hai) string {
 				}
 				continue
 			}
-			body += "│" + h.Name() + "│"
+			if h.isOpen && h.isDown {
+				body += "│" + h.Name() + "│"
+			} else {
+				body += "│  │"
+			}
 			bottom += "└──┘"
 		}
 

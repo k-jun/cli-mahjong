@@ -308,10 +308,10 @@ func (t *takuImpl) draftTehaiAll(c cha.Cha) map[string][]*takuHai {
 	shimocha := t.chas[(idx+1)%t.maxNumberOfUser]
 	toimen := t.chas[(idx+2)%t.maxNumberOfUser]
 	kamicha := t.chas[(idx+3)%t.maxNumberOfUser]
-	tehaiMap["jicha"] = draftTehai(jicha)
-	tehaiMap["shimocha"] = draftTehai(shimocha)
-	tehaiMap["toimen"] = reverse(draftTehai(toimen))
-	tehaiMap["kamicha"] = draftTehai(kamicha)
+	tehaiMap["jicha"] = t.draftTehai(jicha)
+	tehaiMap["shimocha"] = hideTehai(t.draftTehai(shimocha))
+	tehaiMap["toimen"] = hideTehai(reverse(t.draftTehai(toimen)))
+	tehaiMap["kamicha"] = hideTehai(t.draftTehai(kamicha))
 	return tehaiMap
 }
 
@@ -323,14 +323,27 @@ func reverse(s []*takuHai) []*takuHai {
 	return s
 }
 
-func draftTehai(c cha.Cha) []*takuHai {
+func hideTehai(v []*takuHai) []*takuHai {
+
+	hais := []*takuHai{}
+	for _, h := range v {
+		if h != nil && !h.isDown {
+			h.isOpen = false
+		}
+		hais = append(hais, h)
+	}
+
+	return hais
+}
+
+func (t *takuImpl) draftTehai(c cha.Cha) []*takuHai {
 	hais := []*takuHai{}
 	for _, h := range c.Tehai().Hais() {
-		hais = append(hais, &takuHai{Hai: h})
+		hais = append(hais, &takuHai{Hai: h, isOpen: true})
 	}
 	if c.Tsumohai() != nil {
 		hais = append(hais, nil)
-		hais = append(hais, &takuHai{Hai: c.Tsumohai()})
+		hais = append(hais, &takuHai{Hai: c.Tsumohai(), isOpen: true})
 	}
 	if len(c.Huro().Chiis()) != 0 || len(c.Huro().Pons()) != 0 || len(c.Huro().AnKans()) != 0 || len(c.Huro().AnKans()) != 0 {
 		hais = append(hais, nil)
@@ -350,17 +363,17 @@ func draftTehai(c cha.Cha) []*takuHai {
 	}
 	// ankan
 	for _, meld := range c.Huro().AnKans() {
-		for _, h := range meld {
-			hais = append(hais, &takuHai{Hai: h, isOpen: true, isDown: true})
-		}
-	}
-	for _, meld := range c.Huro().MinKans() {
 		for i, h := range meld {
 			isOpen := true
 			if i == 0 || i == 3 {
 				isOpen = false
 			}
 			hais = append(hais, &takuHai{Hai: h, isOpen: isOpen, isDown: true})
+		}
+	}
+	for _, meld := range c.Huro().MinKans() {
+		for _, h := range meld {
+			hais = append(hais, &takuHai{Hai: h, isOpen: true, isDown: true})
 		}
 	}
 	return hais
@@ -376,17 +389,24 @@ func drawTehai(hais []*takuHai) string {
 			strs[3] += "    "
 			continue
 		}
-		if h.isOpen {
+		if h.isDown {
 			strs[0] += "┌──┐"
 			strs[1] += "│" + h.Name() + "│"
 			strs[2] += "└──┘"
 			strs[3] += "└──┘"
-
 		} else {
-			strs[0] += "    "
-			strs[1] += "┌──┐"
-			strs[2] += "│" + h.Name() + "│"
-			strs[3] += "└──┘"
+			if h.isOpen {
+				strs[0] += "    "
+				strs[1] += "┌──┐"
+				strs[2] += "│" + h.Name() + "│"
+				strs[3] += "└──┘"
+
+			} else {
+				strs[0] += "    "
+				strs[1] += "┌──┐"
+				strs[2] += "│  │"
+				strs[3] += "└──┘"
+			}
 		}
 	}
 	return strings.Join(strs, "\n")

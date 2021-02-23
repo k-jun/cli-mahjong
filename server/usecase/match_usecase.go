@@ -51,6 +51,9 @@ func (uc *matchUsecaseImpl) JoinRandomRoom(u user.User) (string, error) {
 	if err := uc.write(roomStatus(room)); err != nil {
 		return "", err
 	}
+	if !room.IsOpen() {
+		return room.ID(), nil
+	}
 
 	for {
 		room, ok = <-rc
@@ -62,11 +65,9 @@ func (uc *matchUsecaseImpl) JoinRandomRoom(u user.User) (string, error) {
 		}
 
 		if !room.IsOpen() {
-			break
+			return room.ID(), nil
 		}
 	}
-
-	return room.ID(), nil
 }
 
 func (uc *matchUsecaseImpl) deadCheck(u user.User, room room.Room) {

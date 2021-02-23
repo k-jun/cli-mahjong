@@ -13,7 +13,7 @@ import (
 
 type GameUsecase interface {
 	JoinTaku(string, cha.Cha) (chan taku.Taku, error)
-	InputController(string, cha.Cha) error
+	InputController(string, cha.Cha)
 	OutputController(string, cha.Cha, chan taku.Taku) error
 }
 
@@ -31,17 +31,20 @@ func NewGameUsecase(ts storage.TakuStorage, write func(string) error, read func(
 	}
 }
 
-func (gu *gameUsecaseImpl) InputController(id string, c cha.Cha) error {
+func (gu *gameUsecaseImpl) InputController(id string, c cha.Cha) {
 	taku, err := gu.takuStorage.Find(id)
 	if err != nil {
-		return err
+		log.Println(err)
 	}
 
 	for {
 		buffer := make([]byte, 1024)
 		if err := gu.read(buffer); err != nil {
 			// dead check
-			taku.LeaveCha(c)
+			log.Println(err)
+			if err := taku.LeaveCha(c); err != nil {
+				log.Println(err)
+			}
 			break
 		}
 		if string(buffer) != "" {
@@ -116,24 +119,21 @@ func (gu *gameUsecaseImpl) InputController(id string, c cha.Cha) error {
 			}
 		}
 	}
-
-	return nil
 }
 
 func (gu *gameUsecaseImpl) OutputController(id string, c cha.Cha, channel chan taku.Taku) error {
-	taku, err := gu.takuStorage.Find(id)
+	_, err := gu.takuStorage.Find(id)
 	if err != nil {
 		return err
 	}
 	for {
-		_, ok := <-channel
-		if ok {
-			break
+		taku, ok := <-channel
+		if !ok {
+			return GameUsecaseTakuChannelClosedErr
 		}
 
 		turnIdx, err := taku.MyTurn(c)
 		if err != nil {
-			log.Println(err)
 			return err
 		}
 
@@ -169,9 +169,9 @@ func (gu *gameUsecaseImpl) OutputController(id string, c cha.Cha, channel chan t
 		if ok {
 			tehaistr += "\n" + "do you do tumo?: "
 		}
-		tehaistr += `
-		`
-		gu.write(tehaistr + "\n")
+		if err := gu.write(tehaistr + "\n"); err != nil {
+			return err
+		}
 	}
 
 	return nil

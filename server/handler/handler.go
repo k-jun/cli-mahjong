@@ -49,9 +49,8 @@ func (h *handlerImpl) Run() {
 		return
 	}
 	go h.gameUsecase.InputController(roomId, cha)
-	h.gameUsecase.OutputController(roomId, cha, roomChan)
+	err = h.gameUsecase.OutputController(roomId, cha, roomChan)
 	if err != nil {
 		log.Println(err)
-		return
 	}
 }

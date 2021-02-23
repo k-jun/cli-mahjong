@@ -33,7 +33,6 @@ func NewMatchUsecase(matches northpole.Match, write func(string) error, read fun
 }
 
 func (uc *matchUsecaseImpl) JoinRandomRoom(u user.User) (string, error) {
-	var room room.Room
 	rc, err := uc.matches.JoinRandomRoom(u)
 	if err != nil {
 		if err == storage.RoomStorageRoomNotFound {
@@ -44,25 +43,21 @@ func (uc *matchUsecaseImpl) JoinRandomRoom(u user.User) (string, error) {
 		}
 	}
 
-	// dead check
-	go func() {
-		for {
-			if err := uc.write(""); err != nil {
-				if room != nil {
-					// connection end
-					uc.matches.LeaveRoom(u, room)
-				}
-				break
-			}
-			if room != nil && !room.IsOpen() {
-				break
-			}
-		}
-	}()
+	room, ok := <-rc
+	if !ok {
+		return "", MatchUsecaseRoomChannelClosedErr
+	}
+	go uc.deadCheck(u, room)
+	if err := uc.write(roomStatus(room)); err != nil {
+		return "", err
+	}
 
 	for {
-		room = <-rc
-		if room == nil || uc.write(roomStatus(room)) != nil {
+		room, ok = <-rc
+		if !ok {
+			return "", MatchUsecaseRoomChannelClosedErr
+		}
+		if err := uc.write(roomStatus(room)); err != nil {
 			return "", err
 		}
 
@@ -72,6 +67,22 @@ func (uc *matchUsecaseImpl) JoinRandomRoom(u user.User) (string, error) {
 	}
 
 	return room.ID(), nil
+}
+
+func (uc *matchUsecaseImpl) deadCheck(u user.User, room room.Room) {
+	for {
+		buffer := make([]byte, 1024)
+		if err := uc.read(buffer); err != nil {
+			if room != nil {
+				// connection end
+				uc.matches.LeaveRoom(u, room)
+			}
+			break
+		}
+		if room != nil && !room.IsOpen() {
+			break
+		}
+	}
 }
 
 func (uc *matchUsecaseImpl) CreateRoom(u user.User) (chan room.Room, error) {

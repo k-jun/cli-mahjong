@@ -35,12 +35,11 @@ func (gu *gameUsecaseImpl) InputController(id string, c cha.Cha) error {
 	taku, err := gu.takuStorage.Find(id)
 	if err != nil {
 		return err
-
 	}
+
 	for {
 		buffer := make([]byte, 1024)
-		err := gu.read(buffer)
-		if err != nil {
+		if err := gu.read(buffer); err != nil {
 			// dead check
 			taku.LeaveCha(c)
 			break
@@ -127,8 +126,8 @@ func (gu *gameUsecaseImpl) OutputController(id string, c cha.Cha, channel chan t
 		return err
 	}
 	for {
-		isClose := <-channel
-		if isClose == nil {
+		_, ok := <-channel
+		if ok {
 			break
 		}
 
@@ -163,7 +162,7 @@ func (gu *gameUsecaseImpl) OutputController(id string, c cha.Cha, channel chan t
 			tehaistr += "\n" + "do you do richi?: "
 		}
 		// tsumo agari
-		ok, err := c.CanTsumoAgari()
+		ok, err = c.CanTsumoAgari()
 		if err != nil {
 			return err
 		}

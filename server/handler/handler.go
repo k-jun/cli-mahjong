@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"log"
 	"mahjong/model/cha"
 	"mahjong/model/ho"
 	"mahjong/model/huro"
@@ -34,6 +35,7 @@ func (h *handlerImpl) Run() {
 
 	roomId, err := h.matchUsecase.JoinRandomRoom(user)
 	if err != nil {
+		log.Println(err)
 		return
 	}
 
@@ -42,9 +44,14 @@ func (h *handlerImpl) Run() {
 	ho := ho.New()
 	cha := cha.New(h.id, ho, t, nil, hu)
 	roomChan, err := h.gameUsecase.JoinTaku(roomId, cha)
+	if err != nil {
+		log.Println(err)
+		return
+	}
 	go h.gameUsecase.InputController(roomId, cha)
 	h.gameUsecase.OutputController(roomId, cha, roomChan)
 	if err != nil {
+		log.Println(err)
 		return
 	}
 }

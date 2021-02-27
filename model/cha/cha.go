@@ -164,7 +164,7 @@ func (c *chaImpl) Kan(inHai *hai.Hai, outHais [3]*hai.Hai) error {
 	if inHai == c.tsumohai {
 		c.tsumohai = nil
 	}
-	hais, err := c.tehai.Removes([]*hai.Hai{outHais[0], outHais[1]})
+	hais, err := c.tehai.Removes([]*hai.Hai{outHais[0], outHais[1], outHais[2]})
 	if err != nil {
 		return err
 	}

@@ -20,6 +20,7 @@ type Taku interface {
 
 	// turn
 	CurrentTurn() int
+	NextTurn() int
 	MyTurn(cha.Cha) (int, error)
 	TurnEnd() error
 
@@ -127,7 +128,7 @@ func (t *takuImpl) MyTurn(c cha.Cha) (int, error) {
 	return -1, TakuChaNotFoundErr
 }
 
-func (t *takuImpl) nextTurn() int {
+func (t *takuImpl) NextTurn() int {
 	return (t.turnIndex + 1) % t.maxNumberOfUser
 }
 
@@ -140,7 +141,7 @@ func (t *takuImpl) TurnEnd() error {
 	}
 
 	if len(t.actionChas) == 0 {
-		if err := t.turnChange(t.nextTurn()); err != nil {
+		if err := t.turnChange(t.NextTurn()); err != nil {
 			return err
 		}
 		if err := t.chas[t.CurrentTurn()].Cha.Tsumo(); err != nil {
@@ -170,8 +171,9 @@ func (t *takuImpl) setActionCounter() error {
 		if tc == t.chas[t.CurrentTurn()] {
 			continue
 		}
+
 		actionCounter := 0
-		if i == t.nextTurn() {
+		if i == t.NextTurn() {
 			pairs, err := tc.Cha.Tehai().FindChiiPairs(inHai)
 			if err != nil {
 				return err
@@ -192,6 +194,7 @@ func (t *takuImpl) setActionCounter() error {
 		if err != nil {
 			return err
 		}
+
 		if actionCounter != 0 {
 			chas = append(chas, tc)
 		}
@@ -227,7 +230,7 @@ func (t *takuImpl) CancelAction(c cha.Cha) error {
 	}
 
 	if len(t.actionChas) == 0 {
-		if err := t.turnChange(t.nextTurn()); err != nil {
+		if err := t.turnChange(t.NextTurn()); err != nil {
 			return err
 		}
 		if err := t.chas[t.CurrentTurn()].Cha.Tsumo(); err != nil {

@@ -6,6 +6,7 @@ import (
 	"log"
 	"mahjong/model/cha"
 	"mahjong/model/hai"
+	"mahjong/model/huro"
 	"mahjong/model/taku"
 	"mahjong/storage"
 	"strings"
@@ -75,13 +76,15 @@ func (gu *gameUsecaseImpl) InputController(id string, c cha.Cha) {
 				}
 			} else {
 				if haiName == "chii" {
-					taku.TakeAction(c, func(inHai *hai.Hai) error {
-						pairs, err := c.Tehai().FindChiiPairs(inHai)
-						if err != nil {
-							return err
-						}
-						return c.Chii(inHai, pairs[0])
-					})
+					if taku.NextTurn() == turnIdx {
+						taku.TakeAction(c, func(inHai *hai.Hai) error {
+							pairs, err := c.Tehai().FindChiiPairs(inHai)
+							if err != nil {
+								return err
+							}
+							return c.Chii(inHai, pairs[0])
+						})
+					}
 				}
 				if haiName == "pon" {
 					taku.TakeAction(c, func(inHai *hai.Hai) error {
@@ -146,7 +149,32 @@ func (gu *gameUsecaseImpl) OutputController(id string, c cha.Cha, channel chan t
 			if err != nil {
 				return err
 			}
-			actions, err := c.FindHuroActions(hai)
+			actions := []huro.HuroAction{}
+			if taku.NextTurn() == turnIdx {
+				chiis, err := c.Tehai().FindChiiPairs(hai)
+				if err != nil {
+					return err
+				}
+				if len(chiis) != 0 {
+					actions = append(actions, huro.Chii)
+				}
+			}
+
+			pons, err := c.Tehai().FindPonPairs(hai)
+			if err != nil {
+				return err
+			}
+			if len(pons) != 0 {
+				actions = append(actions, huro.Pon)
+			}
+			kans, err := c.Tehai().FindKanPairs(hai)
+			if err != nil {
+				return err
+			}
+			if len(kans) != 0 {
+				actions = append(actions, huro.Kan)
+			}
+
 			if err != nil {
 				return err
 			}

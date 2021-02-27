@@ -82,6 +82,9 @@ func (gu *gameUsecaseImpl) InputController(id string, c cha.Cha) {
 							if err != nil {
 								return err
 							}
+							if len(pairs) == 0 {
+								return GameUsecaseHuroNotFoundErr
+							}
 							return c.Chii(inHai, pairs[0])
 						})
 					}
@@ -92,6 +95,9 @@ func (gu *gameUsecaseImpl) InputController(id string, c cha.Cha) {
 						if err != nil {
 							return err
 						}
+						if len(pairs) == 0 {
+							return GameUsecaseHuroNotFoundErr
+						}
 						return c.Pon(inHai, pairs[0])
 					})
 				}
@@ -101,6 +107,9 @@ func (gu *gameUsecaseImpl) InputController(id string, c cha.Cha) {
 						if err != nil {
 							return err
 						}
+						if len(pairs) == 0 {
+							return GameUsecaseHuroNotFoundErr
+						}
 						return c.Kan(inHai, pairs[0])
 					})
 				}
@@ -108,7 +117,6 @@ func (gu *gameUsecaseImpl) InputController(id string, c cha.Cha) {
 					taku.TakeAction(c, func(inHai *hai.Hai) error {
 						isRon, err := c.CanRon(inHai)
 						if err != nil {
-							return err
 						}
 						if isRon {
 							fmt.Println("TODO: Ron! GAME END")
@@ -116,6 +124,18 @@ func (gu *gameUsecaseImpl) InputController(id string, c cha.Cha) {
 						}
 						return nil
 					})
+				}
+				if haiName == "tsumo" {
+					ok, err := c.CanTsumoAgari()
+					if err != nil {
+						log.Println(err)
+						continue
+					}
+					if ok {
+						fmt.Println("TODO: Tsumo! GAME END")
+						taku.LeaveCha(c)
+					}
+
 				}
 				if haiName == "no" {
 					taku.CancelAction(c)
@@ -150,6 +170,7 @@ func (gu *gameUsecaseImpl) OutputController(id string, c cha.Cha, channel chan t
 				return err
 			}
 			actions := []huro.HuroAction{}
+			// chii
 			if taku.NextTurn() == turnIdx {
 				chiis, err := c.Tehai().FindChiiPairs(hai)
 				if err != nil {
@@ -160,6 +181,7 @@ func (gu *gameUsecaseImpl) OutputController(id string, c cha.Cha, channel chan t
 				}
 			}
 
+			// pon
 			pons, err := c.Tehai().FindPonPairs(hai)
 			if err != nil {
 				return err
@@ -167,12 +189,21 @@ func (gu *gameUsecaseImpl) OutputController(id string, c cha.Cha, channel chan t
 			if len(pons) != 0 {
 				actions = append(actions, huro.Pon)
 			}
+			// kan
 			kans, err := c.Tehai().FindKanPairs(hai)
 			if err != nil {
 				return err
 			}
 			if len(kans) != 0 {
 				actions = append(actions, huro.Kan)
+			}
+			// ron
+			ok, err := c.CanRon(hai)
+			if err != nil {
+				return err
+			}
+			if ok {
+				actions = append(actions, huro.Ron)
 			}
 
 			if err != nil {
@@ -196,7 +227,7 @@ func (gu *gameUsecaseImpl) OutputController(id string, c cha.Cha, channel chan t
 			return err
 		}
 		if ok {
-			tehaistr += "\n" + "do you do tumo?: "
+			tehaistr += "\n" + "do you do tsumo?: "
 		}
 		if err := gu.write(tehaistr + "\n"); err != nil {
 			return err

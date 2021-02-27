@@ -59,6 +59,17 @@ func (gu *gameUsecaseImpl) InputController(id string, c cha.Cha) {
 				break
 			}
 			if taku.CurrentTurn() == turnIdx {
+				if haiName == "tsumo" {
+					ok, err := c.CanTsumoAgari()
+					if err != nil {
+						log.Println(err)
+						continue
+					}
+					if ok {
+						fmt.Println("TODO: Tsumo! GAME END")
+						fmt.Println(taku.LeaveCha(c))
+					}
+				}
 				outHai, err := hai.AtoHai(haiName)
 				if err != nil {
 					log.Println(err)
@@ -77,7 +88,7 @@ func (gu *gameUsecaseImpl) InputController(id string, c cha.Cha) {
 			} else {
 				if haiName == "chii" {
 					if taku.NextTurn() == turnIdx {
-						taku.TakeAction(c, func(inHai *hai.Hai) error {
+						err = taku.TakeAction(c, func(inHai *hai.Hai) error {
 							pairs, err := c.Tehai().FindChiiPairs(inHai)
 							if err != nil {
 								return err
@@ -90,7 +101,7 @@ func (gu *gameUsecaseImpl) InputController(id string, c cha.Cha) {
 					}
 				}
 				if haiName == "pon" {
-					taku.TakeAction(c, func(inHai *hai.Hai) error {
+					err = taku.TakeAction(c, func(inHai *hai.Hai) error {
 						pairs, err := c.Tehai().FindPonPairs(inHai)
 						if err != nil {
 							return err
@@ -102,7 +113,7 @@ func (gu *gameUsecaseImpl) InputController(id string, c cha.Cha) {
 					})
 				}
 				if haiName == "kan" {
-					taku.TakeAction(c, func(inHai *hai.Hai) error {
+					err = taku.TakeAction(c, func(inHai *hai.Hai) error {
 						pairs, err := c.Tehai().FindKanPairs(inHai)
 						if err != nil {
 							return err
@@ -114,31 +125,24 @@ func (gu *gameUsecaseImpl) InputController(id string, c cha.Cha) {
 					})
 				}
 				if haiName == "ron" {
-					taku.TakeAction(c, func(inHai *hai.Hai) error {
+					err = taku.TakeAction(c, func(inHai *hai.Hai) error {
 						isRon, err := c.CanRon(inHai)
 						if err != nil {
+							return err
 						}
 						if isRon {
 							fmt.Println("TODO: Ron! GAME END")
-							taku.LeaveCha(c)
 						}
 						return nil
 					})
-				}
-				if haiName == "tsumo" {
-					ok, err := c.CanTsumoAgari()
-					if err != nil {
-						log.Println(err)
-						continue
-					}
-					if ok {
-						fmt.Println("TODO: Tsumo! GAME END")
-						taku.LeaveCha(c)
-					}
-
+					taku.LeaveCha(c)
 				}
 				if haiName == "no" {
-					taku.CancelAction(c)
+					err = taku.CancelAction(c)
+				}
+				if err != nil {
+					log.Println(err)
+					continue
 				}
 			}
 		}

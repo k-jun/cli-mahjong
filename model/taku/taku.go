@@ -190,9 +190,12 @@ func (t *takuImpl) setActionCounter() error {
 			return err
 		}
 		actionCounter += len(kpairs)
-
+		ok, err := tc.Cha.CanRon(inHai)
 		if err != nil {
 			return err
+		}
+		if ok {
+			actionCounter += 1
 		}
 
 		if actionCounter != 0 {

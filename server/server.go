@@ -3,6 +3,7 @@ package server
 import (
 	"log"
 	"mahjong/model/taku"
+	"mahjong/model/yama"
 	"mahjong/server/handler"
 	"mahjong/server/usecase"
 	"mahjong/storage"
@@ -50,7 +51,8 @@ func (s *serverImpl) Run() {
 		}
 
 		callback := func(id string) error {
-			taku := taku.New(taku.MaxNumberOfUsers)
+			yama := yama.New()
+			taku := taku.New(taku.MaxNumberOfUsers, yama)
 			s.takuStorage.Add(id, taku)
 			return nil
 		}

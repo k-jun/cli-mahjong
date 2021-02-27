@@ -35,9 +35,10 @@ type Taku interface {
 	Draw(cha.Cha) string
 }
 
-func New(maxNOU int) Taku {
+func New(maxNOU int, y yama.Yama) Taku {
 	return &takuImpl{
 		chas:            []*takuCha{},
+		yama:            y,
 		turnIndex:       0,
 		maxNumberOfUser: maxNOU,
 		isPlaying:       true,
@@ -48,6 +49,7 @@ func New(maxNOU int) Taku {
 type takuImpl struct {
 	sync.Mutex
 	chas            []*takuCha
+	yama            yama.Yama
 	turnIndex       int
 	maxNumberOfUser int
 	isPlaying       bool
@@ -64,6 +66,10 @@ func (t *takuImpl) JoinCha(c cha.Cha) (chan Taku, error) {
 	defer t.Unlock()
 	if len(t.chas) >= t.maxNumberOfUser {
 		return nil, TakuMaxNOUErr
+	}
+
+	if err := c.SetYama(t.yama); err != nil {
+		return nil, err
 	}
 	channel := make(chan Taku, t.maxNumberOfUser*3)
 	t.chas = append(t.chas, &takuCha{Cha: c, channel: channel})
@@ -97,17 +103,8 @@ func (t *takuImpl) Broadcast() {
 }
 
 func (t *takuImpl) gameStart() error {
-	// create yama
-	y := yama.New()
-	if err := y.Kan(); err != nil {
-		return err
-	}
-
 	// tehai assign
 	for _, tc := range t.chas {
-		if err := tc.SetYama(y); err != nil {
-			return err
-		}
 		if err := tc.Haipai(); err != nil {
 			return err
 		}

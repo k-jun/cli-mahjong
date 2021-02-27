@@ -13,6 +13,9 @@ var (
 )
 
 type Taku interface {
+	// setter
+	SetWinIndex(int) error
+
 	// game
 	JoinCha(cha.Cha) (chan Taku, error)
 	LeaveCha(cha.Cha) error
@@ -44,6 +47,7 @@ func New(maxNOU int, y yama.Yama) Taku {
 		maxNumberOfUser: maxNOU,
 		isPlaying:       true,
 		actionChas:      []*takuCha{},
+		winIndex:        -1,
 	}
 }
 
@@ -55,11 +59,22 @@ type takuImpl struct {
 	maxNumberOfUser int
 	isPlaying       bool
 	actionChas      []*takuCha
+
+	// win
+	winIndex int
 }
 
 type takuCha struct {
 	channel chan Taku
 	cha.Cha
+}
+
+func (t *takuImpl) SetWinIndex(idx int) error {
+	if idx >= len(t.chas) || idx < 0 {
+		return TakuIndexOutOfRangeErr
+	}
+	t.winIndex = idx
+	return nil
 }
 
 func (t *takuImpl) JoinCha(c cha.Cha) (chan Taku, error) {
@@ -286,7 +301,14 @@ type takuHai struct {
 }
 
 func (t *takuImpl) Draw(c cha.Cha) string {
+
 	str := ""
+	if t.winIndex != -1 {
+		draftTehai := t.draftTehai(t.chas[t.winIndex])
+		str += drawTehai(draftTehai)
+		str += "\n GAME SET!!"
+		return str
+	}
 	// tehais
 	draftTehais := t.draftTehaiAll(c)
 	str += drawTehai(draftTehais["toimen"])

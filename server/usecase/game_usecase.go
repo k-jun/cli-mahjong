@@ -66,7 +66,11 @@ func (gu *gameUsecaseImpl) InputController(id string, c cha.Cha) {
 						continue
 					}
 					if ok {
-						fmt.Println("TODO: Tsumo! GAME END")
+						if err := taku.SetWinIndex(turnIdx); err != nil {
+							log.Println(err)
+							continue
+						}
+						taku.Broadcast()
 						fmt.Println(taku.LeaveCha(c))
 					}
 				}
@@ -131,10 +135,14 @@ func (gu *gameUsecaseImpl) InputController(id string, c cha.Cha) {
 							return err
 						}
 						if isRon {
-							fmt.Println("TODO: Ron! GAME END")
+							if err := taku.SetWinIndex(turnIdx); err != nil {
+								return err
+							}
+							taku.Broadcast()
 						}
 						return nil
 					})
+					// TODO where should i put this
 					taku.LeaveCha(c)
 				}
 				if haiName == "no" {

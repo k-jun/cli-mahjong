@@ -231,7 +231,7 @@ func (gu *gameUsecaseImpl) OutputController(id string, c cha.Cha, channel chan t
 			return err
 		}
 		if len(hais) != 0 {
-			tehaistr += "\n" + "do you do richi?: "
+			tehaistr += "\n" + "do you do riichi?: "
 		}
 		// tsumo agari
 		ok, err = c.CanTsumoAgari()

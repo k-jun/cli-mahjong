@@ -241,7 +241,13 @@ func (gu *gameUsecaseImpl) OutputController(id string, c cha.Cha, channel chan t
 		if ok {
 			tehaistr += "\n" + "do you do tsumo?: "
 		}
-		if err := gu.write(tehaistr + "\n"); err != nil {
+		if taku.ActionCounter() == 0 && taku.CurrentTurn() == turnIdx {
+			tehaistr += "\n" + ">>"
+		} else {
+			tehaistr += "\n"
+		}
+
+		if err := gu.write(tehaistr); err != nil {
 			return err
 		}
 	}

@@ -42,7 +42,7 @@ func (h *handlerImpl) Run() {
 	t := tehai.New()
 	hu := huro.New()
 	ho := ho.New()
-	cha := cha.New(h.id, ho, t, nil, hu)
+	cha := cha.New(h.id, ho, t, hu)
 	roomChan, err := h.gameUsecase.JoinTaku(roomId, cha)
 	if err != nil {
 		log.Println(err)

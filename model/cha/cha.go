@@ -44,13 +44,13 @@ type chaImpl struct {
 	yama     yama.Yama
 }
 
-func New(id uuid.UUID, ho ho.Ho, t tehai.Tehai, y yama.Yama, hu huro.Huro) Cha {
+func New(id uuid.UUID, ho ho.Ho, t tehai.Tehai, hu huro.Huro) Cha {
 	return &chaImpl{
 		id:    id,
 		ho:    ho,
 		tehai: t,
-		yama:  y,
 		huro:  hu,
+		yama:  nil,
 	}
 }
 

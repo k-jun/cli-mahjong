@@ -7,6 +7,7 @@ import (
 )
 
 type Yama interface {
+	SetYamaHai([]*hai.Hai) error
 	Draw() (*hai.Hai, error)
 	Kan() error
 
@@ -64,6 +65,11 @@ func New() Yama {
 		omoteDora: []*hai.Hai{},
 		uraDora:   []*hai.Hai{},
 	}
+}
+
+func (y *yamaImpl) SetYamaHai(hais []*hai.Hai) error {
+	y.yamaHai = hais
+	return nil
 }
 
 func (y *yamaImpl) OmoteDora() []*hai.Hai {

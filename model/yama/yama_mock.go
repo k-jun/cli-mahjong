@@ -10,6 +10,10 @@ type YamaMock struct {
 	HaisMock  []*hai.Hai
 }
 
+func (y *YamaMock) SetYamaHai(_ []*hai.Hai) error {
+	return y.ErrorMock
+}
+
 func (y *YamaMock) Draw() (*hai.Hai, error) {
 	return y.HaiMock, y.ErrorMock
 }

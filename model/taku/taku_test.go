@@ -276,6 +276,7 @@ func TestLastHo(t *testing.T) {
 
 func TestCancelAction(t *testing.T) {
 	testCha1 := &cha.ChaMock{HoMock: &ho.HoMock{HaiMock: hai.Haku}}
+	testCha2 := &cha.ChaMock{HoMock: &ho.HoMock{HaiMock: hai.Haku}}
 	cases := []struct {
 		name             string
 		inCha            cha.Cha
@@ -284,10 +285,10 @@ func TestCancelAction(t *testing.T) {
 		afterActionCha   []*takuCha
 	}{
 		{
-			name:             "success: before action taken",
+			name:             "success: 2 actioner",
 			inCha:            testCha1,
-			beforeActionChas: []*takuCha{{Cha: testCha1}, {}},
-			afterActionCha:   []*takuCha{{}},
+			beforeActionChas: []*takuCha{{Cha: testCha1}, {Cha: testCha2}},
+			afterActionCha:   []*takuCha{{Cha: testCha2}},
 		},
 		{
 			name:             "success: after action taken",

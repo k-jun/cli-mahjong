@@ -43,37 +43,26 @@ func (uc *matchUsecaseImpl) JoinRandomRoom(u user.User) (string, error) {
 		}
 	}
 
-	room, ok := <-rc
-	if !ok {
-		return "", MatchUsecaseRoomChannelClosedErr
-	}
+	room, _ := <-rc
 	go uc.deadCheck(u, room)
 	if err := uc.write(roomStatus(room)); err != nil {
 		return "", err
 	}
-	if !room.IsOpen() {
-		return room.ID(), nil
-	}
 
 	for {
-		room, ok = <-rc
-		if !ok {
-			return "", MatchUsecaseRoomChannelClosedErr
+		_, isOpen := <-rc
+		if !isOpen {
+			return room.ID(), nil
 		}
 		if err := uc.write(roomStatus(room)); err != nil {
 			return "", err
-		}
-
-		if !room.IsOpen() {
-			return room.ID(), nil
 		}
 	}
 }
 
 func (uc *matchUsecaseImpl) deadCheck(u user.User, room room.Room) {
 	for {
-		buffer := make([]byte, 1024)
-		if err := uc.read(buffer); err != nil {
+		if err := uc.write(""); err != nil {
 			if room != nil {
 				// connection end
 				uc.matches.LeaveRoom(u, room)

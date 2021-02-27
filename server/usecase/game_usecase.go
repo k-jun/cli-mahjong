@@ -109,6 +109,7 @@ func (gu *gameUsecaseImpl) InputController(id string, c cha.Cha) {
 						}
 						if isRon {
 							fmt.Println("TODO: Ron! GAME END")
+							taku.LeaveCha(c)
 						}
 						return nil
 					})
@@ -173,8 +174,6 @@ func (gu *gameUsecaseImpl) OutputController(id string, c cha.Cha, channel chan t
 			return err
 		}
 	}
-
-	return nil
 }
 
 func (gu *gameUsecaseImpl) JoinTaku(id string, c cha.Cha) (chan taku.Taku, error) {

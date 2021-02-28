@@ -503,7 +503,9 @@ func drawHo(hais [20][20]*takuHai) string {
 
 		for j, h := range hais[i] {
 			lines := []string{"┌", "─", "┐", "│", " ", "│", "└", "─", "┘"}
-			if h != nil && h.isRiichi {
+			if (h != nil && h.isRiichi) ||
+				(i != 0 && hais[i-1][j] != nil && hais[i-1][j].isRiichi) ||
+				(i != len(hais)-1 && hais[i+1][j] != nil && hais[i+1][j].isRiichi) {
 				lines = []string{"┏", "━", "┓", "┃", " ", "┃", "┗", "━", "┛"}
 			}
 			if i == 0 {

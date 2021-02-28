@@ -59,6 +59,7 @@ func (gu *gameUsecaseImpl) InputController(id string, c cha.Cha) {
 				break
 			}
 			if taku.CurrentTurn() == turnIdx {
+				// tsumo
 				if haiName == "tsumo" {
 					ok, err := c.CanTsumoAgari()
 					if err != nil {
@@ -74,15 +75,33 @@ func (gu *gameUsecaseImpl) InputController(id string, c cha.Cha) {
 						fmt.Println(taku.LeaveCha(c))
 					}
 				}
-				outHai, err := hai.AtoHai(haiName)
-				if err != nil {
-					log.Println(err)
-					continue
-				}
-				err = c.Dahai(outHai)
-				if err != nil {
-					log.Println(err)
-					continue
+				// riichi or not
+				if haiName == "riichi" {
+					hais, err := c.FindRiichiHai()
+					if err != nil {
+						log.Println(err)
+						continue
+					}
+					if len(hais) == 0 {
+						log.Println(GameUsecaseInvalidActionErr)
+						continue
+					}
+					err = c.Riichi(hais[0])
+					if err != nil {
+						log.Println(err)
+						continue
+					}
+				} else {
+					outHai, err := hai.AtoHai(haiName)
+					if err != nil {
+						log.Println(err)
+						continue
+					}
+					err = c.Dahai(outHai)
+					if err != nil {
+						log.Println(err)
+						continue
+					}
 				}
 				err = taku.TurnEnd()
 				if err != nil {
@@ -98,7 +117,7 @@ func (gu *gameUsecaseImpl) InputController(id string, c cha.Cha) {
 								return err
 							}
 							if len(pairs) == 0 {
-								return GameUsecaseHuroNotFoundErr
+								return GameUsecaseInvalidActionErr
 							}
 							return c.Chii(inHai, pairs[0])
 						})
@@ -111,7 +130,7 @@ func (gu *gameUsecaseImpl) InputController(id string, c cha.Cha) {
 							return err
 						}
 						if len(pairs) == 0 {
-							return GameUsecaseHuroNotFoundErr
+							return GameUsecaseInvalidActionErr
 						}
 						return c.Pon(inHai, pairs[0])
 					})
@@ -123,7 +142,7 @@ func (gu *gameUsecaseImpl) InputController(id string, c cha.Cha) {
 							return err
 						}
 						if len(pairs) == 0 {
-							return GameUsecaseHuroNotFoundErr
+							return GameUsecaseInvalidActionErr
 						}
 						return c.Kan(inHai, pairs[0])
 					})
@@ -231,7 +250,7 @@ func (gu *gameUsecaseImpl) OutputController(id string, c cha.Cha, channel chan t
 			return err
 		}
 		if len(hais) != 0 {
-			tehaistr += "\n" + "do you do riichi?: "
+			tehaistr += "\n" + "do you do Riichi "
 		}
 		// tsumo agari
 		ok, err = c.CanTsumoAgari()
@@ -239,7 +258,7 @@ func (gu *gameUsecaseImpl) OutputController(id string, c cha.Cha, channel chan t
 			return err
 		}
 		if ok {
-			tehaistr += "\n" + "do you do tsumo?: "
+			tehaistr += "\n" + "do you do Tsumo "
 		}
 		if taku.ActionCounter() == 0 && taku.CurrentTurn() == turnIdx {
 			tehaistr += "\n" + ">>"

@@ -37,6 +37,10 @@ func (c *ChaMock) Tsumohai() *hai.Hai {
 	return c.HaiMock
 }
 
+func (c *ChaMock) IsRiichi() bool {
+	return c.BoolMock
+}
+
 func (c *ChaMock) Tsumo() error {
 	return c.ErrorMock
 }
@@ -44,6 +48,11 @@ func (c *ChaMock) Tsumo() error {
 func (c *ChaMock) Dahai(outHai *hai.Hai) error {
 	return c.ErrorMock
 }
+
+func (c *ChaMock) Riichi(_ *hai.Hai) error {
+	return c.ErrorMock
+}
+
 func (c *ChaMock) SetYama(_ yama.Yama) error {
 	return c.ErrorMock
 }

@@ -296,8 +296,9 @@ func (t *takuImpl) TakeAction(c cha.Cha, action func(*hai.Hai) error) error {
 
 type takuHai struct {
 	*hai.Hai
-	isOpen bool
-	isDown bool
+	isOpen   bool
+	isDown   bool
+	isRiichi bool
 }
 
 func (t *takuImpl) Draw(c cha.Cha) string {
@@ -415,12 +416,22 @@ func (t *takuImpl) draftTehai(c cha.Cha) [20]*takuHai {
 			hais[head] = &takuHai{Hai: h, isOpen: true, isDown: true}
 		}
 	}
+
+	// riichi
+	if c.IsRiichi() {
+		for _, h := range hais {
+			if h != nil {
+				h.isRiichi = true
+			}
+		}
+	}
 	return hais
 }
 
 func drawTehai(hais [20]*takuHai) string {
 	strs := []string{"", "", "", ""}
 	for _, h := range hais {
+
 		if h == nil {
 			strs[0] += "    "
 			strs[1] += "    "
@@ -428,23 +439,28 @@ func drawTehai(hais [20]*takuHai) string {
 			strs[3] += "    "
 			continue
 		}
+
+		lines := []string{"┌", "─", "┐", "│", " ", "│", "└", "─", "┘"}
+		if h != nil && h.isRiichi {
+			lines = []string{"┏", "━", "┓", "┃", " ", "┃", "┗", "━", "┛"}
+		}
 		if h.isDown {
-			strs[0] += "┌──┐"
-			strs[1] += "│" + h.Name() + "│"
-			strs[2] += "└──┘"
-			strs[3] += "└──┘"
+			strs[0] += lines[0] + lines[1] + lines[1] + lines[2]
+			strs[1] += lines[3] + h.Name() + lines[5]
+			strs[2] += lines[6] + lines[7] + lines[7] + lines[8]
+			strs[3] += lines[6] + lines[7] + lines[7] + lines[8]
 		} else {
 			if h.isOpen {
 				strs[0] += "    "
-				strs[1] += "┌──┐"
-				strs[2] += "│" + h.Name() + "│"
-				strs[3] += "└──┘"
+				strs[1] += lines[0] + lines[1] + lines[1] + lines[2]
+				strs[2] += lines[3] + h.Name() + lines[5]
+				strs[3] += lines[6] + lines[7] + lines[7] + lines[8]
 
 			} else {
 				strs[0] += "    "
-				strs[1] += "┌──┐"
-				strs[2] += "│  │"
-				strs[3] += "└──┘"
+				strs[1] += lines[0] + lines[1] + lines[1] + lines[2]
+				strs[2] += lines[3] + lines[4] + lines[4] + lines[5]
+				strs[3] += lines[6] + lines[7] + lines[7] + lines[8]
 			}
 		}
 	}
@@ -474,6 +490,7 @@ func (t *takuImpl) draftHo(c cha.Cha) [20][20]*takuHai {
 	for i, h := range kamicha.Ho().Hais() {
 		hoHais[7+i%6][6-i/6] = &takuHai{Hai: h, isOpen: true, isDown: true}
 	}
+
 	return hoHais
 }
 
@@ -483,45 +500,51 @@ func drawHo(hais [20][20]*takuHai) string {
 		body := ""
 		bottom := ""
 		top := ""
-		if i == 0 {
-			for _, h := range hais[i] {
+
+		for j, h := range hais[i] {
+			lines := []string{"┌", "─", "┐", "│", " ", "│", "└", "─", "┘"}
+			if h != nil && h.isRiichi {
+				lines = []string{"┏", "━", "┓", "┃", " ", "┃", "┗", "━", "┛"}
+			}
+			if i == 0 {
 				if h != nil {
-					top += "┌──┐"
+					top += lines[0] + lines[1] + lines[1] + lines[2]
 				} else {
 					top += "    "
 				}
 			}
-		}
-
-		for j, h := range hais[i] {
 			if h == nil {
 				if i != 0 && hais[i-1][j] != nil {
-					body += "└──┘"
+					body += lines[6] + lines[7] + lines[7] + lines[8]
 				} else {
 					body += "    "
 				}
 				if i != len(hais)-1 && hais[i+1][j] != nil {
-					bottom += "┌──┐"
+					bottom += lines[0] + lines[1] + lines[1] + lines[2]
 				} else {
 					bottom += "    "
 				}
 				continue
 			}
 			if h.isOpen && h.isDown {
-				body += "│" + h.Name() + "│"
+				body += lines[3] + h.Name() + lines[5]
 			} else {
-				body += "│  │"
+				body += lines[3] + lines[4] + lines[4] + lines[5]
 			}
-			bottom += "└──┘"
+			bottom += lines[6] + lines[7] + lines[7] + lines[8]
 		}
 
 		if i == len(hais)-1 {
 			bottom += "\n"
 			for _, h := range hais[i] {
+				lines := []string{"┌", "─", "┐", "│", " ", "│", "└", "─", "┘"}
+				if h != nil && h.isRiichi {
+					lines = []string{"┏", "━", "┓", "┃", " ", "┃", "┗", "━", "┛"}
+				}
 				if h == nil {
 					bottom += "    "
 				} else {
-					bottom += "└──┘"
+					bottom += lines[6] + lines[7] + lines[7] + lines[8]
 				}
 			}
 		}
@@ -533,5 +556,4 @@ func drawHo(hais [20][20]*takuHai) string {
 		str += bottom + "\n"
 	}
 	return str
-
 }

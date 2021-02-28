@@ -18,6 +18,7 @@ type Cha interface {
 	Ho() ho.Ho
 	Tsumohai() *hai.Hai
 	Huro() huro.Huro
+	IsRiichi() bool
 	// setter
 	SetYama(yama.Yama) error
 	// judger
@@ -33,6 +34,7 @@ type Cha interface {
 	Pon(*hai.Hai, [2]*hai.Hai) error
 	Kan(*hai.Hai, [3]*hai.Hai) error
 	Kakan(*hai.Hai) error
+	Riichi(*hai.Hai) error
 }
 
 type chaImpl struct {
@@ -42,15 +44,17 @@ type chaImpl struct {
 	tehai    tehai.Tehai
 	huro     huro.Huro
 	yama     yama.Yama
+	isRiichi bool
 }
 
 func New(id uuid.UUID, ho ho.Ho, t tehai.Tehai, hu huro.Huro) Cha {
 	return &chaImpl{
-		id:    id,
-		ho:    ho,
-		tehai: t,
-		huro:  hu,
-		yama:  nil,
+		id:       id,
+		ho:       ho,
+		tehai:    t,
+		huro:     hu,
+		yama:     nil,
+		isRiichi: false,
 	}
 }
 
@@ -70,6 +74,10 @@ func (c *chaImpl) Tsumohai() *hai.Hai {
 	return c.tsumohai
 }
 
+func (c *chaImpl) IsRiichi() bool {
+	return c.isRiichi
+}
+
 func (c *chaImpl) Tsumo() error {
 	if c.tsumohai != nil {
 		return ChaAlreadyHaveTsumohaiErr
@@ -86,6 +94,9 @@ func (c *chaImpl) Tsumo() error {
 
 func (c *chaImpl) Dahai(outHai *hai.Hai) error {
 	var err error
+	if c.isRiichi && outHai != c.tsumohai {
+		return ChaAlreadyRiichiErr
+	}
 	if outHai != c.tsumohai {
 		if c.tsumohai == nil {
 			outHai, err = c.tehai.Remove(outHai)
@@ -180,9 +191,19 @@ func (c *chaImpl) Kakan(inHai *hai.Hai) error {
 	return c.huro.Kakan(inHai)
 }
 
+func (c *chaImpl) Riichi(inHai *hai.Hai) error {
+	err := c.Dahai(inHai)
+	if err != nil {
+		return err
+	}
+	c.isRiichi = true
+	return nil
+}
+
 func (c *chaImpl) FindRiichiHai() ([]*hai.Hai, error) {
 	outHais := []*hai.Hai{}
-	if len(c.huro.Chiis()) != 0 || len(c.huro.Pons()) != 0 || len(c.huro.MinKans()) != 0 || c.tsumohai == nil {
+	// if len(c.huro.Chiis()) != 0 || len(c.huro.Pons()) != 0 || len(c.huro.MinKans()) != 0 || c.tsumohai == nil {
+	if c.tsumohai == nil {
 		return outHais, nil
 	}
 

@@ -9,6 +9,8 @@ import (
 	"mahjong/model/huro"
 	"mahjong/model/taku"
 	"mahjong/storage"
+	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -23,6 +25,10 @@ type gameUsecaseImpl struct {
 	read        func([]byte) error
 	write       func(string) error
 }
+
+var (
+	re = regexp.MustCompile(`\d`)
+)
 
 func NewGameUsecase(ts storage.TakuStorage, write func(string) error, read func([]byte) error) GameUsecase {
 	return &gameUsecaseImpl{
@@ -76,7 +82,7 @@ func (gu *gameUsecaseImpl) InputController(id string, c cha.Cha) {
 					}
 				}
 				// riichi or not
-				if haiName == "riichi" {
+				if strings.HasPrefix(haiName, "riichi") {
 					hais, err := c.FindRiichiHai()
 					if err != nil {
 						log.Println(err)
@@ -86,7 +92,13 @@ func (gu *gameUsecaseImpl) InputController(id string, c cha.Cha) {
 						log.Println(GameUsecaseInvalidActionErr)
 						continue
 					}
-					err = c.Riichi(hais[0])
+					idxstr := string(re.FindAll([]byte(haiName), 1)[0])
+					idx, err := strconv.Atoi(idxstr)
+					if idx >= len(hais) || idx < 0 {
+						log.Println(GameUsecaseInvalidActionErr)
+						continue
+					}
+					err = c.Riichi(hais[idx])
 					if err != nil {
 						log.Println(err)
 						continue
@@ -109,21 +121,29 @@ func (gu *gameUsecaseImpl) InputController(id string, c cha.Cha) {
 					continue
 				}
 			} else {
-				if haiName == "chii" {
+				if strings.HasPrefix(haiName, "chii") {
 					if taku.NextTurn() == turnIdx {
 						err = taku.TakeAction(c, func(inHai *hai.Hai) error {
 							pairs, err := c.Tehai().FindChiiPairs(inHai)
 							if err != nil {
 								return err
 							}
+							if err != nil {
+								return err
+							}
 							if len(pairs) == 0 {
 								return GameUsecaseInvalidActionErr
 							}
-							return c.Chii(inHai, pairs[0])
+							idxstr := string(re.FindAll([]byte(haiName), 1)[0])
+							idx, err := strconv.Atoi(idxstr)
+							if idx >= len(pairs) || idx < 0 {
+								return GameUsecaseInvalidActionErr
+							}
+							return c.Chii(inHai, pairs[idx])
 						})
 					}
 				}
-				if haiName == "pon" {
+				if strings.HasPrefix(haiName, "pon") {
 					err = taku.TakeAction(c, func(inHai *hai.Hai) error {
 						pairs, err := c.Tehai().FindPonPairs(inHai)
 						if err != nil {
@@ -132,10 +152,15 @@ func (gu *gameUsecaseImpl) InputController(id string, c cha.Cha) {
 						if len(pairs) == 0 {
 							return GameUsecaseInvalidActionErr
 						}
-						return c.Pon(inHai, pairs[0])
+						idxstr := string(re.FindAll([]byte(haiName), 1)[0])
+						idx, err := strconv.Atoi(idxstr)
+						if idx >= len(pairs) || idx < 0 {
+							return GameUsecaseInvalidActionErr
+						}
+						return c.Pon(inHai, pairs[idx])
 					})
 				}
-				if haiName == "kan" {
+				if strings.HasPrefix(haiName, "kan") {
 					err = taku.TakeAction(c, func(inHai *hai.Hai) error {
 						pairs, err := c.Tehai().FindKanPairs(inHai)
 						if err != nil {
@@ -144,7 +169,12 @@ func (gu *gameUsecaseImpl) InputController(id string, c cha.Cha) {
 						if len(pairs) == 0 {
 							return GameUsecaseInvalidActionErr
 						}
-						return c.Kan(inHai, pairs[0])
+						idxstr := string(re.FindAll([]byte(haiName), 1)[0])
+						idx, err := strconv.Atoi(idxstr)
+						if idx >= len(pairs) || idx < 0 {
+							return GameUsecaseInvalidActionErr
+						}
+						return c.Kan(inHai, pairs[idx])
 					})
 				}
 				if haiName == "ron" {
@@ -208,7 +238,10 @@ func (gu *gameUsecaseImpl) OutputController(id string, c cha.Cha, channel chan t
 					return err
 				}
 				if len(chiis) != 0 {
-					actions = append(actions, huro.Chii)
+					tehaistr += "\n" + "do you do Chii "
+					for i, h := range chiis {
+						tehaistr += strconv.Itoa(i) + ": " + h[0].Name() + "," + h[1].Name() + "   "
+					}
 				}
 			}
 
@@ -218,7 +251,10 @@ func (gu *gameUsecaseImpl) OutputController(id string, c cha.Cha, channel chan t
 				return err
 			}
 			if len(pons) != 0 {
-				actions = append(actions, huro.Pon)
+				tehaistr += "\n" + "do you do Pon "
+				for i, h := range pons {
+					tehaistr += strconv.Itoa(i) + ": " + h[0].Name() + "," + h[1].Name() + "   "
+				}
 			}
 			// kan
 			kans, err := c.Tehai().FindKanPairs(hai)
@@ -226,7 +262,10 @@ func (gu *gameUsecaseImpl) OutputController(id string, c cha.Cha, channel chan t
 				return err
 			}
 			if len(kans) != 0 {
-				actions = append(actions, huro.Kan)
+				tehaistr += "\n" + "do you do Kan "
+				for i, h := range kans {
+					tehaistr += strconv.Itoa(i) + ": " + h[0].Name() + "," + h[1].Name() + "," + h[2].Name() + "   "
+				}
 			}
 			// ron
 			ok, err := c.CanRon(hai)
@@ -251,6 +290,9 @@ func (gu *gameUsecaseImpl) OutputController(id string, c cha.Cha, channel chan t
 		}
 		if len(hais) != 0 {
 			tehaistr += "\n" + "do you do Riichi "
+			for i, h := range hais {
+				tehaistr += strconv.Itoa(i) + ": " + h.Name() + " "
+			}
 		}
 		// tsumo agari
 		ok, err = c.CanTsumoAgari()

@@ -202,8 +202,7 @@ func (c *chaImpl) Riichi(inHai *hai.Hai) error {
 
 func (c *chaImpl) FindRiichiHai() ([]*hai.Hai, error) {
 	outHais := []*hai.Hai{}
-	// if len(c.huro.Chiis()) != 0 || len(c.huro.Pons()) != 0 || len(c.huro.MinKans()) != 0 || c.tsumohai == nil {
-	if c.tsumohai == nil {
+	if len(c.huro.Chiis()) != 0 || len(c.huro.Pons()) != 0 || len(c.huro.MinKans()) != 0 || c.tsumohai == nil || c.isRiichi {
 		return outHais, nil
 	}
 

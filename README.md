@@ -1,4 +1,4 @@
-# mahjong
+# cli-mahjong
 
 ## setup
 

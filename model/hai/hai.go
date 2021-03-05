@@ -10,13 +10,7 @@ type Hai struct {
 }
 
 func AtoHai(hainame string) (*Hai, error) {
-	all := append([]*Hai{}, Manzu...)
-	all = append(all, Pinzu...)
-	all = append(all, Souzu...)
-	all = append(all, KazeHai...)
-	all = append(all, YakuHai...)
-
-	for _, hai := range all {
+	for _, hai := range All {
 		if hai.name == hainame {
 			return hai, nil
 		}
@@ -70,6 +64,12 @@ func (h *Hai) HasAttribute(attr *attribute.HaiAttribute) bool {
 }
 
 var (
+	All = []*Hai{
+		Manzu1, Manzu2, Manzu3, Manzu4, Manzu5, Manzu6, Manzu7, Manzu8, Manzu9,
+		Pinzu1, Pinzu2, Pinzu3, Pinzu4, Pinzu5, Pinzu6, Pinzu7, Pinzu8, Pinzu9,
+		Souzu1, Souzu2, Souzu3, Souzu4, Souzu5, Souzu6, Souzu7, Souzu8, Souzu9,
+		Ton, Nan, Sha, Pei, Haku, Hatsu, Chun,
+	}
 	Manzu   = []*Hai{Manzu1, Manzu2, Manzu3, Manzu4, Manzu5, Manzu6, Manzu7, Manzu8, Manzu9}
 	Pinzu   = []*Hai{Pinzu1, Pinzu2, Pinzu3, Pinzu4, Pinzu5, Pinzu6, Pinzu7, Pinzu8, Pinzu9}
 	Souzu   = []*Hai{Souzu1, Souzu2, Souzu3, Souzu4, Souzu5, Souzu6, Souzu7, Souzu8, Souzu9}

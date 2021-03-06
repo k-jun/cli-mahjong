@@ -1,4 +1,4 @@
-package huro
+package naki
 
 import (
 	"mahjong/model/hai"
@@ -23,7 +23,7 @@ func TestPon(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		h := huroImpl{pons: c.beforePons}
+		h := nakiImpl{pons: c.beforePons}
 		err := h.SetPon(c.inPon)
 		if err != nil {
 			assert.Equal(t, c.outError, err)
@@ -49,7 +49,7 @@ func TestChii(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		h := huroImpl{chiis: c.beforeChiis}
+		h := nakiImpl{chiis: c.beforeChiis}
 		err := h.SetChii(c.inChii)
 		if err != nil {
 			assert.Equal(t, c.outError, err)
@@ -75,7 +75,7 @@ func TestKan(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		h := huroImpl{minKans: c.beforeKans}
+		h := nakiImpl{minKans: c.beforeKans}
 		err := h.SetMinKan(c.inKan)
 		if err != nil {
 			assert.Equal(t, c.outError, err)
@@ -103,12 +103,12 @@ func TestKakan(t *testing.T) {
 		{
 			beforePons: [][3]*hai.Hai{{hai.Haku, hai.Haku, hai.Haku}},
 			inHai:      hai.Hatsu,
-			outError:   HuroNotFoundErr,
+			outError:   NakiNotFoundErr,
 		},
 	}
 
 	for _, c := range cases {
-		h := huroImpl{pons: c.beforePons}
+		h := nakiImpl{pons: c.beforePons}
 		err := h.Kakan(c.inHai)
 		if err != nil {
 			assert.Equal(t, c.outError, err)

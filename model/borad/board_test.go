@@ -4,7 +4,7 @@ import (
 	"errors"
 	"mahjong/model/cha"
 	"mahjong/model/hai"
-	"mahjong/model/ho"
+	"mahjong/model/kawa"
 	"mahjong/model/tehai"
 	"testing"
 
@@ -191,7 +191,7 @@ func TestMyTurn(t *testing.T) {
 }
 
 func TestTurnEnd(t *testing.T) {
-	testCha1 := &cha.ChaMock{HoMock: &ho.HoMock{HaiMock: hai.Haku}}
+	testCha1 := &cha.ChaMock{KawaMock: &kawa.KawaMock{HaiMock: hai.Haku}}
 	TehaiMock1 := &tehai.TehaiMock{ChiiMock: [][2]*hai.Hai{}}
 	TehaiMock2 := &tehai.TehaiMock{ChiiMock: [][2]*hai.Hai{{}}}
 	testCha2 := &cha.ChaMock{TehaiMock: TehaiMock1}
@@ -234,9 +234,9 @@ func TestTurnEnd(t *testing.T) {
 	}
 }
 
-func TestLastHo(t *testing.T) {
-	testCha1 := &cha.ChaMock{HoMock: &ho.HoMock{HaiMock: hai.Haku}}
-	testCha2 := &cha.ChaMock{HoMock: &ho.HoMock{ErrorMock: errors.New("")}}
+func TestLastkawa(t *testing.T) {
+	testCha1 := &cha.ChaMock{KawaMock: &kawa.KawaMock{HaiMock: hai.Haku}}
+	testCha2 := &cha.ChaMock{KawaMock: &kawa.KawaMock{ErrorMock: errors.New("")}}
 	cases := []struct {
 		name            string
 		beforeChas      []*takuCha
@@ -264,7 +264,7 @@ func TestLastHo(t *testing.T) {
 				chas:      c.beforeChas,
 				turnIndex: c.beforeTurnIndex,
 			}
-			hai, err := taku.LastHo()
+			hai, err := taku.Lastkawa()
 			if err != nil {
 				assert.Equal(t, c.outError, err)
 				return
@@ -275,8 +275,8 @@ func TestLastHo(t *testing.T) {
 }
 
 func TestCancelAction(t *testing.T) {
-	testCha1 := &cha.ChaMock{HoMock: &ho.HoMock{HaiMock: hai.Haku}}
-	testCha2 := &cha.ChaMock{HoMock: &ho.HoMock{HaiMock: hai.Haku}}
+	testCha1 := &cha.ChaMock{KawaMock: &kawa.KawaMock{HaiMock: hai.Haku}}
+	testCha2 := &cha.ChaMock{KawaMock: &kawa.KawaMock{HaiMock: hai.Haku}}
 	cases := []struct {
 		name             string
 		inCha            cha.Cha
@@ -315,7 +315,7 @@ func TestCancelAction(t *testing.T) {
 }
 
 func TestTakeAction(t *testing.T) {
-	testCha1 := &cha.ChaMock{HoMock: &ho.HoMock{HaiMock: hai.Haku}}
+	testCha1 := &cha.ChaMock{KawaMock: &kawa.KawaMock{HaiMock: hai.Haku}}
 	cases := []struct {
 		name             string
 		beforeActionChas []*takuCha

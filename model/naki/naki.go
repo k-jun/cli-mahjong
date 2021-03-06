@@ -1,19 +1,10 @@
-package huro
+package naki
 
 import (
 	"mahjong/model/hai"
 )
 
-type HuroAction string
-
-var (
-	Chii HuroAction = "Chii"
-	Pon  HuroAction = "Pon"
-	Kan  HuroAction = "Kan"
-	Ron  HuroAction = "Ron"
-)
-
-type Huro interface {
+type Naki interface {
 	SetPon([3]*hai.Hai) error
 	SetChii([3]*hai.Hai) error
 	SetMinKan([4]*hai.Hai) error
@@ -25,15 +16,15 @@ type Huro interface {
 	AnKans() [][4]*hai.Hai
 }
 
-type huroImpl struct {
+type nakiImpl struct {
 	pons    [][3]*hai.Hai
 	chiis   [][3]*hai.Hai
 	minKans [][4]*hai.Hai
 	ankans  [][4]*hai.Hai
 }
 
-func New() Huro {
-	return &huroImpl{
+func New() Naki {
+	return &nakiImpl{
 		pons:    [][3]*hai.Hai{},
 		chiis:   [][3]*hai.Hai{},
 		minKans: [][4]*hai.Hai{},
@@ -41,39 +32,39 @@ func New() Huro {
 	}
 }
 
-func (h *huroImpl) Pons() [][3]*hai.Hai {
+func (h *nakiImpl) Pons() [][3]*hai.Hai {
 	return h.pons
 }
-func (h *huroImpl) Chiis() [][3]*hai.Hai {
+func (h *nakiImpl) Chiis() [][3]*hai.Hai {
 	return h.chiis
 }
-func (h *huroImpl) MinKans() [][4]*hai.Hai {
+func (h *nakiImpl) MinKans() [][4]*hai.Hai {
 	return h.minKans
 }
-func (h *huroImpl) AnKans() [][4]*hai.Hai {
+func (h *nakiImpl) AnKans() [][4]*hai.Hai {
 	return h.ankans
 }
 
-func (h *huroImpl) SetPon(hais [3]*hai.Hai) error {
+func (h *nakiImpl) SetPon(hais [3]*hai.Hai) error {
 	h.pons = append(h.pons, hais)
 	return nil
 }
 
-func (h *huroImpl) SetChii(hais [3]*hai.Hai) error {
+func (h *nakiImpl) SetChii(hais [3]*hai.Hai) error {
 	h.chiis = append(h.chiis, hais)
 	return nil
 }
 
-func (h *huroImpl) SetMinKan(hais [4]*hai.Hai) error {
+func (h *nakiImpl) SetMinKan(hais [4]*hai.Hai) error {
 	h.minKans = append(h.minKans, hais)
 	return nil
 }
-func (h *huroImpl) SetAnKan(hais [4]*hai.Hai) error {
+func (h *nakiImpl) SetAnKan(hais [4]*hai.Hai) error {
 	h.ankans = append(h.ankans, hais)
 	return nil
 }
 
-func (h *huroImpl) Kakan(inHai *hai.Hai) error {
+func (h *nakiImpl) Kakan(inHai *hai.Hai) error {
 	for idx, pon := range h.pons {
 		if pon[0] == inHai {
 			h.pons[idx] = h.pons[0]
@@ -86,5 +77,5 @@ func (h *huroImpl) Kakan(inHai *hai.Hai) error {
 		}
 	}
 
-	return HuroNotFoundErr
+	return NakiNotFoundErr
 }

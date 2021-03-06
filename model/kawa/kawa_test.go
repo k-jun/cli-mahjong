@@ -1,4 +1,4 @@
-package ho
+package kawa
 
 import (
 	"mahjong/model/hai"
@@ -24,7 +24,7 @@ func TestAdd(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		h := hoImpl{hais: c.beforeHais}
+		h := kawaImpl{hais: c.beforeHais}
 		err := h.Add(c.inHai)
 		if err != nil {
 			assert.Equal(t, c.outError, err)
@@ -48,12 +48,12 @@ func TestLast(t *testing.T) {
 		},
 		{
 			beforeHais: []*hai.Hai{},
-			outError:   HoNoHaiError,
+			outError:   KawaNoHaiError,
 		},
 	}
 
 	for _, c := range cases {
-		h := hoImpl{hais: c.beforeHais}
+		h := kawaImpl{hais: c.beforeHais}
 		outHai, err := h.Last()
 
 		if err != nil {
@@ -83,20 +83,20 @@ func TestRemoveLast(t *testing.T) {
 		{
 			name:       "failure",
 			beforeHais: []*hai.Hai{},
-			outError:   HoNoHaiError,
+			outError:   KawaNoHaiError,
 		},
 	}
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			ho := hoImpl{hais: c.beforeHais}
-			hai, err := ho.RemoveLast()
+			Kawa := kawaImpl{hais: c.beforeHais}
+			hai, err := Kawa.RemoveLast()
 			if err != nil {
 				assert.Equal(t, c.outError, err)
 				return
 			}
 			assert.Equal(t, c.outHai, hai)
-			assert.Equal(t, c.afterHais, ho.hais)
+			assert.Equal(t, c.afterHais, Kawa.hais)
 
 		})
 

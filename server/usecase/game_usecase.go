@@ -6,7 +6,6 @@ import (
 	"log"
 	"mahjong/model/cha"
 	"mahjong/model/hai"
-	"mahjong/model/huro"
 	"mahjong/model/taku"
 	"mahjong/storage"
 	"regexp"
@@ -230,7 +229,7 @@ func (gu *gameUsecaseImpl) OutputController(id string, c cha.Cha, channel chan t
 			if err != nil {
 				return err
 			}
-			actions := []huro.HuroAction{}
+			actions := []cha.Action{}
 			// chii
 			if taku.NextTurn() == turnIdx {
 				chiis, err := c.Tehai().FindChiiPairs(hai)
@@ -273,7 +272,7 @@ func (gu *gameUsecaseImpl) OutputController(id string, c cha.Cha, channel chan t
 				return err
 			}
 			if ok {
-				actions = append(actions, huro.Ron)
+				actions = append(actions, cha.Ron)
 			}
 
 			if err != nil {

@@ -25,7 +25,7 @@ type Cha interface {
 	CanTsumoAgari() (bool, error)
 	CanRon(*hai.Hai) (bool, error)
 	FindRiichiHai() ([]*hai.Hai, error)
-	FindHuroActions(*hai.Hai) ([]huro.HuroAction, error)
+	FindHuroActions(*hai.Hai) ([]Action, error)
 
 	Tsumo() error
 	Dahai(*hai.Hai) error
@@ -35,6 +35,28 @@ type Cha interface {
 	Kan(*hai.Hai, [3]*hai.Hai) error
 	Kakan(*hai.Hai) error
 	Riichi(*hai.Hai) error
+}
+
+type Action string
+
+var (
+	Chii       Action = "chii"
+	Pon        Action = "pon"
+	Kan        Action = "kan"
+	Ron        Action = "ron"
+	Riichi     Action = "riichi"
+	Tsumo      Action = "tsumo"
+	AllActions        = []Action{Chii, Pon, Kan, Ron, Riichi, Tsumo}
+)
+
+func AtoAction(s string) (Action, error) {
+	for _, a := range AllActions {
+		if string(a) == s {
+			return a, nil
+		}
+	}
+
+	return "", ChaActionInvalidErr
 }
 
 type chaImpl struct {
@@ -223,6 +245,10 @@ func (c *chaImpl) FindRiichiHai() ([]*hai.Hai, error) {
 	return outHais, nil
 }
 
+func (c *chaImpl) FindAnKanHai() ([][3]*hai.Hai, error) {
+	return c.tehai.FindKanPairs(c.tsumohai)
+}
+
 func (c *chaImpl) CanTsumoAgari() (bool, error) {
 	if c.tsumohai == nil {
 		return false, nil
@@ -277,15 +303,15 @@ func (c *chaImpl) CanRon(inHai *hai.Hai) (bool, error) {
 
 }
 
-func (c *chaImpl) FindHuroActions(inHai *hai.Hai) ([]huro.HuroAction, error) {
-	actions := []huro.HuroAction{}
+func (c *chaImpl) FindHuroActions(inHai *hai.Hai) ([]Action, error) {
+	actions := []Action{}
 	// chii
 	pairs, err := c.tehai.FindChiiPairs(inHai)
 	if err != nil {
 		return actions, err
 	}
 	if len(pairs) != 0 {
-		actions = append(actions, huro.Chii)
+		actions = append(actions, Chii)
 	}
 
 	// pon
@@ -294,7 +320,7 @@ func (c *chaImpl) FindHuroActions(inHai *hai.Hai) ([]huro.HuroAction, error) {
 		return actions, err
 	}
 	if len(pairs) != 0 {
-		actions = append(actions, huro.Pon)
+		actions = append(actions, Pon)
 	}
 
 	// kan
@@ -303,7 +329,7 @@ func (c *chaImpl) FindHuroActions(inHai *hai.Hai) ([]huro.HuroAction, error) {
 		return actions, err
 	}
 	if len(kanpairs) != 0 {
-		actions = append(actions, huro.Kan)
+		actions = append(actions, Kan)
 	}
 
 	// ron
@@ -312,7 +338,7 @@ func (c *chaImpl) FindHuroActions(inHai *hai.Hai) ([]huro.HuroAction, error) {
 		return actions, err
 	}
 	if isRon {
-		actions = append(actions, huro.Ron)
+		actions = append(actions, Ron)
 	}
 	return actions, nil
 }

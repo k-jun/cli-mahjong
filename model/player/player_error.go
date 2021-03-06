@@ -8,4 +8,5 @@ var (
 	ChaAlreadyDidHaipaiErr    = errors.New("already did haipai")
 	ChaHaiNotFoundErr         = errors.New("hai not found")
 	ChaAlreadyRiichiErr       = errors.New("already did riichi")
+	ChaActionInvalidErr       = errors.New("invalid cha action")
 )

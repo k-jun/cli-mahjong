@@ -16,7 +16,7 @@ type ChaMock struct {
 	HuroMock        huro.Huro
 	HaiMock         *hai.Hai
 	HaisMock        []*hai.Hai
-	HuroActionsMock []huro.HuroAction
+	HuroActionsMock []Action
 	HoMock          ho.Ho
 	BoolMock        bool
 }
@@ -85,7 +85,7 @@ func (c *ChaMock) CanTsumoAgari() (bool, error) {
 	return c.BoolMock, c.ErrorMock
 
 }
-func (c *ChaMock) FindHuroActions(_ *hai.Hai) ([]huro.HuroAction, error) {
+func (c *ChaMock) FindHuroActions(_ *hai.Hai) ([]Action, error) {
 	return c.HuroActionsMock, c.ErrorMock
 }
 

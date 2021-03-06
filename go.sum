@@ -71,6 +71,8 @@ github.com/k-jun/northpole v0.1.5 h1:fxVcWAQ5nYQFbdWl2QP/T65SsmfQnhhJRE8nU0AmIEo
 github.com/k-jun/northpole v0.1.5/go.mod h1:mDdDhQtRnlKebk9BDlToZy2f/oXG7sgt0ySe/2t8rdk=
 github.com/k-jun/northpole v0.1.6 h1:MiGDYNkcJ4WTgY6Y9+PsoUenSPn2ciqG22tfEVtYl0s=
 github.com/k-jun/northpole v0.1.6/go.mod h1:mDdDhQtRnlKebk9BDlToZy2f/oXG7sgt0ySe/2t8rdk=
+github.com/k-jun/northpole v0.1.7 h1:7hGsDAUqvmmODEmxGz9RUCP+ldVdzscjxbDwLSzalw4=
+github.com/k-jun/northpole v0.1.7/go.mod h1:mDdDhQtRnlKebk9BDlToZy2f/oXG7sgt0ySe/2t8rdk=
 github.com/kisielk/errcheck v1.2.0/go.mod h1:/BMXB+zMLi60iA8Vv6Ksmxu/1UDYcXs4uQLJ+jE2L00=
 github.com/kisielk/gotool v1.0.0/go.mod h1:XhKaO+MFFWcvkIS/tQcRk01m1F5IRFswLeQ+oQHNcck=
 github.com/kr/fs v0.1.0/go.mod h1:FFnZGqtBN9Gxj7eW1uZ42v5BccTP0vu6NEaFoC2HwRg=

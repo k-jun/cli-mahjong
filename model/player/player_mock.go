@@ -1,94 +1,94 @@
-package cha
+package player
 
 import (
 	"mahjong/model/hai"
-	"mahjong/model/ho"
-	"mahjong/model/huro"
+	"mahjong/model/kawa"
+	"mahjong/model/naki"
 	"mahjong/model/tehai"
 	"mahjong/model/yama"
 )
 
-var _ Cha = &ChaMock{}
+var _ Player = &PlayerMock{}
 
-type ChaMock struct {
-	ErrorMock       error
-	TehaiMock       tehai.Tehai
-	HuroMock        huro.Huro
-	HaiMock         *hai.Hai
-	HaisMock        []*hai.Hai
-	HuroActionsMock []Action
-	HoMock          ho.Ho
-	BoolMock        bool
+type PlayerMock struct {
+	ErrorMock   error
+	TehaiMock   tehai.Tehai
+	NakiMock    naki.Naki
+	HaiMock     *hai.Hai
+	HaisMock    []*hai.Hai
+	ActionsMock []Action
+	KawaMock    kawa.Kawa
+	BoolMock    bool
 }
 
-func (c *ChaMock) Tehai() tehai.Tehai {
+func (c *PlayerMock) Tehai() tehai.Tehai {
 	return c.TehaiMock
 }
 
-func (c *ChaMock) Ho() ho.Ho {
-	return c.HoMock
+func (c *PlayerMock) Kawa() kawa.Kawa {
+	return c.KawaMock
 }
 
-func (c *ChaMock) Huro() huro.Huro {
-	return c.HuroMock
+func (c *PlayerMock) Naki() naki.Naki {
+	return c.NakiMock
 }
 
-func (c *ChaMock) Tsumohai() *hai.Hai {
+func (c *PlayerMock) Tsumohai() *hai.Hai {
 	return c.HaiMock
 }
 
-func (c *ChaMock) IsRiichi() bool {
+func (c *PlayerMock) IsRiichi() bool {
 	return c.BoolMock
 }
 
-func (c *ChaMock) Tsumo() error {
+func (c *PlayerMock) Tsumo() error {
 	return c.ErrorMock
 }
 
-func (c *ChaMock) Dahai(outHai *hai.Hai) error {
+func (c *PlayerMock) Dahai(outHai *hai.Hai) error {
 	return c.ErrorMock
 }
 
-func (c *ChaMock) Riichi(_ *hai.Hai) error {
+func (c *PlayerMock) Riichi(_ *hai.Hai) error {
 	return c.ErrorMock
 }
 
-func (c *ChaMock) SetYama(_ yama.Yama) error {
+func (c *PlayerMock) SetYama(_ yama.Yama) error {
 	return c.ErrorMock
 }
 
-func (c *ChaMock) Haipai() error {
+func (c *PlayerMock) Haipai() error {
 	return c.ErrorMock
 }
 
-func (c *ChaMock) Chii(inHai *hai.Hai, outHais [2]*hai.Hai) error {
+func (c *PlayerMock) Chii(inHai *hai.Hai, outHais [2]*hai.Hai) error {
 	return c.ErrorMock
 }
 
-func (c *ChaMock) Pon(inHai *hai.Hai, outHais [2]*hai.Hai) error {
+func (c *PlayerMock) Pon(inHai *hai.Hai, outHais [2]*hai.Hai) error {
 	return c.ErrorMock
 }
 
-func (c *ChaMock) Kan(inHai *hai.Hai, outHais [3]*hai.Hai) error {
+func (c *PlayerMock) Kan(inHai *hai.Hai, outHais [3]*hai.Hai) error {
 	return c.ErrorMock
 }
 
-func (c *ChaMock) Kakan(inHai *hai.Hai) error {
+func (c *PlayerMock) Kakan(inHai *hai.Hai) error {
 	return c.ErrorMock
 }
 
-func (c *ChaMock) FindRiichiHai() ([]*hai.Hai, error) {
+func (c *PlayerMock) FindRiichiHai() ([]*hai.Hai, error) {
 	return c.HaisMock, c.ErrorMock
 }
 
-func (c *ChaMock) CanTsumoAgari() (bool, error) {
+func (c *PlayerMock) CanTsumoAgari() (bool, error) {
 	return c.BoolMock, c.ErrorMock
 
 }
-func (c *ChaMock) FindHuroActions(_ *hai.Hai) ([]Action, error) {
-	return c.HuroActionsMock, c.ErrorMock
+func (c *PlayerMock) FindNakiActions(_ *hai.Hai) ([]Action, error) {
+	return c.ActionsMock, c.ErrorMock
 }
 
-func (c *ChaMock) CanRon(_ *hai.Hai) (bool, error) {
+func (c *PlayerMock) CanRon(_ *hai.Hai) (bool, error) {
 	return c.BoolMock, c.ErrorMock
 }

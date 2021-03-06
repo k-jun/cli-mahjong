@@ -1,10 +1,10 @@
-package cha
+package player
 
 import (
 	"mahjong/model/attribute"
 	"mahjong/model/hai"
-	"mahjong/model/ho"
-	"mahjong/model/huro"
+	"mahjong/model/kawa"
+	"mahjong/model/naki"
 	"mahjong/model/tehai"
 	"mahjong/model/yama"
 	"sort"
@@ -12,12 +12,12 @@ import (
 	"github.com/google/uuid"
 )
 
-type Cha interface {
+type Player interface {
 	// getter
 	Tehai() tehai.Tehai
-	Ho() ho.Ho
+	Kawa() kawa.Kawa
 	Tsumohai() *hai.Hai
-	Huro() huro.Huro
+	Naki() naki.Naki
 	IsRiichi() bool
 	// setter
 	SetYama(yama.Yama) error
@@ -25,7 +25,7 @@ type Cha interface {
 	CanTsumoAgari() (bool, error)
 	CanRon(*hai.Hai) (bool, error)
 	FindRiichiHai() ([]*hai.Hai, error)
-	FindHuroActions(*hai.Hai) ([]Action, error)
+	FindNakiActions(*hai.Hai) ([]Action, error)
 
 	Tsumo() error
 	Dahai(*hai.Hai) error
@@ -56,53 +56,53 @@ func AtoAction(s string) (Action, error) {
 		}
 	}
 
-	return "", ChaActionInvalidErr
+	return "", PlayerActionInvalidErr
 }
 
-type chaImpl struct {
+type playerImpl struct {
 	id       uuid.UUID
 	tsumohai *hai.Hai
-	ho       ho.Ho
+	kawa     kawa.Kawa
 	tehai    tehai.Tehai
-	huro     huro.Huro
+	naki     naki.Naki
 	yama     yama.Yama
 	isRiichi bool
 }
 
-func New(id uuid.UUID, ho ho.Ho, t tehai.Tehai, hu huro.Huro) Cha {
-	return &chaImpl{
+func New(id uuid.UUID, k kawa.Kawa, t tehai.Tehai, n naki.Naki) Player {
+	return &playerImpl{
 		id:       id,
-		ho:       ho,
+		kawa:     k,
 		tehai:    t,
-		huro:     hu,
+		naki:     n,
 		yama:     nil,
 		isRiichi: false,
 	}
 }
 
-func (c *chaImpl) Tehai() tehai.Tehai {
+func (c *playerImpl) Tehai() tehai.Tehai {
 	return c.tehai
 }
 
-func (c *chaImpl) Ho() ho.Ho {
-	return c.ho
+func (c *playerImpl) Kawa() kawa.Kawa {
+	return c.kawa
 }
 
-func (c *chaImpl) Huro() huro.Huro {
-	return c.huro
+func (c *playerImpl) Naki() naki.Naki {
+	return c.naki
 }
 
-func (c *chaImpl) Tsumohai() *hai.Hai {
+func (c *playerImpl) Tsumohai() *hai.Hai {
 	return c.tsumohai
 }
 
-func (c *chaImpl) IsRiichi() bool {
+func (c *playerImpl) IsRiichi() bool {
 	return c.isRiichi
 }
 
-func (c *chaImpl) Tsumo() error {
+func (c *playerImpl) Tsumo() error {
 	if c.tsumohai != nil {
-		return ChaAlreadyHaveTsumohaiErr
+		return PlayerAlreadyHaveTsumohaiErr
 	}
 
 	tsumohai, err := c.yama.Draw()
@@ -114,10 +114,10 @@ func (c *chaImpl) Tsumo() error {
 	return nil
 }
 
-func (c *chaImpl) Dahai(outHai *hai.Hai) error {
+func (c *playerImpl) Dahai(outHai *hai.Hai) error {
 	var err error
 	if c.isRiichi && outHai != c.tsumohai {
-		return ChaAlreadyRiichiErr
+		return PlayerAlreadyRiichiErr
 	}
 	if outHai != c.tsumohai {
 		if c.tsumohai == nil {
@@ -135,20 +135,20 @@ func (c *chaImpl) Dahai(outHai *hai.Hai) error {
 	}
 	c.tsumohai = nil
 
-	return c.ho.Add(outHai)
+	return c.kawa.Add(outHai)
 }
 
-func (c *chaImpl) SetYama(y yama.Yama) error {
+func (c *playerImpl) SetYama(y yama.Yama) error {
 	if c.yama != nil {
-		return ChaAlreadyHaveYamaErr
+		return PlayerAlreadyHaveYamaErr
 	}
 	c.yama = y
 	return nil
 }
 
-func (c *chaImpl) Haipai() error {
+func (c *playerImpl) Haipai() error {
 	if len(c.tehai.Hais()) != 0 {
-		return ChaAlreadyDidHaipaiErr
+		return PlayerAlreadyDidHaipaiErr
 	}
 
 	for i := 0; i < tehai.MaxHaisLen; i++ {
@@ -167,7 +167,7 @@ func (c *chaImpl) Haipai() error {
 	return nil
 }
 
-func (c *chaImpl) Chii(inHai *hai.Hai, outHais [2]*hai.Hai) error {
+func (c *playerImpl) Chii(inHai *hai.Hai, outHais [2]*hai.Hai) error {
 	if inHai == c.tsumohai {
 		c.tsumohai = nil
 	}
@@ -177,10 +177,10 @@ func (c *chaImpl) Chii(inHai *hai.Hai, outHais [2]*hai.Hai) error {
 	}
 	meld := [3]*hai.Hai{inHai, hais[0], hais[1]}
 
-	return c.huro.SetChii(meld)
+	return c.naki.SetChii(meld)
 }
 
-func (c *chaImpl) Pon(inHai *hai.Hai, outHais [2]*hai.Hai) error {
+func (c *playerImpl) Pon(inHai *hai.Hai, outHais [2]*hai.Hai) error {
 	if inHai == c.tsumohai {
 		c.tsumohai = nil
 	}
@@ -190,10 +190,10 @@ func (c *chaImpl) Pon(inHai *hai.Hai, outHais [2]*hai.Hai) error {
 	}
 	meld := [3]*hai.Hai{inHai, hais[0], hais[1]}
 
-	return c.huro.SetPon(meld)
+	return c.naki.SetPon(meld)
 }
 
-func (c *chaImpl) Kan(inHai *hai.Hai, outHais [3]*hai.Hai) error {
+func (c *playerImpl) Kan(inHai *hai.Hai, outHais [3]*hai.Hai) error {
 	if inHai == c.tsumohai {
 		c.tsumohai = nil
 	}
@@ -203,17 +203,17 @@ func (c *chaImpl) Kan(inHai *hai.Hai, outHais [3]*hai.Hai) error {
 	}
 	meld := [4]*hai.Hai{inHai, hais[0], hais[1], hais[2]}
 
-	return c.huro.SetMinKan(meld)
+	return c.naki.SetMinKan(meld)
 }
 
-func (c *chaImpl) Kakan(inHai *hai.Hai) error {
+func (c *playerImpl) Kakan(inHai *hai.Hai) error {
 	if inHai == c.tsumohai {
 		c.tsumohai = nil
 	}
-	return c.huro.Kakan(inHai)
+	return c.naki.Kakan(inHai)
 }
 
-func (c *chaImpl) Riichi(inHai *hai.Hai) error {
+func (c *playerImpl) Riichi(inHai *hai.Hai) error {
 	err := c.Dahai(inHai)
 	if err != nil {
 		return err
@@ -222,9 +222,9 @@ func (c *chaImpl) Riichi(inHai *hai.Hai) error {
 	return nil
 }
 
-func (c *chaImpl) FindRiichiHai() ([]*hai.Hai, error) {
+func (c *playerImpl) FindRiichiHai() ([]*hai.Hai, error) {
 	outHais := []*hai.Hai{}
-	if len(c.huro.Chiis()) != 0 || len(c.huro.Pons()) != 0 || len(c.huro.MinKans()) != 0 || c.tsumohai == nil || c.isRiichi {
+	if len(c.naki.Chiis()) != 0 || len(c.naki.Pons()) != 0 || len(c.naki.MinKans()) != 0 || c.tsumohai == nil || c.isRiichi {
 		return outHais, nil
 	}
 
@@ -245,11 +245,11 @@ func (c *chaImpl) FindRiichiHai() ([]*hai.Hai, error) {
 	return outHais, nil
 }
 
-func (c *chaImpl) FindAnKanHai() ([][3]*hai.Hai, error) {
+func (c *playerImpl) FindAnKanHai() ([][3]*hai.Hai, error) {
 	return c.tehai.FindKanPairs(c.tsumohai)
 }
 
-func (c *chaImpl) CanTsumoAgari() (bool, error) {
+func (c *playerImpl) CanTsumoAgari() (bool, error) {
 	if c.tsumohai == nil {
 		return false, nil
 	}
@@ -277,7 +277,7 @@ func (c *chaImpl) CanTsumoAgari() (bool, error) {
 	return false, nil
 }
 
-func (c *chaImpl) CanRon(inHai *hai.Hai) (bool, error) {
+func (c *playerImpl) CanRon(inHai *hai.Hai) (bool, error) {
 	hais := c.tehai.Hais()
 	hais = append(hais, inHai)
 	cnt := map[*hai.Hai]int{}
@@ -303,7 +303,7 @@ func (c *chaImpl) CanRon(inHai *hai.Hai) (bool, error) {
 
 }
 
-func (c *chaImpl) FindHuroActions(inHai *hai.Hai) ([]Action, error) {
+func (c *playerImpl) FindNakiActions(inHai *hai.Hai) ([]Action, error) {
 	actions := []Action{}
 	// chii
 	pairs, err := c.tehai.FindChiiPairs(inHai)
@@ -426,7 +426,7 @@ func removeHai(hais []*hai.Hai, hai *hai.Hai) []*hai.Hai {
 			return hais
 		}
 	}
-	panic(ChaHaiNotFoundErr)
+	panic(PlayerHaiNotFoundErr)
 }
 
 func removeMentsus(hais []*hai.Hai) ([]*hai.Hai, error) {

@@ -1,8 +1,8 @@
-package taku
+package board
 
 import (
-	"mahjong/model/cha"
 	"mahjong/model/hai"
+	"mahjong/model/player"
 	"mahjong/model/yama"
 	"strings"
 	"sync"
@@ -12,85 +12,85 @@ var (
 	MaxNumberOfUsers = 4
 )
 
-type Taku interface {
+type board interface {
 	// setter
 	SetWinIndex(int) error
 
 	// game
-	JoinCha(cha.Cha) (chan Taku, error)
-	LeaveCha(cha.Cha) error
+	Joinplayer(player.Player) (chan board, error)
+	Leaveplayer(player.Player) error
 	Broadcast()
 
 	// turn
 	CurrentTurn() int
 	NextTurn() int
-	MyTurn(cha.Cha) (int, error)
+	MyTurn(player.Player) (int, error)
 	TurnEnd() error
 
 	// last ho
-	LastHo() (*hai.Hai, error)
+	LastKawa() (*hai.Hai, error)
 
 	// action counter
 	ActionCounter() int
-	CancelAction(c cha.Cha) error
-	TakeAction(cha.Cha, func(*hai.Hai) error) error
+	CancelAction(c player.Player) error
+	TakeAction(player.Player, func(*hai.Hai) error) error
 
 	// draw
-	Draw(cha.Cha) string
+	Draw(player.Player) string
 }
 
-func New(maxNOU int, y yama.Yama) Taku {
-	return &takuImpl{
-		chas:            []*takuCha{},
+func New(maxNOU int, y yama.Yama) board {
+	return &boardImpl{
+		players:         []*boardPlayer{},
 		yama:            y,
 		turnIndex:       0,
 		maxNumberOfUser: maxNOU,
 		isPlaying:       true,
-		actionChas:      []*takuCha{},
+		actionplayers:   []*boardPlayer{},
 		winIndex:        -1,
 	}
 }
 
-type takuImpl struct {
+type boardImpl struct {
 	sync.Mutex
-	chas            []*takuCha
+	players         []*boardPlayer
 	yama            yama.Yama
 	turnIndex       int
 	maxNumberOfUser int
 	isPlaying       bool
-	actionChas      []*takuCha
+	actionplayers   []*boardPlayer
 
 	// win
 	winIndex int
 }
 
-type takuCha struct {
-	channel chan Taku
-	cha.Cha
+type boardPlayer struct {
+	channel chan board
+	player.Player
 }
 
-func (t *takuImpl) SetWinIndex(idx int) error {
-	if idx >= len(t.chas) || idx < 0 {
-		return TakuIndexOutOfRangeErr
+func (t *boardImpl) SetWinIndex(idx int) error {
+	if idx >= len(t.players) || idx < 0 {
+		return BoardIndexOutOfRangeErr
 	}
 	t.winIndex = idx
 	return nil
 }
 
-func (t *takuImpl) JoinCha(c cha.Cha) (chan Taku, error) {
+func (t *boardImpl) Joinplayer(c player.Player) (chan board, error) {
 	t.Lock()
 	defer t.Unlock()
-	if len(t.chas) >= t.maxNumberOfUser {
-		return nil, TakuMaxNOUErr
+	if len(t.players) >= t.maxNumberOfUser {
+		return nil, BoardMaxNOUErr
 	}
 
 	if err := c.SetYama(t.yama); err != nil {
 		return nil, err
 	}
-	channel := make(chan Taku, t.maxNumberOfUser*3)
-	t.chas = append(t.chas, &takuCha{Cha: c, channel: channel})
+	channel := make(chan board, t.maxNumberOfUser*3)
+	t.players = append(t.players, &boardPlayer{Player: c, channel: channel})
 
-	if len(t.chas) >= t.maxNumberOfUser {
+	if len(t.players) >= t.maxNumberOfUser {
 		t.gameStart()
 		go t.Broadcast()
 	}
@@ -98,56 +98,56 @@ func (t *takuImpl) JoinCha(c cha.Cha) (chan Taku, error) {
 	return channel, nil
 }
 
-func (t *takuImpl) LeaveCha(c cha.Cha) error {
+func (t *boardImpl) Leaveplayer(c player.Player) error {
 	t.Lock()
 	defer t.Unlock()
 	// terminate the game
 	if t.isPlaying {
 		t.isPlaying = false
-		for _, tu := range t.chas {
+		for _, tu := range t.players {
 			close(tu.channel)
 		}
-		t.chas = []*takuCha{}
+		t.players = []*boardPlayer{}
 	}
 	return nil
 }
 
-func (t *takuImpl) Broadcast() {
-	for _, tu := range t.chas {
+func (t *boardImpl) Broadcast() {
+	for _, tu := range t.players {
 		tu.channel <- t
 	}
 }
 
-func (t *takuImpl) gameStart() error {
+func (t *boardImpl) gameStart() error {
 	// tehai assign
-	for _, tc := range t.chas {
+	for _, tc := range t.players {
 		if err := tc.Haipai(); err != nil {
 			return err
 		}
 	}
 
 	// tsumo
-	return t.chas[t.CurrentTurn()].Cha.Tsumo()
+	return t.players[t.CurrentTurn()].Tsumo()
 }
 
-func (t *takuImpl) CurrentTurn() int {
+func (t *boardImpl) CurrentTurn() int {
 	return t.turnIndex
 }
 
-func (t *takuImpl) MyTurn(c cha.Cha) (int, error) {
-	for i, tc := range t.chas {
-		if tc.Cha == c {
+func (t *boardImpl) MyTurn(c player.Player) (int, error) {
+	for i, tc := range t.players {
+		if tc.Player == c {
 			return i, nil
 		}
 	}
-	return -1, TakuChaNotFoundErr
+	return -1, BoardPlayerNotFoundErr
 }
 
-func (t *takuImpl) NextTurn() int {
+func (t *boardImpl) NextTurn() int {
 	return (t.turnIndex + 1) % t.maxNumberOfUser
 }
 
-func (t *takuImpl) TurnEnd() error {
+func (t *boardImpl) TurnEnd() error {
 	t.Lock()
 	defer t.Unlock()
 	err := t.setActionCounter()
@@ -155,11 +155,11 @@ func (t *takuImpl) TurnEnd() error {
 		return err
 	}
 
-	if len(t.actionChas) == 0 {
-		if err := t.turnChange(t.NextTurn()); err != nil {
+	if len(t.actionplayers) == 0 {
+		if err := t.turnchange(t.NextTurn()); err != nil {
 			return err
 		}
-		if err := t.chas[t.CurrentTurn()].Cha.Tsumo(); err != nil {
+		if err := t.players[t.CurrentTurn()].Tsumo(); err != nil {
 			return err
 		}
 	}
@@ -167,45 +167,45 @@ func (t *takuImpl) TurnEnd() error {
 	return nil
 }
 
-func (t *takuImpl) turnChange(idx int) error {
-	if idx < 0 || idx >= len(t.chas) {
-		return TakuIndexOutOfRangeErr
+func (t *boardImpl) turnchange(idx int) error {
+	if idx < 0 || idx >= len(t.players) {
+		return BoardIndexOutOfRangeErr
 	}
 	t.turnIndex = idx
 	return nil
 }
 
-func (t *takuImpl) setActionCounter() error {
-	chas := []*takuCha{}
+func (t *boardImpl) setActionCounter() error {
+	players := []*boardPlayer{}
 
-	inHai, err := t.chas[t.CurrentTurn()].Ho().Last()
+	inHai, err := t.players[t.CurrentTurn()].Kawa().Last()
 	if err != nil {
 		return err
 	}
-	for i, tc := range t.chas {
-		if tc == t.chas[t.CurrentTurn()] {
+	for i, tc := range t.players {
+		if tc == t.players[t.CurrentTurn()] {
 			continue
 		}
 
 		actionCounter := 0
 		if i == t.NextTurn() {
-			pairs, err := tc.Cha.Tehai().FindChiiPairs(inHai)
+			pairs, err := tc.Tehai().FindChiiPairs(inHai)
 			if err != nil {
 				return err
 			}
 			actionCounter += len(pairs)
 		}
-		pairs, err := tc.Cha.Tehai().FindPonPairs(inHai)
+		pairs, err := tc.Tehai().FindPonPairs(inHai)
 		if err != nil {
 			return err
 		}
 		actionCounter += len(pairs)
-		kpairs, err := tc.Cha.Tehai().FindKanPairs(inHai)
+		kpairs, err := tc.Tehai().FindKanPairs(inHai)
 		if err != nil {
 			return err
 		}
 		actionCounter += len(kpairs)
-		ok, err := tc.Cha.CanRon(inHai)
+		ok, err := tc.CanRon(inHai)
 		if err != nil {
 			return err
 		}
@@ -214,44 +214,44 @@ func (t *takuImpl) setActionCounter() error {
 		}
 
 		if actionCounter != 0 {
-			chas = append(chas, tc)
+			players = append(players, tc)
 		}
 	}
-	t.actionChas = chas
+	t.actionplayers = players
 	return nil
 }
 
-func (t *takuImpl) LastHo() (*hai.Hai, error) {
-	return t.chas[t.CurrentTurn()].Ho().Last()
+func (t *boardImpl) LastKawa() (*hai.Hai, error) {
+	return t.players[t.CurrentTurn()].Kawa().Last()
 }
 
-func (t *takuImpl) ActionCounter() int {
-	return len(t.actionChas)
+func (t *boardImpl) ActionCounter() int {
+	return len(t.actionplayers)
 }
 
-func (t *takuImpl) CancelAction(c cha.Cha) error {
+func (t *boardImpl) CancelAction(c player.Player) error {
 	t.Lock()
 	defer t.Unlock()
-	if len(t.actionChas) == 0 {
+	if len(t.actionplayers) == 0 {
 		return nil
 	}
 
 	found := false
-	for i, tc := range t.actionChas {
-		if tc.Cha == c {
+	for i, tc := range t.actionplayers {
+		if tc.Player == c {
 			found = true
-			t.actionChas = append(t.actionChas[:i], t.actionChas[i+1:]...)
+			t.actionplayers = append(t.actionplayers[:i], t.actionplayers[i+1:]...)
 		}
 	}
 	if !found {
-		return TakuChaNotFoundErr
+		return BoardPlayerNotFoundErr
 	}
 
-	if len(t.actionChas) == 0 {
-		if err := t.turnChange(t.NextTurn()); err != nil {
+	if len(t.actionplayers) == 0 {
+		if err := t.turnchange(t.NextTurn()); err != nil {
 			return err
 		}
-		if err := t.chas[t.CurrentTurn()].Cha.Tsumo(); err != nil {
+		if err := t.players[t.CurrentTurn()].Tsumo(); err != nil {
 			return err
 		}
 		go t.Broadcast()
@@ -259,25 +259,25 @@ func (t *takuImpl) CancelAction(c cha.Cha) error {
 	return nil
 }
 
-func (t *takuImpl) TakeAction(c cha.Cha, action func(*hai.Hai) error) error {
+func (t *boardImpl) TakeAction(c player.Player, action func(*hai.Hai) error) error {
 	t.Lock()
 	defer t.Unlock()
-	if len(t.actionChas) == 0 {
-		return TakuActionAlreadyTokenErr
+	if len(t.actionplayers) == 0 {
+		return BoardActionAlreadyTokenErr
 	}
 
 	found := false
-	for _, tc := range t.actionChas {
-		if tc.Cha == c {
+	for _, tc := range t.actionplayers {
+		if tc.Player == c {
 			found = true
 		}
 	}
 	if !found {
-		return TakuChaNotFoundErr
+		return BoardPlayerNotFoundErr
 	}
 
-	t.actionChas = []*takuCha{}
-	h, err := t.chas[t.CurrentTurn()].Ho().RemoveLast()
+	t.actionplayers = []*boardPlayer{}
+	h, err := t.players[t.CurrentTurn()].Kawa().RemoveLast()
 	if err != nil {
 		return err
 	}
@@ -287,25 +287,25 @@ func (t *takuImpl) TakeAction(c cha.Cha, action func(*hai.Hai) error) error {
 	}
 
 	turnIdx, _ := t.MyTurn(c)
-	if err := t.turnChange(turnIdx); err != nil {
+	if err := t.turnchange(turnIdx); err != nil {
 		return err
 	}
 	go t.Broadcast()
 	return nil
 }
 
-type takuHai struct {
+type boardHai struct {
 	*hai.Hai
 	isOpen   bool
 	isDown   bool
 	isRiichi bool
 }
 
-func (t *takuImpl) Draw(c cha.Cha) string {
+func (t *boardImpl) Draw(c player.Player) string {
 
 	str := ""
 	if t.winIndex != -1 {
-		draftTehai := t.draftTehai(t.chas[t.winIndex])
+		draftTehai := t.draftTehai(t.players[t.winIndex])
 		str += drawTehai(draftTehai)
 		str += "\n GAME SET!!"
 		return str
@@ -317,13 +317,13 @@ func (t *takuImpl) Draw(c cha.Cha) string {
 	// ho
 	draftHo := t.draftHo(c)
 
-	for i, h := range draftTehais["kamicha"] {
+	for i, h := range draftTehais["kamiplayer"] {
 		if h == nil {
 			continue
 		}
 		draftHo[i][0] = h
 	}
-	for i, h := range draftTehais["shimocha"] {
+	for i, h := range draftTehais["shimoplayer"] {
 		if h == nil {
 			continue
 		}
@@ -332,29 +332,29 @@ func (t *takuImpl) Draw(c cha.Cha) string {
 	str += drawHo(draftHo)
 
 	// tehai
-	str += drawTehai(draftTehais["jicha"])
+	str += drawTehai(draftTehais["jiplayer"])
 
 	return str
 }
 
-func (t *takuImpl) draftTehaiAll(c cha.Cha) map[string][20]*takuHai {
-	tehaiMap := map[string][20]*takuHai{}
+func (t *boardImpl) draftTehaiAll(c player.Player) map[string][20]*boardHai {
+	tehaiMap := map[string][20]*boardHai{}
 	idx, err := t.MyTurn(c)
 	if err != nil {
 		panic(err)
 	}
-	jicha := t.chas[idx]
-	shimocha := t.chas[(idx+1)%t.maxNumberOfUser]
-	toimen := t.chas[(idx+2)%t.maxNumberOfUser]
-	kamicha := t.chas[(idx+3)%t.maxNumberOfUser]
-	tehaiMap["jicha"] = t.draftTehai(jicha)
-	tehaiMap["shimocha"] = hideTehai(t.draftTehai(shimocha))
+	jiplayer := t.players[idx]
+	shimoplayer := t.players[(idx+1)%t.maxNumberOfUser]
+	toimen := t.players[(idx+2)%t.maxNumberOfUser]
+	kamiplayer := t.players[(idx+3)%t.maxNumberOfUser]
+	tehaiMap["jiplayer"] = t.draftTehai(jiplayer)
+	tehaiMap["shimoplayer"] = hideTehai(t.draftTehai(shimoplayer))
 	tehaiMap["toimen"] = hideTehai(reverse(t.draftTehai(toimen)))
-	tehaiMap["kamicha"] = hideTehai(t.draftTehai(kamicha))
+	tehaiMap["kamiplayer"] = hideTehai(t.draftTehai(kamiplayer))
 	return tehaiMap
 }
 
-func reverse(s [20]*takuHai) [20]*takuHai {
+func reverse(s [20]*boardHai) [20]*boardHai {
 	for i, j := 0, len(s)-1; i < j; i, j = i+1, j-1 {
 		s[i], s[j] = s[j], s[i]
 	}
@@ -362,8 +362,8 @@ func reverse(s [20]*takuHai) [20]*takuHai {
 	return s
 }
 
-func hideTehai(v [20]*takuHai) [20]*takuHai {
-	hais := [20]*takuHai{}
+func hideTehai(v [20]*boardHai) [20]*boardHai {
+	hais := [20]*boardHai{}
 	for i, h := range v {
 		if h != nil && !h.isDown {
 			h.isOpen = false
@@ -374,46 +374,46 @@ func hideTehai(v [20]*takuHai) [20]*takuHai {
 	return hais
 }
 
-func (t *takuImpl) draftTehai(c cha.Cha) [20]*takuHai {
-	hais := [20]*takuHai{}
+func (t *boardImpl) draftTehai(c player.Player) [20]*boardHai {
+	hais := [20]*boardHai{}
 	for i, h := range c.Tehai().Hais() {
-		hais[i] = &takuHai{Hai: h, isOpen: true}
+		hais[i] = &boardHai{Hai: h, isOpen: true}
 	}
 	if c.Tsumohai() != nil {
-		hais[len(c.Tehai().Hais())+1] = &takuHai{Hai: c.Tsumohai(), isOpen: true}
+		hais[len(c.Tehai().Hais())+1] = &boardHai{Hai: c.Tsumohai(), isOpen: true}
 	}
 
 	head := 20
 	// chii
-	for _, meld := range c.Huro().Chiis() {
+	for _, meld := range c.Naki().Chiis() {
 		for _, h := range meld {
 			head--
-			hais[head] = &takuHai{Hai: h, isOpen: true, isDown: true}
+			hais[head] = &boardHai{Hai: h, isOpen: true, isDown: true}
 		}
 	}
 	// pon
-	for _, meld := range c.Huro().Pons() {
+	for _, meld := range c.Naki().Pons() {
 		for _, h := range meld {
 			head--
-			hais[head] = &takuHai{Hai: h, isOpen: true, isDown: true}
+			hais[head] = &boardHai{Hai: h, isOpen: true, isDown: true}
 		}
 	}
 	// ankan
-	for _, meld := range c.Huro().AnKans() {
+	for _, meld := range c.Naki().AnKans() {
 		for i, h := range meld {
 			isOpen := true
 			if i == 0 || i == 3 {
 				isOpen = false
 			}
 			head--
-			hais[head] = &takuHai{Hai: h, isOpen: isOpen, isDown: true}
+			hais[head] = &boardHai{Hai: h, isOpen: isOpen, isDown: true}
 		}
 	}
 	// minkan
-	for _, meld := range c.Huro().MinKans() {
+	for _, meld := range c.Naki().MinKans() {
 		for _, h := range meld {
 			head--
-			hais[head] = &takuHai{Hai: h, isOpen: true, isDown: true}
+			hais[head] = &boardHai{Hai: h, isOpen: true, isDown: true}
 		}
 	}
 
@@ -428,7 +428,7 @@ func (t *takuImpl) draftTehai(c cha.Cha) [20]*takuHai {
 	return hais
 }
 
-func drawTehai(hais [20]*takuHai) string {
+func drawTehai(hais [20]*boardHai) string {
 	strs := []string{"", "", "", ""}
 	for _, h := range hais {
 
@@ -467,34 +467,34 @@ func drawTehai(hais [20]*takuHai) string {
 	return strings.Join(strs, "\n") + "\n"
 }
 
-func (t *takuImpl) draftHo(c cha.Cha) [20][20]*takuHai {
-	hoHais := [20][20]*takuHai{}
+func (t *boardImpl) draftHo(c player.Player) [20][20]*boardHai {
+	hoHais := [20][20]*boardHai{}
 	idx, err := t.MyTurn(c)
 	if err != nil {
 		panic(err)
 	}
-	myself := t.chas[idx]
-	shimocha := t.chas[(idx+1)%t.maxNumberOfUser]
-	toimen := t.chas[(idx+2)%t.maxNumberOfUser]
-	kamicha := t.chas[(idx+3)%t.maxNumberOfUser]
+	myself := t.players[idx]
+	shimoplayer := t.players[(idx+1)%t.maxNumberOfUser]
+	toimen := t.players[(idx+2)%t.maxNumberOfUser]
+	kamiplayer := t.players[(idx+3)%t.maxNumberOfUser]
 
-	for i, h := range myself.Ho().Hais() {
-		hoHais[13+i/6][7+i%6] = &takuHai{Hai: h, isOpen: true, isDown: true}
+	for i, h := range myself.Kawa().Hais() {
+		hoHais[13+i/6][7+i%6] = &boardHai{Hai: h, isOpen: true, isDown: true}
 	}
-	for i, h := range shimocha.Ho().Hais() {
-		hoHais[12-i%6][13+i/6] = &takuHai{Hai: h, isOpen: true, isDown: true}
+	for i, h := range shimoplayer.Kawa().Hais() {
+		hoHais[12-i%6][13+i/6] = &boardHai{Hai: h, isOpen: true, isDown: true}
 	}
-	for i, h := range toimen.Ho().Hais() {
-		hoHais[6-i/6][12-i%6] = &takuHai{Hai: h, isOpen: true, isDown: true}
+	for i, h := range toimen.Kawa().Hais() {
+		hoHais[6-i/6][12-i%6] = &boardHai{Hai: h, isOpen: true, isDown: true}
 	}
-	for i, h := range kamicha.Ho().Hais() {
-		hoHais[7+i%6][6-i/6] = &takuHai{Hai: h, isOpen: true, isDown: true}
+	for i, h := range kamiplayer.Kawa().Hais() {
+		hoHais[7+i%6][6-i/6] = &boardHai{Hai: h, isOpen: true, isDown: true}
 	}
 
 	return hoHais
 }
 
-func drawHo(hais [20][20]*takuHai) string {
+func drawHo(hais [20][20]*boardHai) string {
 	str := ""
 	for i, _ := range hais {
 		body := ""

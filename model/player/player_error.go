@@ -1,12 +1,12 @@
-package cha
+package player
 
 import "errors"
 
 var (
-	ChaAlreadyHaveTsumohaiErr = errors.New("already have tsumohai")
-	ChaAlreadyHaveYamaErr     = errors.New("already have yama")
-	ChaAlreadyDidHaipaiErr    = errors.New("already did haipai")
-	ChaHaiNotFoundErr         = errors.New("hai not found")
-	ChaAlreadyRiichiErr       = errors.New("already did riichi")
-	ChaActionInvalidErr       = errors.New("invalid cha action")
+	PlayerAlreadyHaveTsumohaiErr = errors.New("already have tsumohai")
+	PlayerAlreadyHaveYamaErr     = errors.New("already have yama")
+	PlayerAlreadyDidHaipaiErr    = errors.New("already did haipai")
+	PlayerHaiNotFoundErr         = errors.New("hai not found")
+	PlayerAlreadyRiichiErr       = errors.New("already did riichi")
+	PlayerActionInvalidErr       = errors.New("invalid Player action")
 )

@@ -9,60 +9,6 @@ type Hai struct {
 	name       string
 }
 
-func AtoHai(hainame string) (*Hai, error) {
-	for _, hai := range All {
-		if hai.name == hainame {
-			return hai, nil
-		}
-	}
-	return nil, HaiInvalidArgumentErr
-}
-
-func HaitoI(h *Hai) (int, error) {
-	if h == nil {
-		return 0, HaiInvalidArgumentErr
-	}
-
-	nums := []*attribute.HaiAttribute{&attribute.One, &attribute.Two, &attribute.Three, &attribute.Four, &attribute.Five, &attribute.Six, &attribute.Seven, &attribute.Eight, &attribute.Nine}
-	for i, num := range nums {
-		if h.HasAttribute(num) {
-			return i + 1, nil
-		}
-	}
-
-	return 0, HaiInvalidArgumentErr
-}
-
-func HaitoSuits(h *Hai) ([]*Hai, error) {
-	if h == nil {
-		return []*Hai{}, HaiInvalidArgumentErr
-	}
-	if h.HasAttribute(&attribute.Manzu) {
-		return Manzu, nil
-	}
-	if h.HasAttribute(&attribute.Pinzu) {
-		return Pinzu, nil
-	}
-	if h.HasAttribute(&attribute.Souzu) {
-		return Souzu, nil
-	}
-	return []*Hai{}, HaiInvalidArgumentErr
-}
-
-func (h *Hai) Name() string {
-	return h.name
-}
-
-func (h *Hai) HasAttribute(attr *attribute.HaiAttribute) bool {
-	for _, a := range h.attributes {
-		if a == attr {
-			return true
-		}
-	}
-
-	return false
-}
-
 var (
 	All = []*Hai{
 		Manzu1, Manzu2, Manzu3, Manzu4, Manzu5, Manzu6, Manzu7, Manzu8, Manzu9,
@@ -216,3 +162,56 @@ var (
 		name:       "北",
 	}
 )
+
+func AtoHai(hainame string) (*Hai, error) {
+	for _, hai := range All {
+		if hai.name == hainame {
+			return hai, nil
+		}
+	}
+	return nil, HaiInvalidArgumentErr
+}
+
+func HaitoI(h *Hai) (int, error) {
+	if h == nil {
+		return 0, HaiInvalidArgumentErr
+	}
+
+	for i, num := range attribute.Numbers {
+		if h.HasAttribute(num) {
+			return i + 1, nil
+		}
+	}
+
+	return 0, HaiInvalidArgumentErr
+}
+
+func HaitoSuits(h *Hai) ([]*Hai, error) {
+	if h == nil {
+		return []*Hai{}, HaiInvalidArgumentErr
+	}
+	if h.HasAttribute(&attribute.Manzu) {
+		return Manzu, nil
+	}
+	if h.HasAttribute(&attribute.Pinzu) {
+		return Pinzu, nil
+	}
+	if h.HasAttribute(&attribute.Souzu) {
+		return Souzu, nil
+	}
+	return []*Hai{}, HaiInvalidArgumentErr
+}
+
+func (h *Hai) Name() string {
+	return h.name
+}
+
+func (h *Hai) HasAttribute(attr *attribute.HaiAttribute) bool {
+	for _, a := range h.attributes {
+		if a == attr {
+			return true
+		}
+	}
+
+	return false
+}

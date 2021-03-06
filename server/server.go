@@ -18,19 +18,19 @@ type Server interface {
 }
 
 type serverImpl struct {
-	listener    net.Listener
-	matches     northpole.Match
-	takuStorage storage.TakuStorage
+	listener     net.Listener
+	matches      northpole.Match
+	boardStorage storage.BoardStorage
 }
 
 func New(listener net.Listener) Server {
 	m := northpole.New()
-	ts := storage.NewTakuStorage()
+	ts := storage.NewBoardStorage()
 
 	return &serverImpl{
-		listener:    listener,
-		matches:     m,
-		takuStorage: ts,
+		listener:     listener,
+		matches:      m,
+		boardStorage: ts,
 	}
 }
 
@@ -53,7 +53,7 @@ func (s *serverImpl) Run() {
 		callback := func(id string) error {
 			yama := yama.New()
 			taku := board.New(board.MaxNumberOfUsers, yama)
-			s.takuStorage.Add(id, taku)
+			s.boardStorage.Add(id, taku)
 			return nil
 		}
 		close := func() error {
@@ -61,7 +61,7 @@ func (s *serverImpl) Run() {
 		}
 
 		matchUsecase := usecase.NewMatchUsecase(s.matches, write, read, callback)
-		gameUsecase := usecase.NewGameUsecase(s.takuStorage, write, read)
+		gameUsecase := usecase.NewGameUsecase(s.boardStorage, write, read)
 		id := utils.NewUUID()
 		h := handler.New(id, matchUsecase, gameUsecase, close)
 		go h.Run()

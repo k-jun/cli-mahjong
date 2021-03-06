@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"fmt"
 	"log"
-	"mahjong/model/cha"
+	"mahjong/model/board"
 	"mahjong/model/hai"
-	"mahjong/model/taku"
+	"mahjong/model/player"
 	"mahjong/storage"
 	"regexp"
 	"strconv"
@@ -14,31 +14,31 @@ import (
 )
 
 type GameUsecase interface {
-	JoinTaku(string, cha.Cha) (chan taku.Taku, error)
-	InputController(string, cha.Cha)
-	OutputController(string, cha.Cha, chan taku.Taku) error
+	JoinBoard(string, player.Player) (chan board.Board, error)
+	InputController(string, player.Player)
+	OutputController(string, player.Player, chan board.Board) error
 }
 
 type gameUsecaseImpl struct {
-	takuStorage storage.TakuStorage
-	read        func([]byte) error
-	write       func(string) error
+	BoardStorage storage.BoardStorage
+	read         func([]byte) error
+	write        func(string) error
 }
 
 var (
 	re = regexp.MustCompile(`\d`)
 )
 
-func NewGameUsecase(ts storage.TakuStorage, write func(string) error, read func([]byte) error) GameUsecase {
+func NewGameUsecase(ts storage.BoardStorage, write func(string) error, read func([]byte) error) GameUsecase {
 	return &gameUsecaseImpl{
-		takuStorage: ts,
-		read:        read,
-		write:       write,
+		BoardStorage: ts,
+		read:         read,
+		write:        write,
 	}
 }
 
-func (gu *gameUsecaseImpl) InputController(id string, c cha.Cha) {
-	taku, err := gu.takuStorage.Find(id)
+func (gu *gameUsecaseImpl) InputController(id string, c player.Player) {
+	Board, err := gu.BoardStorage.Find(id)
 	if err != nil {
 		log.Println(err)
 	}
@@ -48,7 +48,7 @@ func (gu *gameUsecaseImpl) InputController(id string, c cha.Cha) {
 		if err := gu.read(buffer); err != nil {
 			// dead check
 			log.Println(err)
-			if err := taku.LeaveCha(c); err != nil {
+			if err := Board.LeavePlayer(c); err != nil {
 				log.Println(err)
 			}
 			break
@@ -57,13 +57,13 @@ func (gu *gameUsecaseImpl) InputController(id string, c cha.Cha) {
 			buffer = bytes.Trim(buffer, "\x00")
 			buffer = bytes.Trim(buffer, "\x10")
 			haiName := strings.TrimSpace(string(buffer))
-			turnIdx, err := taku.MyTurn(c)
+			turnIdx, err := Board.MyTurn(c)
 			if err != nil {
 				log.Println(err)
-				taku.LeaveCha(c)
+				Board.LeavePlayer(c)
 				break
 			}
-			if taku.CurrentTurn() == turnIdx {
+			if Board.CurrentTurn() == turnIdx {
 				// tsumo
 				if haiName == "tsumo" {
 					ok, err := c.CanTsumoAgari()
@@ -72,12 +72,12 @@ func (gu *gameUsecaseImpl) InputController(id string, c cha.Cha) {
 						continue
 					}
 					if ok {
-						if err := taku.SetWinIndex(turnIdx); err != nil {
+						if err := Board.SetWinIndex(turnIdx); err != nil {
 							log.Println(err)
 							continue
 						}
-						taku.Broadcast()
-						fmt.Println(taku.LeaveCha(c))
+						Board.Broadcast()
+						fmt.Println(Board.LeavePlayer(c))
 					}
 				}
 				// riichi or not
@@ -114,15 +114,15 @@ func (gu *gameUsecaseImpl) InputController(id string, c cha.Cha) {
 						continue
 					}
 				}
-				err = taku.TurnEnd()
+				err = Board.TurnEnd()
 				if err != nil {
 					log.Println(err)
 					continue
 				}
 			} else {
 				if strings.HasPrefix(haiName, "chii") {
-					if taku.NextTurn() == turnIdx {
-						err = taku.TakeAction(c, func(inHai *hai.Hai) error {
+					if Board.NextTurn() == turnIdx {
+						err = Board.TakeAction(c, func(inHai *hai.Hai) error {
 							pairs, err := c.Tehai().FindChiiPairs(inHai)
 							if err != nil {
 								return err
@@ -143,7 +143,7 @@ func (gu *gameUsecaseImpl) InputController(id string, c cha.Cha) {
 					}
 				}
 				if strings.HasPrefix(haiName, "pon") {
-					err = taku.TakeAction(c, func(inHai *hai.Hai) error {
+					err = Board.TakeAction(c, func(inHai *hai.Hai) error {
 						pairs, err := c.Tehai().FindPonPairs(inHai)
 						if err != nil {
 							return err
@@ -160,7 +160,7 @@ func (gu *gameUsecaseImpl) InputController(id string, c cha.Cha) {
 					})
 				}
 				if strings.HasPrefix(haiName, "kan") {
-					err = taku.TakeAction(c, func(inHai *hai.Hai) error {
+					err = Board.TakeAction(c, func(inHai *hai.Hai) error {
 						pairs, err := c.Tehai().FindKanPairs(inHai)
 						if err != nil {
 							return err
@@ -177,24 +177,24 @@ func (gu *gameUsecaseImpl) InputController(id string, c cha.Cha) {
 					})
 				}
 				if haiName == "ron" {
-					err = taku.TakeAction(c, func(inHai *hai.Hai) error {
+					err = Board.TakeAction(c, func(inHai *hai.Hai) error {
 						isRon, err := c.CanRon(inHai)
 						if err != nil {
 							return err
 						}
 						if isRon {
-							if err := taku.SetWinIndex(turnIdx); err != nil {
+							if err := Board.SetWinIndex(turnIdx); err != nil {
 								return err
 							}
-							taku.Broadcast()
+							Board.Broadcast()
 						}
 						return nil
 					})
 					// TODO where should i put this
-					taku.LeaveCha(c)
+					Board.LeavePlayer(c)
 				}
 				if haiName == "no" {
-					err = taku.CancelAction(c)
+					err = Board.CancelAction(c)
 				}
 				if err != nil {
 					log.Println(err)
@@ -205,33 +205,33 @@ func (gu *gameUsecaseImpl) InputController(id string, c cha.Cha) {
 	}
 }
 
-func (gu *gameUsecaseImpl) OutputController(id string, c cha.Cha, channel chan taku.Taku) error {
-	_, err := gu.takuStorage.Find(id)
+func (gu *gameUsecaseImpl) OutputController(id string, c player.Player, channel chan board.Board) error {
+	_, err := gu.BoardStorage.Find(id)
 	if err != nil {
 		return err
 	}
 	for {
-		taku, ok := <-channel
+		Board, ok := <-channel
 		if !ok {
-			return GameUsecaseTakuChannelClosedErr
+			return GameUsecaseBoardChannelClosedErr
 		}
 
-		turnIdx, err := taku.MyTurn(c)
+		turnIdx, err := Board.MyTurn(c)
 		if err != nil {
 			return err
 		}
 
-		tehaistr := taku.Draw(c)
+		tehaistr := Board.Draw(c)
 
 		// huros
-		if taku.ActionCounter() != 0 && taku.CurrentTurn() != turnIdx {
-			hai, err := taku.LastHo()
+		if Board.ActionCounter() != 0 && Board.CurrentTurn() != turnIdx {
+			hai, err := Board.LastKawa()
 			if err != nil {
 				return err
 			}
-			actions := []cha.Action{}
+			actions := []player.Action{}
 			// chii
-			if taku.NextTurn() == turnIdx {
+			if Board.NextTurn() == turnIdx {
 				chiis, err := c.Tehai().FindChiiPairs(hai)
 				if err != nil {
 					return err
@@ -272,7 +272,7 @@ func (gu *gameUsecaseImpl) OutputController(id string, c cha.Cha, channel chan t
 				return err
 			}
 			if ok {
-				actions = append(actions, cha.Ron)
+				actions = append(actions, player.Ron)
 			}
 
 			if err != nil {
@@ -301,7 +301,7 @@ func (gu *gameUsecaseImpl) OutputController(id string, c cha.Cha, channel chan t
 		if ok {
 			tehaistr += "\n" + "do you do Tsumo "
 		}
-		if taku.ActionCounter() == 0 && taku.CurrentTurn() == turnIdx {
+		if Board.ActionCounter() == 0 && Board.CurrentTurn() == turnIdx {
 			tehaistr += "\n" + ">>"
 		} else {
 			tehaistr += "\n"
@@ -313,11 +313,11 @@ func (gu *gameUsecaseImpl) OutputController(id string, c cha.Cha, channel chan t
 	}
 }
 
-func (gu *gameUsecaseImpl) JoinTaku(id string, c cha.Cha) (chan taku.Taku, error) {
-	taku, err := gu.takuStorage.Find(id)
+func (gu *gameUsecaseImpl) JoinBoard(id string, c player.Player) (chan board.Board, error) {
+	Board, err := gu.BoardStorage.Find(id)
 	if err != nil {
 		return nil, err
 	}
 
-	return taku.JoinCha(c)
+	return Board.JoinPlayer(c)
 }

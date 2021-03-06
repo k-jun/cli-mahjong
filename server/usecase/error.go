@@ -4,6 +4,6 @@ import "errors"
 
 var (
 	MatchUsecaseRoomChannelClosedErr = errors.New("the room channel closed")
-	GameUsecaseTakuChannelClosedErr  = errors.New("the taku channel closed")
+	GameUsecaseBoardChannelClosedErr = errors.New("the board channel closed")
 	GameUsecaseInvalidActionErr      = errors.New("invalid action")
 )

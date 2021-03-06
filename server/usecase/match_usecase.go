@@ -1,7 +1,7 @@
 package usecase
 
 import (
-	"mahjong/model/taku"
+	"mahjong/model/board"
 	"mahjong/utils"
 	"strconv"
 
@@ -77,7 +77,7 @@ func (uc *matchUsecaseImpl) deadCheck(u user.User, room room.Room) {
 
 func (uc *matchUsecaseImpl) CreateRoom(u user.User) (chan room.Room, error) {
 	newId := utils.NewUUID()
-	newRoom := room.New(newId.String(), taku.MaxNumberOfUsers, uc.callback)
+	newRoom := room.New(newId.String(), board.MaxNumberOfUsers, uc.callback)
 	return uc.matches.CreateRoom(u, newRoom)
 }
 

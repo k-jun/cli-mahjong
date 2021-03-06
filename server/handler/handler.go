@@ -2,9 +2,9 @@ package handler
 
 import (
 	"log"
-	"mahjong/model/cha"
-	"mahjong/model/ho"
-	"mahjong/model/huro"
+	"mahjong/model/kawa"
+	"mahjong/model/naki"
+	"mahjong/model/player"
 	"mahjong/model/tehai"
 	"mahjong/server/usecase"
 
@@ -40,10 +40,10 @@ func (h *handlerImpl) Run() {
 	}
 
 	t := tehai.New()
-	hu := huro.New()
-	ho := ho.New()
-	cha := cha.New(h.id, ho, t, hu)
-	roomChan, err := h.gameUsecase.JoinTaku(roomId, cha)
+	n := naki.New()
+	k := kawa.New()
+	cha := player.New(h.id, k, t, n)
+	roomChan, err := h.gameUsecase.JoinBoard(roomId, cha)
 	if err != nil {
 		log.Println(err)
 		return

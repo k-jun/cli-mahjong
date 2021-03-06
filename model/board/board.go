@@ -12,13 +12,13 @@ var (
 	MaxNumberOfUsers = 4
 )
 
-type board interface {
+type Board interface {
 	// setter
 	SetWinIndex(int) error
 
 	// game
-	Joinplayer(player.Player) (chan board, error)
-	Leaveplayer(player.Player) error
+	JoinPlayer(player.Player) (chan Board, error)
+	LeavePlayer(player.Player) error
 	Broadcast()
 
 	// turn
@@ -39,14 +39,14 @@ type board interface {
 	Draw(player.Player) string
 }
 
-func New(maxNOU int, y yama.Yama) board {
+func New(maxNOU int, y yama.Yama) Board {
 	return &boardImpl{
 		players:         []*boardPlayer{},
 		yama:            y,
 		turnIndex:       0,
 		maxNumberOfUser: maxNOU,
 		isPlaying:       true,
-		actionplayers:   []*boardPlayer{},
+		actionPlayers:   []*boardPlayer{},
 		winIndex:        -1,
 	}
 }
@@ -58,14 +58,14 @@ type boardImpl struct {
 	turnIndex       int
 	maxNumberOfUser int
 	isPlaying       bool
-	actionplayers   []*boardPlayer
+	actionPlayers   []*boardPlayer
 
 	// win
 	winIndex int
 }
 
 type boardPlayer struct {
-	channel chan board
+	channel chan Board
 	player.Player
 }
 
@@ -77,7 +77,7 @@ func (t *boardImpl) SetWinIndex(idx int) error {
 	return nil
 }
 
-func (t *boardImpl) Joinplayer(c player.Player) (chan board, error) {
+func (t *boardImpl) JoinPlayer(c player.Player) (chan Board, error) {
 	t.Lock()
 	defer t.Unlock()
 	if len(t.players) >= t.maxNumberOfUser {
@@ -87,7 +87,7 @@ func (t *boardImpl) Joinplayer(c player.Player) (chan board, error) {
 	if err := c.SetYama(t.yama); err != nil {
 		return nil, err
 	}
-	channel := make(chan board, t.maxNumberOfUser*3)
+	channel := make(chan Board, t.maxNumberOfUser*3)
 	t.players = append(t.players, &boardPlayer{Player: c, channel: channel})
 
 	if len(t.players) >= t.maxNumberOfUser {
@@ -98,7 +98,7 @@ func (t *boardImpl) Joinplayer(c player.Player) (chan board, error) {
 	return channel, nil
 }
 
-func (t *boardImpl) Leaveplayer(c player.Player) error {
+func (t *boardImpl) LeavePlayer(c player.Player) error {
 	t.Lock()
 	defer t.Unlock()
 	// terminate the game
@@ -155,7 +155,7 @@ func (t *boardImpl) TurnEnd() error {
 		return err
 	}
 
-	if len(t.actionplayers) == 0 {
+	if len(t.actionPlayers) == 0 {
 		if err := t.turnchange(t.NextTurn()); err != nil {
 			return err
 		}
@@ -217,7 +217,7 @@ func (t *boardImpl) setActionCounter() error {
 			players = append(players, tc)
 		}
 	}
-	t.actionplayers = players
+	t.actionPlayers = players
 	return nil
 }
 
@@ -226,28 +226,28 @@ func (t *boardImpl) LastKawa() (*hai.Hai, error) {
 }
 
 func (t *boardImpl) ActionCounter() int {
-	return len(t.actionplayers)
+	return len(t.actionPlayers)
 }
 
 func (t *boardImpl) CancelAction(c player.Player) error {
 	t.Lock()
 	defer t.Unlock()
-	if len(t.actionplayers) == 0 {
+	if len(t.actionPlayers) == 0 {
 		return nil
 	}
 
 	found := false
-	for i, tc := range t.actionplayers {
+	for i, tc := range t.actionPlayers {
 		if tc.Player == c {
 			found = true
-			t.actionplayers = append(t.actionplayers[:i], t.actionplayers[i+1:]...)
+			t.actionPlayers = append(t.actionPlayers[:i], t.actionPlayers[i+1:]...)
 		}
 	}
 	if !found {
 		return BoardPlayerNotFoundErr
 	}
 
-	if len(t.actionplayers) == 0 {
+	if len(t.actionPlayers) == 0 {
 		if err := t.turnchange(t.NextTurn()); err != nil {
 			return err
 		}
@@ -262,12 +262,12 @@ func (t *boardImpl) CancelAction(c player.Player) error {
 func (t *boardImpl) TakeAction(c player.Player, action func(*hai.Hai) error) error {
 	t.Lock()
 	defer t.Unlock()
-	if len(t.actionplayers) == 0 {
+	if len(t.actionPlayers) == 0 {
 		return BoardActionAlreadyTokenErr
 	}
 
 	found := false
-	for _, tc := range t.actionplayers {
+	for _, tc := range t.actionPlayers {
 		if tc.Player == c {
 			found = true
 		}
@@ -276,7 +276,7 @@ func (t *boardImpl) TakeAction(c player.Player, action func(*hai.Hai) error) err
 		return BoardPlayerNotFoundErr
 	}
 
-	t.actionplayers = []*boardPlayer{}
+	t.actionPlayers = []*boardPlayer{}
 	h, err := t.players[t.CurrentTurn()].Kawa().RemoveLast()
 	if err != nil {
 		return err

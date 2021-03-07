@@ -381,6 +381,177 @@ func TestMachihai(t *testing.T) {
 			},
 			outHais: []*hai.Hai{hai.Pinzu1, hai.Pinzu4},
 		},
+		{
+			name: "1/19",
+			beforeHais: []*hai.Hai{
+				hai.Manzu1, hai.Manzu1, hai.Manzu1, hai.Manzu4, hai.Manzu5, hai.Manzu6,
+				hai.Pinzu2, hai.Pinzu3, hai.Pinzu4, hai.Pinzu5, hai.Pinzu6, hai.Pei,
+				hai.Pei,
+			},
+			outHais: []*hai.Hai{hai.Pinzu1, hai.Pinzu4, hai.Pinzu7},
+		},
+		{
+			name: "2/19",
+			beforeHais: []*hai.Hai{
+				hai.Manzu1, hai.Manzu1, hai.Manzu1, hai.Manzu4, hai.Manzu5, hai.Manzu6,
+				hai.Pinzu2, hai.Pinzu3, hai.Pinzu4, hai.Pinzu5, hai.Pinzu6, hai.Pinzu7,
+				hai.Pinzu8,
+			},
+			outHais: []*hai.Hai{hai.Pinzu2, hai.Pinzu5, hai.Pinzu8},
+		},
+		{
+			name: "3/19",
+			beforeHais: []*hai.Hai{
+				hai.Manzu1, hai.Manzu1, hai.Manzu1, hai.Manzu4, hai.Manzu5, hai.Manzu6,
+				hai.Pinzu2, hai.Pinzu3, hai.Pinzu4, hai.Pinzu5, hai.Pinzu6, hai.Pinzu7,
+				hai.Pinzu5,
+			},
+			outHais: []*hai.Hai{hai.Pinzu2, hai.Pinzu5, hai.Pinzu8},
+		},
+		{
+			name: "4/19",
+			beforeHais: []*hai.Hai{
+				hai.Manzu1, hai.Manzu1, hai.Manzu1, hai.Manzu4, hai.Manzu5, hai.Manzu6,
+				hai.Pinzu2, hai.Pinzu3, hai.Pinzu4, hai.Pinzu4, hai.Pinzu4, hai.Pei,
+				hai.Pei,
+			},
+			outHais: []*hai.Hai{hai.Pinzu1, hai.Pinzu4, hai.Pei},
+		},
+		{
+			name: "5/19",
+			beforeHais: []*hai.Hai{
+				hai.Manzu1, hai.Manzu1, hai.Manzu1, hai.Manzu4, hai.Manzu5, hai.Manzu6,
+				hai.Pinzu2, hai.Pinzu3, hai.Pinzu3, hai.Pinzu3, hai.Pinzu4, hai.Pinzu5,
+				hai.Pinzu6,
+			},
+			outHais: []*hai.Hai{hai.Pinzu1, hai.Pinzu2, hai.Pinzu4, hai.Pinzu7},
+		},
+		{
+			name: "6/19",
+			beforeHais: []*hai.Hai{
+				hai.Manzu1, hai.Manzu1, hai.Manzu1, hai.Manzu4, hai.Manzu5, hai.Manzu6,
+				hai.Pinzu3, hai.Pinzu3, hai.Pinzu3, hai.Pinzu4, hai.Pinzu4, hai.Pinzu5,
+				hai.Pinzu6,
+			},
+			outHais: []*hai.Hai{hai.Pinzu2, hai.Pinzu4, hai.Pinzu5, hai.Pinzu7},
+		},
+		{
+			name: "7/19",
+			beforeHais: []*hai.Hai{
+				hai.Manzu1, hai.Manzu1, hai.Manzu1, hai.Manzu4, hai.Manzu5, hai.Manzu6,
+				hai.Pinzu3, hai.Pinzu3, hai.Pinzu3, hai.Pinzu4, hai.Pinzu5, hai.Pinzu5,
+				hai.Pinzu6,
+			},
+			outHais: []*hai.Hai{hai.Pinzu4, hai.Pinzu5, hai.Pinzu7},
+		},
+		{
+			name: "8/19",
+			beforeHais: []*hai.Hai{
+				hai.Manzu1, hai.Manzu1, hai.Manzu1, hai.Manzu4, hai.Manzu5, hai.Manzu6,
+				hai.Pinzu3, hai.Pinzu3, hai.Pinzu3, hai.Pinzu4, hai.Pinzu5, hai.Pinzu6,
+				hai.Pinzu7,
+			},
+			outHais: []*hai.Hai{hai.Pinzu2, hai.Pinzu4, hai.Pinzu5, hai.Pinzu7, hai.Pinzu8},
+		},
+		{
+			name: "9/19",
+			beforeHais: []*hai.Hai{
+				hai.Manzu1, hai.Manzu1, hai.Manzu1, hai.Manzu4, hai.Manzu5, hai.Manzu6,
+				hai.Pinzu3, hai.Pinzu3, hai.Pinzu3, hai.Pinzu4, hai.Pinzu5, hai.Pinzu6,
+				hai.Pinzu8,
+			},
+			outHais: []*hai.Hai{hai.Pinzu7, hai.Pinzu8},
+		},
+		{
+			name: "10/19",
+			beforeHais: []*hai.Hai{
+				hai.Manzu1, hai.Manzu1, hai.Manzu1, hai.Manzu4, hai.Manzu5, hai.Manzu6,
+				hai.Pinzu3, hai.Pinzu3, hai.Pinzu3, hai.Pinzu5, hai.Pinzu5, hai.Pinzu6,
+				hai.Pinzu7,
+			},
+			outHais: []*hai.Hai{hai.Pinzu4, hai.Pinzu5, hai.Pinzu8},
+		},
+		{
+			name: "11/19",
+			beforeHais: []*hai.Hai{
+				hai.Manzu1, hai.Manzu1, hai.Manzu1, hai.Manzu4, hai.Manzu5, hai.Manzu6,
+				hai.Pinzu3, hai.Pinzu3, hai.Pinzu3, hai.Pinzu5, hai.Pinzu6, hai.Pinzu7,
+				hai.Pinzu8,
+			},
+			outHais: []*hai.Hai{hai.Pinzu4, hai.Pinzu5, hai.Pinzu8},
+		},
+		{
+			name: "12/19",
+			beforeHais: []*hai.Hai{
+				hai.Manzu1, hai.Manzu1, hai.Manzu1, hai.Manzu4, hai.Manzu5, hai.Manzu6,
+				hai.Pinzu3, hai.Pinzu3, hai.Pinzu3, hai.Pinzu4, hai.Pinzu4, hai.Pinzu5,
+				hai.Pinzu5,
+			},
+			outHais: []*hai.Hai{hai.Pinzu3, hai.Pinzu4, hai.Pinzu5, hai.Pinzu6},
+		},
+		{
+			name: "13/19",
+			beforeHais: []*hai.Hai{
+				hai.Manzu1, hai.Manzu1, hai.Manzu1, hai.Manzu4, hai.Manzu5, hai.Manzu6,
+				hai.Pinzu3, hai.Pinzu3, hai.Pinzu4, hai.Pinzu4, hai.Pinzu4, hai.Pinzu5,
+				hai.Pinzu5,
+			},
+			outHais: []*hai.Hai{hai.Pinzu3, hai.Pinzu4, hai.Pinzu5},
+		},
+		{
+			name: "14/19",
+			beforeHais: []*hai.Hai{
+				hai.Manzu1, hai.Manzu1, hai.Manzu1, hai.Manzu4, hai.Manzu5, hai.Manzu6,
+				hai.Pinzu3, hai.Pinzu3, hai.Pinzu3, hai.Pinzu4, hai.Pinzu5, hai.Pinzu5,
+				hai.Pinzu5,
+			},
+			outHais: []*hai.Hai{hai.Pinzu2, hai.Pinzu3, hai.Pinzu4, hai.Pinzu5, hai.Pinzu6},
+		},
+		{
+			name: "15/19",
+			beforeHais: []*hai.Hai{
+				hai.Manzu1, hai.Manzu1, hai.Manzu1, hai.Manzu4, hai.Manzu5, hai.Manzu6,
+				hai.Pinzu3, hai.Pinzu3, hai.Pinzu3, hai.Pinzu4, hai.Pinzu4, hai.Pinzu4,
+				hai.Pinzu5,
+			},
+			outHais: []*hai.Hai{hai.Pinzu3, hai.Pinzu4, hai.Pinzu5, hai.Pinzu6},
+		},
+		{
+			name: "16/19",
+			beforeHais: []*hai.Hai{
+				hai.Manzu1, hai.Manzu1, hai.Manzu1, hai.Manzu4, hai.Manzu5, hai.Manzu6,
+				hai.Pinzu3, hai.Pinzu3, hai.Pinzu3, hai.Pinzu5, hai.Pinzu7, hai.Pinzu7,
+				hai.Pinzu7,
+			},
+			outHais: []*hai.Hai{hai.Pinzu4, hai.Pinzu5, hai.Pinzu6},
+		},
+		{
+			name: "17/19",
+			beforeHais: []*hai.Hai{
+				hai.Manzu1, hai.Manzu1, hai.Manzu1, hai.Manzu4, hai.Manzu5, hai.Manzu6,
+				hai.Pinzu3, hai.Pinzu3, hai.Pinzu4, hai.Pinzu5, hai.Pinzu5, hai.Pinzu5,
+				hai.Pinzu5,
+			},
+			outHais: []*hai.Hai{hai.Pinzu3, hai.Pinzu4, hai.Pinzu6},
+		},
+		{
+			name: "18/19",
+			beforeHais: []*hai.Hai{
+				hai.Manzu1, hai.Manzu1, hai.Manzu1, hai.Manzu4, hai.Manzu5, hai.Manzu6,
+				hai.Pinzu3, hai.Pinzu3, hai.Pinzu4, hai.Pinzu4, hai.Pinzu4, hai.Pinzu4,
+				hai.Pinzu5,
+			},
+			outHais: []*hai.Hai{hai.Pinzu2, hai.Pinzu3, hai.Pinzu5, hai.Pinzu6},
+		},
+		{
+			name: "19/19",
+			beforeHais: []*hai.Hai{
+				hai.Manzu1, hai.Manzu1, hai.Manzu1, hai.Manzu4, hai.Manzu5, hai.Manzu6,
+				hai.Pinzu3, hai.Pinzu4, hai.Pinzu4, hai.Pinzu4, hai.Pinzu4, hai.Pinzu5,
+				hai.Pinzu6,
+			},
+			outHais: []*hai.Hai{hai.Pinzu2, hai.Pinzu3, hai.Pinzu5, hai.Pinzu6},
+		},
 	}
 
 	for _, c := range cases {

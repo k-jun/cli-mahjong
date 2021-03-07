@@ -7,6 +7,7 @@ import (
 	"mahjong/model/board"
 	"mahjong/model/hai"
 	"mahjong/model/player"
+	"mahjong/model/view"
 	"mahjong/storage"
 	"regexp"
 	"strconv"
@@ -221,7 +222,10 @@ func (gu *gameUsecaseImpl) OutputController(id string, c player.Player, channel 
 			return err
 		}
 
-		tehaistr := Board.Draw(c)
+		tehaistr, err := view.BoardString(c, Board)
+		if err != nil {
+			return err
+		}
 
 		// huros
 		if Board.ActionCounter() != 0 && Board.CurrentTurn() != turnIdx {

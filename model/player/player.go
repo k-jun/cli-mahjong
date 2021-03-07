@@ -1,8 +1,8 @@
 package player
 
 import (
-	"mahjong/model/attribute"
 	"mahjong/model/hai"
+	"mahjong/model/hai/attribute"
 	"mahjong/model/kawa"
 	"mahjong/model/naki"
 	"mahjong/model/tehai"

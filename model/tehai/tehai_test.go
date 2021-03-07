@@ -372,6 +372,15 @@ func TestMachihai(t *testing.T) {
 			},
 			outHais: []*hai.Hai{hai.Hatsu},
 		},
+		{
+			name: "延段",
+			beforeHais: []*hai.Hai{
+				hai.Manzu1, hai.Manzu1, hai.Manzu1, hai.Manzu4, hai.Manzu5, hai.Manzu6,
+				hai.Manzu7, hai.Manzu8, hai.Manzu9, hai.Pinzu1, hai.Pinzu2, hai.Pinzu3,
+				hai.Pinzu4,
+			},
+			outHais: []*hai.Hai{hai.Pinzu1, hai.Pinzu4},
+		},
 	}
 
 	for _, c := range cases {

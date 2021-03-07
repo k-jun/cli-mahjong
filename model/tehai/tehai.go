@@ -27,6 +27,7 @@ type Tehai interface {
 	CanChii(*hai.Hai) (bool, error)
 	CanPon(*hai.Hai) (bool, error)
 	CanKan(*hai.Hai) (bool, error)
+	CanRiichi(*hai.Hai) (bool, error)
 	CanRon(*hai.Hai) (bool, error)
 
 	Sort() error
@@ -181,7 +182,6 @@ func (t *tehaiImpl) KanPairs(inHai *hai.Hai) ([][3]*hai.Hai, error) {
 			pairs = append(pairs, [3]*hai.Hai{k, k, k})
 		}
 	}
-
 	return pairs, nil
 }
 
@@ -252,52 +252,64 @@ func (t *tehaiImpl) Machihai() ([]*hai.Hai, error) {
 		for i := 0; i < 1<<len(pairs); i++ {
 			// deep copy
 			hais := append([]*hai.Hai{}, tehai.hais...)
-			tehai := tehaiImpl{hais}
+			tehaiKotsu := tehaiImpl{hais}
 			// remove
 			for j := 0; j < len(pairs); j++ {
 				if i>>j&1 == 1 {
-					if _, err := tehai.Removes(pairs[j]); err != nil {
+					if _, err := tehaiKotsu.Removes(pairs[j]); err != nil {
 						return machihai, err
 					}
 				}
 			}
 
 			// shuntsu
-			pairs, err := Shuntsu(tehai.hais)
-			if err != nil {
-				return machihai, err
-			}
-			// remove
-			for j := 0; j < len(pairs); j++ {
-				if _, err := tehai.Removes(pairs[j]); err != nil {
-					// skip if not exist
-					if err == TehaiHaiNotFoundErr {
-						continue
-					}
-					return machihai, err
-				}
-			}
+			print(tehaiKotsu.hais)
+			forward := Sort(append([]*hai.Hai{}, tehaiKotsu.hais...))
+			backward := ReverseSort(append([]*hai.Hai{}, tehaiKotsu.hais...))
+			sorts := [][]*hai.Hai{forward, backward}
 
-			// machi
-			// tanki
-			if len(tehai.hais) == 1 {
-				machihai = append(machihai, tehai.hais[0])
-			}
-			// ryanmen etc..
-			if len(tehai.hais) == 2 {
-				hais, err := Machihai(tehai.hais[0], tehai.hais[1])
+			for _, sortedHais := range sorts {
+				tehaiShuntsu := tehaiImpl{sortedHais}
+				pairs, err := Shuntsu(sortedHais)
+				print(tehaiShuntsu.hais)
 				if err != nil {
 					return machihai, err
 				}
-				for _, h := range hais {
-					machihai = append(machihai, h)
+				// remove
+				for j := 0; j < len(pairs); j++ {
+					if !(tehaiShuntsu.hasHai(pairs[j][0]) && tehaiShuntsu.hasHai(pairs[j][1]) && tehaiShuntsu.hasHai(pairs[j][2])) {
+						continue
+					}
+					if _, err := tehaiShuntsu.Removes(pairs[j]); err != nil {
+						// skip if not exist
+						if err == TehaiHaiNotFoundErr {
+							continue
+						}
+						return machihai, err
+					}
+				}
+
+				// machi
+				// tanki
+				if len(tehaiShuntsu.hais) == 1 {
+					machihai = append(machihai, tehaiShuntsu.hais[0])
+				}
+				// ryanmen etc..
+				if len(tehaiShuntsu.hais) == 2 {
+					hais, err := Machihai(tehaiShuntsu.hais[0], tehaiShuntsu.hais[1])
+					if err != nil {
+						return machihai, err
+					}
+					for _, h := range hais {
+						machihai = append(machihai, h)
+					}
 				}
 			}
 		}
 	}
 
-	Sort(machihai)
 	machihai = Unique(machihai)
+	machihai = Sort(machihai)
 	return machihai, nil
 }
 

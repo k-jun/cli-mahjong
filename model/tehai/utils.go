@@ -23,7 +23,6 @@ func Kotsu(inHais []*hai.Hai) [][]*hai.Hai {
 
 func Shuntsu(inHais []*hai.Hai) ([][]*hai.Hai, error) {
 	outHais := [][]*hai.Hai{}
-	Sort(inHais)
 	for _, h := range inHais {
 		if h.HasAttribute(&attribute.Jihai) {
 			continue
@@ -44,10 +43,20 @@ func Shuntsu(inHais []*hai.Hai) ([][]*hai.Hai, error) {
 	return outHais, nil
 }
 
-func Sort(inHais []*hai.Hai) {
-	sort.Slice(inHais, func(i int, j int) bool {
-		return inHais[i].Name() < inHais[j].Name()
+func Sort(hais []*hai.Hai) []*hai.Hai {
+	sort.Slice(hais, func(i int, j int) bool {
+		return hais[i].Name() < hais[j].Name()
 	})
+
+	return hais
+}
+
+func ReverseSort(hais []*hai.Hai) []*hai.Hai {
+	sort.Slice(hais, func(i int, j int) bool {
+		return hais[i].Name() > hais[j].Name()
+	})
+
+	return hais
 }
 
 func Unique(inHais []*hai.Hai) []*hai.Hai {

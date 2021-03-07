@@ -55,6 +55,7 @@ func (t *TehaiMock) PonPairs(_ *hai.Hai) ([][2]*hai.Hai, error) {
 func (t *TehaiMock) KanPairs(_ *hai.Hai) ([][3]*hai.Hai, error) {
 	return t.KanMock, t.ErrorMock
 }
+
 func (t *TehaiMock) RiichiHais(_ *hai.Hai) ([]*hai.Hai, error) {
 	return t.HaisMock, t.ErrorMock
 }
@@ -70,6 +71,11 @@ func (t *TehaiMock) CanPon(_ *hai.Hai) (bool, error) {
 func (t *TehaiMock) CanKan(_ *hai.Hai) (bool, error) {
 	return t.BoolMock, t.ErrorMock
 }
+
+func (t *TehaiMock) CanRiichi(_ *hai.Hai) (bool, error) {
+	return t.BoolMock, t.ErrorMock
+}
+
 func (t *TehaiMock) CanRon(_ *hai.Hai) (bool, error) {
 	return t.BoolMock, t.ErrorMock
 }

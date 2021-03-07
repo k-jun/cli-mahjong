@@ -60,9 +60,7 @@ func TestLast(t *testing.T) {
 			assert.Equal(t, c.outError, err)
 			continue
 		}
-
 		assert.Equal(t, c.outHai, outHai)
-
 	}
 }
 

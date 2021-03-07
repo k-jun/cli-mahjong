@@ -158,7 +158,7 @@ func (t *boardImpl) NextTurn() int {
 func (t *boardImpl) TurnEnd() error {
 	t.Lock()
 	defer t.Unlock()
-	err := t.setActionCounter()
+	err := t.setAction()
 	if err != nil {
 		return err
 	}
@@ -183,7 +183,7 @@ func (t *boardImpl) turnchange(idx int) error {
 	return nil
 }
 
-func (t *boardImpl) setActionCounter() error {
+func (t *boardImpl) setAction() error {
 	players := []*boardPlayer{}
 
 	inHai, err := t.players[t.CurrentTurn()].Kawa().Last()
@@ -195,33 +195,33 @@ func (t *boardImpl) setActionCounter() error {
 			continue
 		}
 
-		actionCounter := 0
+		type Arg struct {
+			ok bool
+			e  error
+		}
+		args := []Arg{}
+		flag := false
 		if i == t.NextTurn() {
-			pairs, err := tc.Tehai().FindChiiPairs(inHai)
-			if err != nil {
-				return err
+			ok, err := tc.Tehai().CanChii(inHai)
+			args = append(args, Arg{ok, err})
+		}
+		ok, err := tc.Tehai().CanPon(inHai)
+		args = append(args, Arg{ok, err})
+		ok, err = tc.Tehai().CanKan(inHai)
+		args = append(args, Arg{ok, err})
+		ok, err = tc.Tehai().CanRon(inHai)
+		args = append(args, Arg{ok, err})
+
+		for _, arg := range args {
+			if arg.e != nil {
+				return arg.e
 			}
-			actionCounter += len(pairs)
-		}
-		pairs, err := tc.Tehai().FindPonPairs(inHai)
-		if err != nil {
-			return err
-		}
-		actionCounter += len(pairs)
-		kpairs, err := tc.Tehai().FindKanPairs(inHai)
-		if err != nil {
-			return err
-		}
-		actionCounter += len(kpairs)
-		ok, err := tc.CanRon(inHai)
-		if err != nil {
-			return err
-		}
-		if ok {
-			actionCounter += 1
+			if arg.ok {
+				flag = true
+			}
 		}
 
-		if actionCounter != 0 {
+		if flag {
 			players = append(players, tc)
 		}
 	}

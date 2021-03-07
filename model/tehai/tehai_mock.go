@@ -10,6 +10,7 @@ type TehaiMock struct {
 	ChiiMock  [][2]*hai.Hai
 	PonMock   [][2]*hai.Hai
 	KanMock   [][3]*hai.Hai
+	BoolMock  bool
 	ErrorMock error
 }
 
@@ -43,14 +44,32 @@ func (t *TehaiMock) Replace(inHai *hai.Hai, _ *hai.Hai) (*hai.Hai, error) {
 	return outhai, t.ErrorMock
 }
 
-func (t *TehaiMock) FindChiiPairs(_ *hai.Hai) ([][2]*hai.Hai, error) {
+func (t *TehaiMock) ChiiPairs(_ *hai.Hai) ([][2]*hai.Hai, error) {
 	return t.ChiiMock, t.ErrorMock
 }
 
-func (t *TehaiMock) FindPonPairs(_ *hai.Hai) ([][2]*hai.Hai, error) {
+func (t *TehaiMock) PonPairs(_ *hai.Hai) ([][2]*hai.Hai, error) {
 	return t.PonMock, t.ErrorMock
 }
 
-func (t *TehaiMock) FindKanPairs(_ *hai.Hai) ([][3]*hai.Hai, error) {
+func (t *TehaiMock) KanPairs(_ *hai.Hai) ([][3]*hai.Hai, error) {
 	return t.KanMock, t.ErrorMock
+}
+func (t *TehaiMock) RiichiHais(_ *hai.Hai) ([]*hai.Hai, error) {
+	return t.HaisMock, t.ErrorMock
+}
+
+func (t *TehaiMock) CanChii(_ *hai.Hai) (bool, error) {
+	return t.BoolMock, t.ErrorMock
+}
+
+func (t *TehaiMock) CanPon(_ *hai.Hai) (bool, error) {
+	return t.BoolMock, t.ErrorMock
+}
+
+func (t *TehaiMock) CanKan(_ *hai.Hai) (bool, error) {
+	return t.BoolMock, t.ErrorMock
+}
+func (t *TehaiMock) CanRon(_ *hai.Hai) (bool, error) {
+	return t.BoolMock, t.ErrorMock
 }

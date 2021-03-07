@@ -83,7 +83,7 @@ func (gu *gameUsecaseImpl) InputController(id string, c player.Player) {
 				}
 				// riichi or not
 				if strings.HasPrefix(haiName, "riichi") {
-					hais, err := c.FindRiichiHai()
+					hais, err := c.Tehai().RiichiHais(c.Tsumohai())
 					if err != nil {
 						log.Println(err)
 						continue
@@ -124,7 +124,7 @@ func (gu *gameUsecaseImpl) InputController(id string, c player.Player) {
 				if strings.HasPrefix(haiName, "chii") {
 					if Board.NextTurn() == turnIdx {
 						err = Board.TakeAction(c, func(inHai *hai.Hai) error {
-							pairs, err := c.Tehai().FindChiiPairs(inHai)
+							pairs, err := c.Tehai().ChiiPairs(inHai)
 							if err != nil {
 								return err
 							}
@@ -145,7 +145,7 @@ func (gu *gameUsecaseImpl) InputController(id string, c player.Player) {
 				}
 				if strings.HasPrefix(haiName, "pon") {
 					err = Board.TakeAction(c, func(inHai *hai.Hai) error {
-						pairs, err := c.Tehai().FindPonPairs(inHai)
+						pairs, err := c.Tehai().PonPairs(inHai)
 						if err != nil {
 							return err
 						}
@@ -162,7 +162,7 @@ func (gu *gameUsecaseImpl) InputController(id string, c player.Player) {
 				}
 				if strings.HasPrefix(haiName, "kan") {
 					err = Board.TakeAction(c, func(inHai *hai.Hai) error {
-						pairs, err := c.Tehai().FindKanPairs(inHai)
+						pairs, err := c.Tehai().KanPairs(inHai)
 						if err != nil {
 							return err
 						}
@@ -179,7 +179,7 @@ func (gu *gameUsecaseImpl) InputController(id string, c player.Player) {
 				}
 				if haiName == "ron" {
 					err = Board.TakeAction(c, func(inHai *hai.Hai) error {
-						isRon, err := c.CanRon(inHai)
+						isRon, err := c.Tehai().CanRon(inHai)
 						if err != nil {
 							return err
 						}
@@ -236,7 +236,7 @@ func (gu *gameUsecaseImpl) OutputController(id string, c player.Player, channel 
 			actions := []player.Action{}
 			// chii
 			if Board.NextTurn() == turnIdx {
-				chiis, err := c.Tehai().FindChiiPairs(hai)
+				chiis, err := c.Tehai().ChiiPairs(hai)
 				if err != nil {
 					return err
 				}
@@ -249,7 +249,7 @@ func (gu *gameUsecaseImpl) OutputController(id string, c player.Player, channel 
 			}
 
 			// pon
-			pons, err := c.Tehai().FindPonPairs(hai)
+			pons, err := c.Tehai().PonPairs(hai)
 			if err != nil {
 				return err
 			}
@@ -260,7 +260,7 @@ func (gu *gameUsecaseImpl) OutputController(id string, c player.Player, channel 
 				}
 			}
 			// kan
-			kans, err := c.Tehai().FindKanPairs(hai)
+			kans, err := c.Tehai().KanPairs(hai)
 			if err != nil {
 				return err
 			}
@@ -271,7 +271,7 @@ func (gu *gameUsecaseImpl) OutputController(id string, c player.Player, channel 
 				}
 			}
 			// ron
-			ok, err := c.CanRon(hai)
+			ok, err := c.Tehai().CanRon(hai)
 			if err != nil {
 				return err
 			}
@@ -287,7 +287,7 @@ func (gu *gameUsecaseImpl) OutputController(id string, c player.Player, channel 
 			}
 		}
 		// riichi
-		hais, err := c.FindRiichiHai()
+		hais, err := c.Tehai().RiichiHais(c.Tsumohai())
 		if err != nil {
 			return err
 		}

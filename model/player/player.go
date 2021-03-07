@@ -2,12 +2,10 @@ package player
 
 import (
 	"mahjong/model/hai"
-	"mahjong/model/hai/attribute"
 	"mahjong/model/kawa"
 	"mahjong/model/naki"
 	"mahjong/model/tehai"
 	"mahjong/model/yama"
-	"sort"
 
 	"github.com/google/uuid"
 )
@@ -21,11 +19,10 @@ type Player interface {
 	IsRiichi() bool
 	// setter
 	SetYama(yama.Yama) error
+
 	// judger
 	CanTsumoAgari() (bool, error)
-	CanRon(*hai.Hai) (bool, error)
-	FindRiichiHai() ([]*hai.Hai, error)
-	FindNakiActions(*hai.Hai) ([]Action, error)
+	Actions(*hai.Hai) ([]Action, error)
 
 	Tsumo() error
 	Dahai(*hai.Hai) error
@@ -222,276 +219,47 @@ func (c *playerImpl) Riichi(inHai *hai.Hai) error {
 	return nil
 }
 
-func (c *playerImpl) FindRiichiHai() ([]*hai.Hai, error) {
-	outHais := []*hai.Hai{}
-	if len(c.naki.Chiis()) != 0 || len(c.naki.Pons()) != 0 || len(c.naki.MinKans()) != 0 || c.tsumohai == nil || c.isRiichi {
-		return outHais, nil
-	}
-
-	hais := c.tehai.Hais()
-	hais = append(hais, c.tsumohai)
-
-	for _, eh := range hais {
-		hs := append([]*hai.Hai{}, hais...)
-		hs = removeHai(hs, eh)
-		riichi, err := isTempan(hs)
-		if err != nil {
-			return outHais, err
-		}
-		if riichi && !haiContain(outHais, eh) {
-			outHais = append(outHais, eh)
-		}
-	}
-	return outHais, nil
-}
-
 func (c *playerImpl) FindAnKanHai() ([][3]*hai.Hai, error) {
-	return c.tehai.FindKanPairs(c.tsumohai)
+	return c.tehai.KanPairs(c.tsumohai)
 }
 
 func (c *playerImpl) CanTsumoAgari() (bool, error) {
-	if c.tsumohai == nil {
-		return false, nil
-	}
-	hais := c.tehai.Hais()
-	hais = append(hais, c.tsumohai)
-	cnt := map[*hai.Hai]int{}
-	for _, h := range hais {
-		cnt[h] += 1
-	}
-	for k, v := range cnt {
-		if v < 2 {
-			continue
-		}
-		// deep copy
-		hais := append([]*hai.Hai{}, hais...)
-		hais = removeHais(hais, []*hai.Hai{k, k})
-		hais, err := removeMentsus(hais)
-		if err != nil {
-			return false, err
-		}
-		if len(hais) == 0 {
-			return true, nil
-		}
-	}
-	return false, nil
+	return c.tehai.CanRon(c.tsumohai)
 }
 
-func (c *playerImpl) CanRon(inHai *hai.Hai) (bool, error) {
-	hais := c.tehai.Hais()
-	hais = append(hais, inHai)
-	cnt := map[*hai.Hai]int{}
-	for _, h := range hais {
-		cnt[h] += 1
-	}
-	for k, v := range cnt {
-		if v < 2 {
-			continue
-		}
-		// deep copy
-		hais := append([]*hai.Hai{}, hais...)
-		hais = removeHais(hais, []*hai.Hai{k, k})
-		hais, err := removeMentsus(hais)
-		if err != nil {
-			return false, err
-		}
-		if len(hais) == 0 {
-			return true, nil
-		}
-	}
-	return false, nil
-
-}
-
-func (c *playerImpl) FindNakiActions(inHai *hai.Hai) ([]Action, error) {
+func (c *playerImpl) Actions(inHai *hai.Hai) ([]Action, error) {
 	actions := []Action{}
+
+	type Arg struct {
+		ok bool
+		e  error
+		a  Action
+	}
+	args := []Arg{}
 	// chii
-	pairs, err := c.tehai.FindChiiPairs(inHai)
-	if err != nil {
-		return actions, err
-	}
-	if len(pairs) != 0 {
-		actions = append(actions, Chii)
-	}
+	ok, err := c.tehai.CanChii(inHai)
+	args = append(args, Arg{ok, err, Chii})
 
 	// pon
-	pairs, err = c.tehai.FindPonPairs(inHai)
-	if err != nil {
-		return actions, err
-	}
-	if len(pairs) != 0 {
-		actions = append(actions, Pon)
-	}
+	ok, err = c.tehai.CanPon(inHai)
+	args = append(args, Arg{ok, err, Pon})
 
 	// kan
-	kanpairs, err := c.tehai.FindKanPairs(inHai)
-	if err != nil {
-		return actions, err
-	}
-	if len(kanpairs) != 0 {
-		actions = append(actions, Kan)
-	}
+	ok, err = c.tehai.CanKan(inHai)
+	args = append(args, Arg{ok, err, Kan})
 
 	// ron
-	isRon, err := c.CanRon(inHai)
-	if err != nil {
-		return actions, err
-	}
-	if isRon {
-		actions = append(actions, Ron)
+	ok, err = c.tehai.CanRon(inHai)
+	args = append(args, Arg{ok, err, Ron})
+
+	for _, arg := range args {
+		if arg.e != nil {
+			return actions, arg.e
+		}
+		if ok {
+			actions = append(actions, arg.a)
+		}
+
 	}
 	return actions, nil
-}
-
-func haiContain(a []*hai.Hai, h *hai.Hai) bool {
-	for _, hi := range a {
-		if h == hi {
-			return true
-		}
-	}
-	return false
-
-}
-
-func isTempan(hais []*hai.Hai) (bool, error) {
-	cnt := map[*hai.Hai]int{}
-	for _, h := range hais {
-		cnt[h] += 1
-	}
-
-	haisc := append([]*hai.Hai{}, hais...)
-	haisc, err := removeMentsus(haisc)
-	if err != nil {
-		return false, err
-	}
-	if len(haisc) == 1 {
-		return true, nil
-	}
-
-	for k, v := range cnt {
-		hais := append([]*hai.Hai{}, hais...)
-		if v < 2 {
-			continue
-		}
-		// 両面, 嵌張, 双碰, 辺張
-		hais = removeHais(hais, []*hai.Hai{k, k})
-		hais, err := removeMentsus(hais)
-		if err != nil {
-			return false, err
-		}
-		if len(hais) == 2 && hasMati([2]*hai.Hai{hais[0], hais[1]}) {
-			return true, nil
-		}
-
-	}
-
-	return false, nil
-}
-
-func hasMati(hais [2]*hai.Hai) bool {
-	if hais[0] == hais[1] {
-		return true
-	}
-	// jihai
-	if hais[0].HasAttribute(&attribute.Jihai) && hais[1].HasAttribute(&attribute.Jihai) {
-		return hais[0] == hais[1]
-	}
-
-	// suhai
-	num1, err := hai.HaitoI(hais[0])
-	if err != nil {
-		return false
-	}
-	num2, err := hai.HaitoI(hais[1])
-	if err != nil {
-		return false
-	}
-	if num2 > num1 {
-		return num2-num1 <= 2
-	}
-	return num1-num2 <= 2
-}
-
-func removeHais(hais []*hai.Hai, outHais []*hai.Hai) []*hai.Hai {
-	for _, hai := range outHais {
-		hais = removeHai(hais, hai)
-	}
-	return hais
-}
-
-func removeHai(hais []*hai.Hai, hai *hai.Hai) []*hai.Hai {
-	for i, h := range hais {
-		if h == hai {
-			hais = append(hais[:i], hais[i+1:]...)
-			return hais
-		}
-	}
-	panic(PlayerHaiNotFoundErr)
-}
-
-func removeMentsus(hais []*hai.Hai) ([]*hai.Hai, error) {
-	for {
-		kotsu, err := findKotsu(hais)
-		if err != nil {
-			return hais, err
-		}
-		if len(kotsu) != 0 {
-			hais = removeHais(hais, kotsu)
-		}
-		shuntsu, err := findShuntsu(hais)
-		if err != nil {
-			return hais, err
-		}
-		if len(shuntsu) != 0 {
-			hais = removeHais(hais, shuntsu)
-		}
-
-		if len(shuntsu) == 0 && len(kotsu) == 0 {
-			break
-		}
-	}
-	return hais, nil
-}
-
-func findShuntsu(hais []*hai.Hai) ([]*hai.Hai, error) {
-	sort.Slice(hais, func(i int, j int) bool {
-		return hais[i].Name() < hais[j].Name()
-	})
-	for _, h := range hais {
-		if h.HasAttribute(&attribute.Jihai) {
-			continue
-		}
-		suit, err := hai.HaitoSuits(h)
-		if err != nil {
-			return hais, err
-		}
-		num, err := hai.HaitoI(h)
-		if err != nil {
-			return hais, err
-		}
-		if num <= 7 && hasHai(hais, suit[num]) && hasHai(hais, suit[num+1]) {
-			return []*hai.Hai{h, suit[num], suit[num+1]}, nil
-		}
-	}
-	return []*hai.Hai{}, nil
-}
-
-func findKotsu(hais []*hai.Hai) ([]*hai.Hai, error) {
-	cnt := map[*hai.Hai]int{}
-	for _, h := range hais {
-		cnt[h] += 1
-		if cnt[h] >= 3 {
-			return []*hai.Hai{h, h, h}, nil
-		}
-	}
-	return []*hai.Hai{}, nil
-}
-
-func hasHai(hais []*hai.Hai, hai *hai.Hai) bool {
-	for _, h := range hais {
-		if h == hai {
-			return true
-		}
-	}
-	return false
 }

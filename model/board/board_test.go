@@ -192,8 +192,8 @@ func TestMyTurn(t *testing.T) {
 
 func TestTurnEnd(t *testing.T) {
 	testPlayer1 := &player.PlayerMock{KawaMock: &kawa.KawaMock{HaiMock: hai.Haku}}
-	TehaiMock1 := &tehai.TehaiMock{ChiiMock: [][2]*hai.Hai{}}
-	TehaiMock2 := &tehai.TehaiMock{ChiiMock: [][2]*hai.Hai{{}}}
+	TehaiMock1 := &tehai.TehaiMock{BoolMock: false}
+	TehaiMock2 := &tehai.TehaiMock{BoolMock: true}
 	testPlayer2 := &player.PlayerMock{TehaiMock: TehaiMock1}
 	testPlayer3 := &player.PlayerMock{TehaiMock: TehaiMock2}
 	cases := []struct {

@@ -12,28 +12,28 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestTumo(t *testing.T) {
+func TestTsumo(t *testing.T) {
 	cases := []struct {
-		beforeTumohai *hai.Hai
-		beforeYama    yama.Yama
-		afterTumohai  *hai.Hai
-		outError      error
+		beforeTsumohai *hai.Hai
+		beforeYama     yama.Yama
+		afterTsumohai  *hai.Hai
+		outError       error
 	}{
 		{
-			beforeTumohai: nil,
-			beforeYama:    &yama.YamaMock{HaiMock: hai.Haku},
-			afterTumohai:  hai.Haku,
-			outError:      nil,
+			beforeTsumohai: nil,
+			beforeYama:     &yama.YamaMock{HaiMock: hai.Haku},
+			afterTsumohai:  hai.Haku,
+			outError:       nil,
 		},
 		{
-			beforeTumohai: hai.Haku,
-			outError:      PlayerAlreadyHaveTsumohaiErr,
+			beforeTsumohai: hai.Haku,
+			outError:       PlayerAlreadyHaveTsumohaiErr,
 		},
 	}
 
 	for _, c := range cases {
 		Player := playerImpl{
-			tsumohai: c.beforeTumohai,
+			tsumohai: c.beforeTsumohai,
 			yama:     c.beforeYama,
 		}
 
@@ -43,44 +43,44 @@ func TestTumo(t *testing.T) {
 			continue
 		}
 
-		assert.Equal(t, c.afterTumohai, Player.tsumohai)
+		assert.Equal(t, c.afterTsumohai, Player.tsumohai)
 	}
 }
 
 func TestDahai(t *testing.T) {
 	cases := []struct {
-		beforeTumohai *hai.Hai
-		beforeTehai   tehai.Tehai
-		beforeKawa    kawa.Kawa
-		inHai         *hai.Hai
-		afterTumohai  *hai.Hai
-		afterTehai    tehai.Tehai
-		afterKawa     kawa.Kawa
-		outError      error
+		beforeTsumohai *hai.Hai
+		beforeTehai    tehai.Tehai
+		beforeKawa     kawa.Kawa
+		inHai          *hai.Hai
+		afterTsumohai  *hai.Hai
+		afterTehai     tehai.Tehai
+		afterKawa      kawa.Kawa
+		outError       error
 	}{
 		{
-			beforeTumohai: hai.Haku,
-			beforeTehai:   &tehai.TehaiMock{},
-			beforeKawa:    &kawa.KawaMock{},
-			inHai:         hai.Haku,
-			afterTumohai:  nil,
-			afterTehai:    &tehai.TehaiMock{},
-			afterKawa:     &kawa.KawaMock{HaiMock: hai.Haku},
+			beforeTsumohai: hai.Haku,
+			beforeTehai:    &tehai.TehaiMock{},
+			beforeKawa:     &kawa.KawaMock{},
+			inHai:          hai.Haku,
+			afterTsumohai:  nil,
+			afterTehai:     &tehai.TehaiMock{},
+			afterKawa:      &kawa.KawaMock{HaiMock: hai.Haku},
 		},
 		{
-			beforeTumohai: hai.Haku,
-			beforeTehai:   &tehai.TehaiMock{HaiMock: hai.Manzu1},
-			beforeKawa:    &kawa.KawaMock{},
-			inHai:         hai.Manzu1,
-			afterTumohai:  nil,
-			afterTehai:    &tehai.TehaiMock{HaiMock: hai.Haku},
-			afterKawa:     &kawa.KawaMock{HaiMock: hai.Manzu1},
+			beforeTsumohai: hai.Haku,
+			beforeTehai:    &tehai.TehaiMock{HaiMock: hai.Manzu1},
+			beforeKawa:     &kawa.KawaMock{},
+			inHai:          hai.Manzu1,
+			afterTsumohai:  nil,
+			afterTehai:     &tehai.TehaiMock{HaiMock: hai.Haku},
+			afterKawa:      &kawa.KawaMock{HaiMock: hai.Manzu1},
 		},
 	}
 
 	for _, c := range cases {
 		Player := playerImpl{
-			tsumohai: c.beforeTumohai,
+			tsumohai: c.beforeTsumohai,
 			tehai:    c.beforeTehai,
 			kawa:     c.beforeKawa,
 		}
@@ -91,7 +91,7 @@ func TestDahai(t *testing.T) {
 			continue
 		}
 
-		assert.Equal(t, c.afterTumohai, Player.tsumohai)
+		assert.Equal(t, c.afterTsumohai, Player.tsumohai)
 		assert.Equal(t, c.afterTehai, Player.tehai)
 		assert.Equal(t, c.afterKawa, Player.kawa)
 	}
@@ -99,24 +99,24 @@ func TestDahai(t *testing.T) {
 
 func TestChi(t *testing.T) {
 	cases := []struct {
-		beforeTehai   tehai.Tehai
-		beforeNaki    naki.Naki
-		beforeTumohai *hai.Hai
-		inHai         *hai.Hai
-		inHais        [2]*hai.Hai
-		afterNaki     naki.Naki
-		afterTumohai  *hai.Hai
-		outError      error
+		beforeTehai    tehai.Tehai
+		beforeNaki     naki.Naki
+		beforeTsumohai *hai.Hai
+		inHai          *hai.Hai
+		inHais         [2]*hai.Hai
+		afterNaki      naki.Naki
+		afterTsumohai  *hai.Hai
+		outError       error
 	}{
 		{
-			beforeTehai:   &tehai.TehaiMock{HaisMock: []*hai.Hai{hai.Manzu1, hai.Manzu2}},
-			beforeNaki:    &naki.NakiMock{},
-			beforeTumohai: hai.Haku,
-			inHai:         hai.Manzu3,
-			inHais:        [2]*hai.Hai{hai.Manzu1, hai.Manzu2},
-			afterNaki:     &naki.NakiMock{ChiiMock: [3]*hai.Hai{hai.Manzu3, hai.Manzu1, hai.Manzu2}},
-			afterTumohai:  nil,
-			outError:      nil,
+			beforeTehai:    &tehai.TehaiMock{HaisMock: []*hai.Hai{hai.Manzu1, hai.Manzu2}},
+			beforeNaki:     &naki.NakiMock{},
+			beforeTsumohai: hai.Haku,
+			inHai:          hai.Manzu3,
+			inHais:         [2]*hai.Hai{hai.Manzu1, hai.Manzu2},
+			afterNaki:      &naki.NakiMock{ChiiMock: [3]*hai.Hai{hai.Manzu3, hai.Manzu1, hai.Manzu2}},
+			afterTsumohai:  nil,
+			outError:       nil,
 		},
 		{
 			beforeTehai: &tehai.TehaiMock{ErrorMock: errors.New("")},
@@ -149,30 +149,30 @@ func TestChi(t *testing.T) {
 		}
 
 		assert.Equal(t, c.afterNaki, Player.naki)
-		assert.Equal(t, c.afterTumohai, Player.tsumohai)
+		assert.Equal(t, c.afterTsumohai, Player.tsumohai)
 	}
 }
 
 func TestPon(t *testing.T) {
 	cases := []struct {
-		beforeTehai   tehai.Tehai
-		beforeNaki    naki.Naki
-		beforeTumohai *hai.Hai
-		inHai         *hai.Hai
-		inHais        [2]*hai.Hai
-		afterNaki     naki.Naki
-		afterTumohai  *hai.Hai
-		outError      error
+		beforeTehai    tehai.Tehai
+		beforeNaki     naki.Naki
+		beforeTsumohai *hai.Hai
+		inHai          *hai.Hai
+		inHais         [2]*hai.Hai
+		afterNaki      naki.Naki
+		afterTsumohai  *hai.Hai
+		outError       error
 	}{
 		{
-			beforeTehai:   &tehai.TehaiMock{HaisMock: []*hai.Hai{hai.Haku, hai.Haku}},
-			beforeNaki:    &naki.NakiMock{},
-			beforeTumohai: hai.Haku,
-			inHai:         hai.Haku,
-			inHais:        [2]*hai.Hai{hai.Haku, hai.Haku},
-			afterNaki:     &naki.NakiMock{PonMock: [3]*hai.Hai{hai.Haku, hai.Haku, hai.Haku}},
-			afterTumohai:  nil,
-			outError:      nil,
+			beforeTehai:    &tehai.TehaiMock{HaisMock: []*hai.Hai{hai.Haku, hai.Haku}},
+			beforeNaki:     &naki.NakiMock{},
+			beforeTsumohai: hai.Haku,
+			inHai:          hai.Haku,
+			inHais:         [2]*hai.Hai{hai.Haku, hai.Haku},
+			afterNaki:      &naki.NakiMock{PonMock: [3]*hai.Hai{hai.Haku, hai.Haku, hai.Haku}},
+			afterTsumohai:  nil,
+			outError:       nil,
 		},
 		{
 			beforeTehai: &tehai.TehaiMock{ErrorMock: errors.New("")},
@@ -205,30 +205,30 @@ func TestPon(t *testing.T) {
 		}
 
 		assert.Equal(t, c.afterNaki, Player.naki)
-		assert.Equal(t, c.afterTumohai, Player.tsumohai)
+		assert.Equal(t, c.afterTsumohai, Player.tsumohai)
 	}
 }
 
 func TestKan(t *testing.T) {
 	cases := []struct {
-		beforeTehai   tehai.Tehai
-		beforeNaki    naki.Naki
-		beforeTumohai *hai.Hai
-		inHai         *hai.Hai
-		inHais        [3]*hai.Hai
-		afterNaki     naki.Naki
-		afterTumohai  *hai.Hai
-		outError      error
+		beforeTehai    tehai.Tehai
+		beforeNaki     naki.Naki
+		beforeTsumohai *hai.Hai
+		inHai          *hai.Hai
+		inHais         [3]*hai.Hai
+		afterNaki      naki.Naki
+		afterTsumohai  *hai.Hai
+		outError       error
 	}{
 		{
-			beforeTehai:   &tehai.TehaiMock{HaisMock: []*hai.Hai{hai.Haku, hai.Haku, hai.Haku}},
-			beforeNaki:    &naki.NakiMock{},
-			beforeTumohai: hai.Haku,
-			inHai:         hai.Haku,
-			inHais:        [3]*hai.Hai{},
-			afterNaki:     &naki.NakiMock{MinKanMock: [4]*hai.Hai{hai.Haku, hai.Haku, hai.Haku, hai.Haku}},
-			afterTumohai:  nil,
-			outError:      nil,
+			beforeTehai:    &tehai.TehaiMock{HaisMock: []*hai.Hai{hai.Haku, hai.Haku, hai.Haku}},
+			beforeNaki:     &naki.NakiMock{},
+			beforeTsumohai: hai.Haku,
+			inHai:          hai.Haku,
+			inHais:         [3]*hai.Hai{},
+			afterNaki:      &naki.NakiMock{MinKanMock: [4]*hai.Hai{hai.Haku, hai.Haku, hai.Haku, hai.Haku}},
+			afterTsumohai:  nil,
+			outError:       nil,
 		},
 		{
 			beforeTehai: &tehai.TehaiMock{ErrorMock: errors.New("")},
@@ -261,34 +261,34 @@ func TestKan(t *testing.T) {
 		}
 
 		assert.Equal(t, c.afterNaki, Player.naki)
-		assert.Equal(t, c.afterTumohai, Player.tsumohai)
+		assert.Equal(t, c.afterTsumohai, Player.tsumohai)
 	}
 }
 
 func TestKakan(t *testing.T) {
 	cases := []struct {
-		beforeNaki    naki.Naki
-		beforeTumohai *hai.Hai
-		inHai         *hai.Hai
-		afterNaki     naki.Naki
-		afterTomohai  *hai.Hai
-		outError      error
+		beforeNaki     naki.Naki
+		beforeTsumohai *hai.Hai
+		inHai          *hai.Hai
+		afterNaki      naki.Naki
+		afterTomohai   *hai.Hai
+		outError       error
 	}{
 		{
-			beforeNaki:    &naki.NakiMock{PonMock: [3]*hai.Hai{hai.Haku, hai.Haku, hai.Haku}},
-			beforeTumohai: hai.Haku,
-			inHai:         hai.Haku,
-			afterNaki:     &naki.NakiMock{MinKanMock: [4]*hai.Hai{hai.Haku, hai.Haku, hai.Haku, hai.Haku}},
-			afterTomohai:  nil,
-			outError:      nil,
+			beforeNaki:     &naki.NakiMock{PonMock: [3]*hai.Hai{hai.Haku, hai.Haku, hai.Haku}},
+			beforeTsumohai: hai.Haku,
+			inHai:          hai.Haku,
+			afterNaki:      &naki.NakiMock{MinKanMock: [4]*hai.Hai{hai.Haku, hai.Haku, hai.Haku, hai.Haku}},
+			afterTomohai:   nil,
+			outError:       nil,
 		},
 		{
-			beforeNaki:    &naki.NakiMock{PonMock: [3]*hai.Hai{hai.Haku, hai.Haku, hai.Haku}},
-			beforeTumohai: nil,
-			inHai:         hai.Haku,
-			afterNaki:     &naki.NakiMock{MinKanMock: [4]*hai.Hai{hai.Haku, hai.Haku, hai.Haku, hai.Haku}},
-			afterTomohai:  nil,
-			outError:      nil,
+			beforeNaki:     &naki.NakiMock{PonMock: [3]*hai.Hai{hai.Haku, hai.Haku, hai.Haku}},
+			beforeTsumohai: nil,
+			inHai:          hai.Haku,
+			afterNaki:      &naki.NakiMock{MinKanMock: [4]*hai.Hai{hai.Haku, hai.Haku, hai.Haku, hai.Haku}},
+			afterTomohai:   nil,
+			outError:       nil,
 		},
 		{
 			beforeNaki: &naki.NakiMock{ErrorMock: errors.New("")},
@@ -300,7 +300,7 @@ func TestKakan(t *testing.T) {
 
 	for _, c := range cases {
 		Player := playerImpl{
-			tsumohai: c.beforeTumohai,
+			tsumohai: c.beforeTsumohai,
 			naki:     c.beforeNaki,
 		}
 
@@ -375,130 +375,33 @@ func TestHaihai(t *testing.T) {
 	}
 }
 
-func TestCanRichi(t *testing.T) {
+func TestCanTsumoAgari(t *testing.T) {
 	cases := []struct {
-		name          string
-		beforeNaki    naki.Naki
-		beforeTehai   tehai.Tehai
-		beforeTumohai *hai.Hai
-		outHais       []*hai.Hai
-		outError      error
+		name           string
+		beforeTehai    tehai.Tehai
+		beforeTsumohai *hai.Hai
+		outBool        bool
+		outError       error
 	}{
 		{
-			name:       "両面",
-			beforeNaki: &naki.NakiMock{},
 			beforeTehai: &tehai.TehaiMock{
-				HaisMock: []*hai.Hai{
-					hai.Manzu1, hai.Manzu2, hai.Manzu3, hai.Manzu4, hai.Manzu5, hai.Manzu6,
-					hai.Manzu7, hai.Manzu8, hai.Manzu9, hai.Haku, hai.Pinzu2, hai.Pinzu3,
-					hai.Hatsu,
-				},
+				BoolMock: true,
 			},
-			beforeTumohai: hai.Hatsu,
-			outHais:       []*hai.Hai{hai.Haku},
+			beforeTsumohai: hai.Hatsu,
+			outBool:        true,
 		},
 		{
-			name:       "辺張",
-			beforeNaki: &naki.NakiMock{},
 			beforeTehai: &tehai.TehaiMock{
-				HaisMock: []*hai.Hai{
-					hai.Manzu1, hai.Manzu2, hai.Manzu3, hai.Manzu4, hai.Manzu5, hai.Manzu6,
-					hai.Pinzu8, hai.Pinzu9, hai.Souzu6, hai.Souzu6, hai.Souzu6, hai.Souzu7,
-					hai.Souzu7,
-				},
+				BoolMock: false,
 			},
-			beforeTumohai: hai.Manzu1,
-			outHais:       []*hai.Hai{hai.Manzu1},
-		},
-		{
-			name:       "嵌張",
-			beforeNaki: &naki.NakiMock{},
-			beforeTehai: &tehai.TehaiMock{
-				HaisMock: []*hai.Hai{
-					hai.Manzu1, hai.Manzu1, hai.Manzu1, hai.Manzu4, hai.Manzu5, hai.Manzu6,
-					hai.Manzu7, hai.Manzu8, hai.Manzu9, hai.Haku, hai.Pinzu5, hai.Pinzu3,
-					hai.Hatsu,
-				},
-			},
-			beforeTumohai: hai.Hatsu,
-			outHais:       []*hai.Hai{hai.Haku},
-		},
-		{
-			name:       "双碰",
-			beforeNaki: &naki.NakiMock{},
-			beforeTehai: &tehai.TehaiMock{
-				HaisMock: []*hai.Hai{
-					hai.Manzu1, hai.Manzu1, hai.Manzu1, hai.Manzu4, hai.Manzu5, hai.Manzu6,
-					hai.Manzu7, hai.Manzu8, hai.Manzu9, hai.Haku, hai.Pinzu3, hai.Pinzu3,
-					hai.Hatsu,
-				},
-			},
-			beforeTumohai: hai.Hatsu,
-			outHais:       []*hai.Hai{hai.Haku},
-		},
-		{
-			name:       "単騎",
-			beforeNaki: &naki.NakiMock{},
-			beforeTehai: &tehai.TehaiMock{
-				HaisMock: []*hai.Hai{
-					hai.Manzu1, hai.Manzu1, hai.Manzu1, hai.Manzu4, hai.Manzu5, hai.Manzu6,
-					hai.Manzu7, hai.Manzu8, hai.Manzu9, hai.Pinzu1, hai.Pinzu2, hai.Pinzu3,
-					hai.Hatsu,
-				},
-			},
-			beforeTumohai: hai.Haku,
-			outHais:       []*hai.Hai{hai.Hatsu, hai.Haku},
+			beforeTsumohai: hai.Hatsu,
+			outBool:        false,
 		},
 	}
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			Player := playerImpl{tehai: c.beforeTehai, tsumohai: c.beforeTumohai, naki: c.beforeNaki}
-			hais, err := Player.FindRiichiHai()
-			if err != nil {
-				assert.Equal(t, c.outError, err)
-				return
-			}
-			assert.Equal(t, c.outHais, hais)
-		})
-	}
-}
-
-func TestCanTumo(t *testing.T) {
-	cases := []struct {
-		name          string
-		beforeTehai   tehai.Tehai
-		beforeTumohai *hai.Hai
-		outBool       bool
-		outError      error
-	}{
-		{
-			beforeTehai: &tehai.TehaiMock{
-				HaisMock: []*hai.Hai{
-					hai.Manzu1, hai.Manzu1, hai.Manzu1, hai.Manzu4, hai.Manzu5, hai.Manzu6,
-					hai.Manzu7, hai.Manzu8, hai.Manzu9, hai.Pinzu1, hai.Pinzu2, hai.Pinzu3,
-					hai.Hatsu,
-				},
-			},
-			beforeTumohai: hai.Hatsu,
-			outBool:       true,
-		},
-		{
-			beforeTehai: &tehai.TehaiMock{
-				HaisMock: []*hai.Hai{
-					hai.Manzu1, hai.Manzu1, hai.Manzu1, hai.Manzu4, hai.Manzu5, hai.Manzu6,
-					hai.Manzu7, hai.Manzu8, hai.Manzu9, hai.Pinzu1, hai.Pinzu2, hai.Pinzu3,
-					hai.Haku,
-				},
-			},
-			beforeTumohai: hai.Hatsu,
-			outBool:       false,
-		},
-	}
-
-	for _, c := range cases {
-		t.Run(c.name, func(t *testing.T) {
-			Player := playerImpl{tehai: c.beforeTehai, tsumohai: c.beforeTumohai}
+			Player := playerImpl{tehai: c.beforeTehai, tsumohai: c.beforeTsumohai}
 			isTsumo, err := Player.CanTsumoAgari()
 			if err != nil {
 				assert.Equal(t, c.outError, err)

@@ -85,10 +85,6 @@ func (c *PlayerMock) CanTsumoAgari() (bool, error) {
 	return c.BoolMock, c.ErrorMock
 
 }
-func (c *PlayerMock) FindNakiActions(_ *hai.Hai) ([]Action, error) {
+func (c *PlayerMock) Actions(_ *hai.Hai) ([]Action, error) {
 	return c.ActionsMock, c.ErrorMock
-}
-
-func (c *PlayerMock) CanRon(_ *hai.Hai) (bool, error) {
-	return c.BoolMock, c.ErrorMock
 }

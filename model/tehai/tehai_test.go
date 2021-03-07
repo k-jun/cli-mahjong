@@ -205,7 +205,7 @@ func TestReplace(t *testing.T) {
 	}
 }
 
-func TestFindPonPairs(t *testing.T) {
+func TestPonPairs(t *testing.T) {
 	cases := []struct {
 		name       string
 		beforeHais []*hai.Hai
@@ -235,7 +235,7 @@ func TestFindPonPairs(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			tehai := tehaiImpl{hais: c.beforeHais}
-			pairs, err := tehai.FindPonPairs(c.inHai)
+			pairs, err := tehai.PonPairs(c.inHai)
 			if err != nil {
 				assert.Equal(t, nil, err)
 				return
@@ -245,7 +245,7 @@ func TestFindPonPairs(t *testing.T) {
 	}
 }
 
-func TestFindKanPairs(t *testing.T) {
+func TestKanPairs(t *testing.T) {
 	cases := []struct {
 		name       string
 		beforeHais []*hai.Hai
@@ -274,7 +274,7 @@ func TestFindKanPairs(t *testing.T) {
 
 	for _, c := range cases {
 		tehai := tehaiImpl{hais: c.beforeHais}
-		pairs, err := tehai.FindKanPairs(c.inHai)
+		pairs, err := tehai.KanPairs(c.inHai)
 		if err != nil {
 			assert.Equal(t, nil, err)
 			continue
@@ -283,7 +283,7 @@ func TestFindKanPairs(t *testing.T) {
 	}
 }
 
-func TestFindChiiPairs(t *testing.T) {
+func TestChiiPairs(t *testing.T) {
 	cases := []struct {
 		name       string
 		beforeHais []*hai.Hai
@@ -312,11 +312,76 @@ func TestFindChiiPairs(t *testing.T) {
 
 	for _, c := range cases {
 		tehai := tehaiImpl{hais: c.beforeHais}
-		pairs, err := tehai.FindChiiPairs(c.inHai)
+		pairs, err := tehai.ChiiPairs(c.inHai)
 		if err != nil {
 			assert.Equal(t, nil, err)
 			continue
 		}
 		assert.Equal(t, c.outPairs, pairs)
 	}
+}
+
+func TestMachihai(t *testing.T) {
+	cases := []struct {
+		name       string
+		beforeHais []*hai.Hai
+		outHais    []*hai.Hai
+	}{
+		{
+			name: "両面",
+			beforeHais: []*hai.Hai{
+				hai.Manzu1, hai.Manzu2, hai.Manzu3, hai.Manzu4, hai.Manzu5, hai.Manzu6,
+				hai.Manzu7, hai.Manzu8, hai.Manzu9, hai.Haku, hai.Pinzu2, hai.Pinzu3,
+				hai.Haku,
+			},
+			outHais: []*hai.Hai{hai.Pinzu1, hai.Pinzu4},
+		},
+		{
+			name: "辺張",
+			beforeHais: []*hai.Hai{
+				hai.Manzu1, hai.Manzu2, hai.Manzu3, hai.Manzu4, hai.Manzu5, hai.Manzu6,
+				hai.Pinzu8, hai.Pinzu9, hai.Souzu6, hai.Souzu6, hai.Souzu6, hai.Souzu7,
+				hai.Souzu7,
+			},
+			outHais: []*hai.Hai{hai.Pinzu7},
+		},
+		{
+			name: "嵌張",
+			beforeHais: []*hai.Hai{
+				hai.Manzu1, hai.Manzu1, hai.Manzu1, hai.Manzu4, hai.Manzu5, hai.Manzu6,
+				hai.Manzu7, hai.Manzu8, hai.Manzu9, hai.Haku, hai.Pinzu5, hai.Pinzu3,
+				hai.Haku,
+			},
+			outHais: []*hai.Hai{hai.Pinzu4},
+		},
+		{
+			name: "双碰",
+			beforeHais: []*hai.Hai{
+				hai.Manzu1, hai.Manzu1, hai.Manzu1, hai.Manzu4, hai.Manzu5, hai.Manzu6,
+				hai.Manzu7, hai.Manzu8, hai.Manzu9, hai.Hatsu, hai.Pinzu3, hai.Pinzu3,
+				hai.Hatsu,
+			},
+			outHais: []*hai.Hai{hai.Pinzu3, hai.Hatsu},
+		},
+		{
+			name: "単騎",
+			beforeHais: []*hai.Hai{
+				hai.Manzu1, hai.Manzu1, hai.Manzu1, hai.Manzu4, hai.Manzu5, hai.Manzu6,
+				hai.Manzu7, hai.Manzu8, hai.Manzu9, hai.Pinzu1, hai.Pinzu2, hai.Pinzu3,
+				hai.Hatsu,
+			},
+			outHais: []*hai.Hai{hai.Hatsu},
+		},
+	}
+
+	for _, c := range cases {
+
+		t.Run(c.name, func(t *testing.T) {
+			tehai := tehaiImpl{c.beforeHais}
+			hais, err := tehai.Machihai()
+			assert.NoError(t, err)
+			assert.Equal(t, c.outHais, hais)
+		})
+	}
+
 }

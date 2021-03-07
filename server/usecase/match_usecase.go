@@ -62,6 +62,8 @@ func (uc *matchUsecaseImpl) JoinRandomRoom(u user.User) (string, error) {
 
 func (uc *matchUsecaseImpl) deadCheck(u user.User, room room.Room) {
 	for {
+		// if it's read, first input from user was read in here
+		// to avoid that, and do daed check it should be write
 		if err := uc.write(""); err != nil {
 			if room != nil {
 				// connection end

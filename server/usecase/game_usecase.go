@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"bytes"
-	"fmt"
 	"log"
 	"mahjong/model/board"
 	"mahjong/model/hai"
@@ -17,7 +16,7 @@ import (
 type GameUsecase interface {
 	JoinBoard(string, player.Player) (chan board.Board, error)
 	InputController(string, player.Player)
-	OutputController(string, player.Player, chan board.Board) error
+	OutputController(player.Player, chan board.Board) error
 }
 
 type gameUsecaseImpl struct {
@@ -27,7 +26,8 @@ type gameUsecaseImpl struct {
 }
 
 var (
-	re = regexp.MustCompile(`\d`)
+	num = regexp.MustCompile(`\d+`)
+	str = regexp.MustCompile(`\w+`)
 )
 
 func NewGameUsecase(ts storage.BoardStorage, write func(string) error, read func([]byte) error) GameUsecase {
@@ -38,8 +38,208 @@ func NewGameUsecase(ts storage.BoardStorage, write func(string) error, read func
 	}
 }
 
-func (gu *gameUsecaseImpl) InputController(id string, c player.Player) {
-	Board, err := gu.BoardStorage.Find(id)
+type ActionType string
+
+var (
+	Normal ActionType = ""
+	Tsumo  ActionType = "tsumo"
+	Riichi ActionType = "riichi"
+	Chii   ActionType = "chii"
+	Pon    ActionType = "pon"
+	Kan    ActionType = "kan"
+	Ron    ActionType = "ron"
+	Cancel ActionType = "no"
+)
+
+type InputCommand struct {
+	actionType  ActionType
+	actionIndex int
+	hai         *hai.Hai
+}
+
+func (gu *gameUsecaseImpl) CommandParser(raw []byte) (*InputCommand, error) {
+	raw = bytes.Trim(raw, "\x00")
+	raw = bytes.Trim(raw, "\x10")
+	rawstr := strings.TrimSpace(string(raw))
+	h, err := hai.AtoHai(rawstr)
+	if err != nil && err != hai.HaiInvalidArgumentErr {
+		return nil, err
+	}
+
+	ic := InputCommand{actionType: Normal, actionIndex: 0, hai: h}
+	if h != nil {
+		return &ic, nil
+	}
+
+	actions := str.FindAllString(rawstr, 1)
+	if len(actions) != 1 {
+		return &ic, GameUsecaseInvalidActionErr
+	}
+
+	switch actions[0] {
+	case "tsumo":
+		ic.actionType = Tsumo
+	case "riichi":
+		ic.actionType = Riichi
+	case "chii":
+		ic.actionType = Chii
+	case "pon":
+		ic.actionType = Pon
+	case "kan":
+		ic.actionType = Kan
+	case "ron":
+		ic.actionType = Chii
+	case "no":
+		ic.actionType = Cancel
+	default:
+		return &ic, GameUsecaseInvalidActionErr
+	}
+	idxes := num.FindAllString(rawstr, 1)
+	if len(idxes) != 1 {
+		return &ic, nil
+	}
+	idx, _ := strconv.Atoi(idxes[0])
+	ic.actionIndex = idx
+
+	return &ic, nil
+}
+
+func (gu *gameUsecaseImpl) Normal(b board.Board, p player.Player, ic *InputCommand) error {
+	err := p.Dahai(ic.hai)
+	if err != nil {
+		return err
+	}
+	return b.TurnEnd()
+}
+
+func (gu *gameUsecaseImpl) Tsumo(b board.Board, p player.Player, ic *InputCommand) error {
+	ok, err := p.CanTsumoAgari()
+	if err != nil {
+		return err
+	}
+
+	if !ok {
+		return GameUsecaseInvalidActionErr
+	}
+	idx, err := b.MyTurn(p)
+	if err != nil {
+		return err
+	}
+	if err := b.SetWinIndex(idx); err != nil {
+		return err
+	}
+	b.Broadcast()
+	return b.LeavePlayer(p)
+}
+
+func (gu *gameUsecaseImpl) Riichi(b board.Board, p player.Player, ic *InputCommand) error {
+	hais, err := p.Tehai().RiichiHais(p.Tsumohai())
+	if err != nil {
+		return err
+	}
+	if len(hais) == 0 {
+		return GameUsecaseInvalidActionErr
+	}
+
+	if ic.actionIndex >= len(hais) || ic.actionIndex < 0 {
+		return GameUsecaseInvalidActionErr
+	}
+	err = p.Riichi(hais[ic.actionIndex])
+	if err != nil {
+		log.Println(err)
+	}
+	return b.TurnEnd()
+}
+
+func (gu *gameUsecaseImpl) AnKan(b board.Board, p player.Player, ic InputCommand) {
+
+}
+
+func (gu *gameUsecaseImpl) Chii(b board.Board, p player.Player, ic *InputCommand) error {
+	return b.TakeAction(p, func(inHai *hai.Hai) error {
+		pairs, err := p.Tehai().ChiiPairs(inHai)
+		if err != nil {
+			return err
+		}
+		if err != nil {
+			return err
+		}
+		if len(pairs) == 0 {
+			return GameUsecaseInvalidActionErr
+		}
+		if ic.actionIndex >= len(pairs) || ic.actionIndex < 0 {
+			return GameUsecaseInvalidActionErr
+		}
+		return p.Chii(inHai, pairs[ic.actionIndex])
+	})
+}
+
+func (gu *gameUsecaseImpl) Pon(b board.Board, p player.Player, ic *InputCommand) error {
+	return b.TakeAction(p, func(inHai *hai.Hai) error {
+		pairs, err := p.Tehai().PonPairs(inHai)
+		if err != nil {
+			return err
+		}
+		if err != nil {
+			return err
+		}
+		if len(pairs) == 0 {
+			return GameUsecaseInvalidActionErr
+		}
+		if ic.actionIndex >= len(pairs) || ic.actionIndex < 0 {
+			return GameUsecaseInvalidActionErr
+		}
+		return p.Pon(inHai, pairs[ic.actionIndex])
+	})
+}
+
+func (gu *gameUsecaseImpl) MinKan(b board.Board, p player.Player, ic *InputCommand) error {
+	return b.TakeAction(p, func(inHai *hai.Hai) error {
+		pairs, err := p.Tehai().MinKanPairs(inHai)
+		if err != nil {
+			return err
+		}
+		if err != nil {
+			return err
+		}
+		if len(pairs) == 0 {
+			return GameUsecaseInvalidActionErr
+		}
+		if ic.actionIndex >= len(pairs) || ic.actionIndex < 0 {
+			return GameUsecaseInvalidActionErr
+		}
+		return p.MinKan(inHai, pairs[ic.actionIndex])
+	})
+}
+
+func (gu *gameUsecaseImpl) Ron(b board.Board, p player.Player, ic *InputCommand) error {
+	turnIdx, err := b.MyTurn(p)
+	if err != nil {
+		return err
+	}
+
+	err = b.TakeAction(p, func(inHai *hai.Hai) error {
+		ok, err := p.Tehai().CanRon(inHai)
+		if err != nil {
+			return err
+		}
+		if !ok {
+			return GameUsecaseInvalidActionErr
+		}
+		if err := b.SetWinIndex(turnIdx); err != nil {
+			return err
+		}
+		b.Broadcast()
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	return b.LeavePlayer(p)
+}
+
+func (gu *gameUsecaseImpl) InputController(id string, p player.Player) {
+	b, err := gu.BoardStorage.Find(id)
 	if err != nil {
 		log.Println(err)
 	}
@@ -49,193 +249,88 @@ func (gu *gameUsecaseImpl) InputController(id string, c player.Player) {
 		if err := gu.read(buffer); err != nil {
 			// dead check
 			log.Println(err)
-			if err := Board.LeavePlayer(c); err != nil {
+			if err := b.LeavePlayer(p); err != nil {
 				log.Println(err)
 			}
 			break
 		}
-		if string(buffer) != "" {
-			buffer = bytes.Trim(buffer, "\x00")
-			buffer = bytes.Trim(buffer, "\x10")
-			haiName := strings.TrimSpace(string(buffer))
-			turnIdx, err := Board.MyTurn(c)
-			if err != nil {
-				log.Println(err)
-				Board.LeavePlayer(c)
-				break
+
+		command, err := gu.CommandParser(buffer)
+		if err != nil {
+			log.Println(err)
+			continue
+		}
+		turnIdx, err := b.MyTurn(p)
+		if err != nil {
+			log.Println(err)
+			b.LeavePlayer(p)
+			break
+		}
+		if b.CurrentTurn() == turnIdx {
+			// my turn
+			switch command.actionType {
+			case Normal:
+				err = gu.Normal(b, p, command)
+			case Tsumo:
+				err = gu.Tsumo(b, p, command)
+			case Riichi:
+				err = gu.Riichi(b, p, command)
+			case Kan:
+				continue
+			default:
+				continue
 			}
-			if Board.CurrentTurn() == turnIdx {
-				// tsumo
-				if haiName == "tsumo" {
-					ok, err := c.CanTsumoAgari()
-					if err != nil {
-						log.Println(err)
-						continue
-					}
-					if ok {
-						if err := Board.SetWinIndex(turnIdx); err != nil {
-							log.Println(err)
-							continue
-						}
-						Board.Broadcast()
-						fmt.Println(Board.LeavePlayer(c))
-					}
-				}
-				// riichi or not
-				if strings.HasPrefix(haiName, "riichi") {
-					hais, err := c.Tehai().RiichiHais(c.Tsumohai())
-					if err != nil {
-						log.Println(err)
-						continue
-					}
-					if len(hais) == 0 {
-						log.Println(GameUsecaseInvalidActionErr)
-						continue
-					}
-					idxstr := string(re.FindAll([]byte(haiName), 1)[0])
-					idx, err := strconv.Atoi(idxstr)
-					if idx >= len(hais) || idx < 0 {
-						log.Println(GameUsecaseInvalidActionErr)
-						continue
-					}
-					err = c.Riichi(hais[idx])
-					if err != nil {
-						log.Println(err)
-						continue
-					}
-				} else {
-					outHai, err := hai.AtoHai(haiName)
-					if err != nil {
-						log.Println(err)
-						continue
-					}
-					err = c.Dahai(outHai)
-					if err != nil {
-						log.Println(err)
-						continue
-					}
-				}
-				err = Board.TurnEnd()
-				if err != nil {
-					log.Println(err)
-					continue
-				}
+		} else {
+			// not my turn
+			if b.NextTurn() == turnIdx && command.actionType == Chii {
+				err = gu.Chii(b, p, command)
 			} else {
-				if strings.HasPrefix(haiName, "chii") {
-					if Board.NextTurn() == turnIdx {
-						err = Board.TakeAction(c, func(inHai *hai.Hai) error {
-							pairs, err := c.Tehai().ChiiPairs(inHai)
-							if err != nil {
-								return err
-							}
-							if err != nil {
-								return err
-							}
-							if len(pairs) == 0 {
-								return GameUsecaseInvalidActionErr
-							}
-							idxstr := string(re.FindAll([]byte(haiName), 1)[0])
-							idx, err := strconv.Atoi(idxstr)
-							if idx >= len(pairs) || idx < 0 {
-								return GameUsecaseInvalidActionErr
-							}
-							return c.Chii(inHai, pairs[idx])
-						})
-					}
-				}
-				if strings.HasPrefix(haiName, "pon") {
-					err = Board.TakeAction(c, func(inHai *hai.Hai) error {
-						pairs, err := c.Tehai().PonPairs(inHai)
-						if err != nil {
-							return err
-						}
-						if len(pairs) == 0 {
-							return GameUsecaseInvalidActionErr
-						}
-						idxstr := string(re.FindAll([]byte(haiName), 1)[0])
-						idx, err := strconv.Atoi(idxstr)
-						if idx >= len(pairs) || idx < 0 {
-							return GameUsecaseInvalidActionErr
-						}
-						return c.Pon(inHai, pairs[idx])
-					})
-				}
-				if strings.HasPrefix(haiName, "kan") {
-					err = Board.TakeAction(c, func(inHai *hai.Hai) error {
-						pairs, err := c.Tehai().MinKanPairs(inHai)
-						if err != nil {
-							return err
-						}
-						if len(pairs) == 0 {
-							return GameUsecaseInvalidActionErr
-						}
-						idxstr := string(re.FindAll([]byte(haiName), 1)[0])
-						idx, err := strconv.Atoi(idxstr)
-						if idx >= len(pairs) || idx < 0 {
-							return GameUsecaseInvalidActionErr
-						}
-						return c.MinKan(inHai, pairs[idx])
-					})
-				}
-				if haiName == "ron" {
-					err = Board.TakeAction(c, func(inHai *hai.Hai) error {
-						isRon, err := c.Tehai().CanRon(inHai)
-						if err != nil {
-							return err
-						}
-						if isRon {
-							if err := Board.SetWinIndex(turnIdx); err != nil {
-								return err
-							}
-							Board.Broadcast()
-						}
-						return nil
-					})
-					// TODO where should i put this
-					Board.LeavePlayer(c)
-				}
-				if haiName == "no" {
-					err = Board.CancelAction(c)
-				}
-				if err != nil {
-					log.Println(err)
+				switch command.actionType {
+				case Pon:
+					err = gu.Pon(b, p, command)
+				case Kan:
+					err = gu.MinKan(b, p, command)
+				case Ron:
+					err = gu.Ron(b, p, command)
+				case Cancel:
+					err = b.CancelAction(p)
+				default:
 					continue
 				}
 			}
+		}
+		if err != nil {
+			log.Println(err)
 		}
 	}
 }
 
-func (gu *gameUsecaseImpl) OutputController(id string, c player.Player, channel chan board.Board) error {
-	_, err := gu.BoardStorage.Find(id)
-	if err != nil {
-		return err
-	}
+func (gu *gameUsecaseImpl) OutputController(c player.Player, channel chan board.Board) error {
 	for {
-		Board, ok := <-channel
+		board, ok := <-channel
 		if !ok {
 			return GameUsecaseBoardChannelClosedErr
 		}
 
-		turnIdx, err := Board.MyTurn(c)
+		turnIdx, err := board.MyTurn(c)
 		if err != nil {
 			return err
 		}
 
-		tehaistr, err := view.BoardString(c, Board)
+		tehaistr, err := view.BoardString(c, board)
 		if err != nil {
 			return err
 		}
 
 		// huros
-		if Board.ActionCounter() != 0 && Board.CurrentTurn() != turnIdx {
-			hai, err := Board.LastKawa()
+		if board.ActionCounter() != 0 && board.CurrentTurn() != turnIdx {
+			hai, err := board.LastKawa()
 			if err != nil {
 				return err
 			}
 			actions := []player.Action{}
 			// chii
-			if Board.NextTurn() == turnIdx {
+			if board.NextTurn() == turnIdx {
 				chiis, err := c.Tehai().ChiiPairs(hai)
 				if err != nil {
 					return err
@@ -305,7 +400,7 @@ func (gu *gameUsecaseImpl) OutputController(id string, c player.Player, channel 
 		if ok {
 			tehaistr += "\n" + "do you do Tsumo "
 		}
-		if Board.ActionCounter() == 0 && Board.CurrentTurn() == turnIdx {
+		if board.ActionCounter() == 0 && board.CurrentTurn() == turnIdx {
 			tehaistr += "\n" + ">>"
 		} else {
 			tehaistr += "\n"

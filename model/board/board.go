@@ -284,17 +284,23 @@ func (t *boardImpl) TakeAction(c player.Player, action func(*hai.Hai) error) err
 		return BoardPlayerNotFoundErr
 	}
 
-	t.actionPlayers = []*boardPlayer{}
-	h, err := t.players[t.CurrentTurn()].Kawa().RemoveLast()
+	h, err := t.players[t.CurrentTurn()].Kawa().Last()
 	if err != nil {
 		return err
 	}
-
 	if err := action(h); err != nil {
 		return err
 	}
+	_, err = t.players[t.CurrentTurn()].Kawa().RemoveLast()
+	if err != nil {
+		return err
+	}
+	t.actionPlayers = []*boardPlayer{}
 
-	turnIdx, _ := t.MyTurn(c)
+	turnIdx, err := t.MyTurn(c)
+	if err != nil {
+		return err
+	}
 	if err := t.turnchange(turnIdx); err != nil {
 		return err
 	}

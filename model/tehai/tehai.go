@@ -55,6 +55,9 @@ func (t *tehaiImpl) Sort() error {
 }
 
 func (t *tehaiImpl) Add(inHai *hai.Hai) error {
+	if inHai == nil {
+		return TehaiHaiIsNilErr
+	}
 	if len(t.hais) >= MaxHaisLen {
 		return TehaiReachMaxHaiErr
 	}
@@ -116,7 +119,7 @@ func (t *tehaiImpl) CanChii(inHai *hai.Hai) (bool, error) {
 
 func (t *tehaiImpl) ChiiPairs(inHai *hai.Hai) ([][2]*hai.Hai, error) {
 	pairs := [][2]*hai.Hai{}
-	if !inHai.HasAttribute(&attribute.Suhai) {
+	if inHai == nil || !inHai.HasAttribute(&attribute.Suhai) {
 		return pairs, nil
 	}
 	// detect suit
@@ -153,6 +156,9 @@ func (t *tehaiImpl) CanPon(inHai *hai.Hai) (bool, error) {
 
 func (t *tehaiImpl) PonPairs(inHai *hai.Hai) ([][2]*hai.Hai, error) {
 	pairs := [][2]*hai.Hai{}
+	if inHai == nil {
+		return pairs, nil
+	}
 	cnt := map[*hai.Hai]int{}
 	for _, h := range t.hais {
 		cnt[h] += 1
@@ -174,6 +180,9 @@ func (t *tehaiImpl) CanMinKan(inHai *hai.Hai) (bool, error) {
 
 func (t *tehaiImpl) MinKanPairs(inHai *hai.Hai) ([][3]*hai.Hai, error) {
 	pairs := [][3]*hai.Hai{}
+	if inHai == nil {
+		return pairs, nil
+	}
 	cnt := map[*hai.Hai]int{}
 	for _, h := range t.hais {
 		cnt[h] += 1
@@ -194,6 +203,9 @@ func (t *tehaiImpl) CanAnKan(inHai *hai.Hai) (bool, error) {
 
 func (t *tehaiImpl) AnKanPairs(inHai *hai.Hai) ([][4]*hai.Hai, error) {
 	pairs := [][4]*hai.Hai{}
+	if inHai == nil {
+		return pairs, nil
+	}
 	cnt := map[*hai.Hai]int{}
 	cnt[inHai]++
 	for _, h := range t.hais {
@@ -209,6 +221,9 @@ func (t *tehaiImpl) AnKanPairs(inHai *hai.Hai) ([][4]*hai.Hai, error) {
 }
 
 func (t *tehaiImpl) CanRon(inHai *hai.Hai) (bool, error) {
+	if inHai == nil {
+		return false, nil
+	}
 	tehai := tehaiImpl{append([]*hai.Hai{inHai}, t.hais...)}
 	tehai.Sort()
 
@@ -266,12 +281,18 @@ func (t *tehaiImpl) CanRon(inHai *hai.Hai) (bool, error) {
 }
 
 func (t *tehaiImpl) CanRiichi(inHai *hai.Hai) (bool, error) {
+	if inHai == nil {
+		return false, nil
+	}
 	hais, err := t.RiichiHais(inHai)
 	return len(hais) != 0, err
 }
 
 func (t *tehaiImpl) RiichiHais(inHai *hai.Hai) ([]*hai.Hai, error) {
 	outHais := []*hai.Hai{}
+	if inHai == nil {
+		return outHais, nil
+	}
 	hais := append([]*hai.Hai{}, t.hais...)
 	hais = append(hais, inHai)
 	for i, outHai := range hais {

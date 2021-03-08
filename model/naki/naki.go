@@ -9,11 +9,14 @@ type Naki interface {
 	SetChii([3]*hai.Hai) error
 	SetMinKan([4]*hai.Hai) error
 	SetAnKan([4]*hai.Hai) error
-	Kakan(*hai.Hai) error
+
 	Pons() [][3]*hai.Hai
 	Chiis() [][3]*hai.Hai
 	MinKans() [][4]*hai.Hai
 	AnKans() [][4]*hai.Hai
+
+	CanKakan(*hai.Hai) bool
+	Kakan(*hai.Hai) error
 }
 
 type nakiImpl struct {
@@ -62,6 +65,15 @@ func (h *nakiImpl) SetMinKan(hais [4]*hai.Hai) error {
 func (h *nakiImpl) SetAnKan(hais [4]*hai.Hai) error {
 	h.ankans = append(h.ankans, hais)
 	return nil
+}
+
+func (h *nakiImpl) CanKakan(inHai *hai.Hai) bool {
+	for _, pon := range h.pons {
+		if pon[0] == inHai {
+			return true
+		}
+	}
+	return false
 }
 
 func (h *nakiImpl) Kakan(inHai *hai.Hai) error {

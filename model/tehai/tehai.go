@@ -21,12 +21,14 @@ type Tehai interface {
 
 	ChiiPairs(*hai.Hai) ([][2]*hai.Hai, error)
 	PonPairs(*hai.Hai) ([][2]*hai.Hai, error)
-	KanPairs(*hai.Hai) ([][3]*hai.Hai, error)
+	MinKanPairs(*hai.Hai) ([][3]*hai.Hai, error)
+	AnKanPairs(*hai.Hai) ([][4]*hai.Hai, error)
 	RiichiHais(*hai.Hai) ([]*hai.Hai, error)
 
 	CanChii(*hai.Hai) (bool, error)
 	CanPon(*hai.Hai) (bool, error)
-	CanKan(*hai.Hai) (bool, error)
+	CanMinKan(*hai.Hai) (bool, error)
+	CanAnKan(*hai.Hai) (bool, error)
 	CanRiichi(*hai.Hai) (bool, error)
 	CanRon(*hai.Hai) (bool, error)
 
@@ -165,12 +167,12 @@ func (t *tehaiImpl) PonPairs(inHai *hai.Hai) ([][2]*hai.Hai, error) {
 	return pairs, nil
 }
 
-func (t *tehaiImpl) CanKan(inHai *hai.Hai) (bool, error) {
-	hais, err := t.KanPairs(inHai)
+func (t *tehaiImpl) CanMinKan(inHai *hai.Hai) (bool, error) {
+	hais, err := t.MinKanPairs(inHai)
 	return len(hais) != 0, err
 }
 
-func (t *tehaiImpl) KanPairs(inHai *hai.Hai) ([][3]*hai.Hai, error) {
+func (t *tehaiImpl) MinKanPairs(inHai *hai.Hai) ([][3]*hai.Hai, error) {
 	pairs := [][3]*hai.Hai{}
 	cnt := map[*hai.Hai]int{}
 	for _, h := range t.hais {
@@ -180,6 +182,27 @@ func (t *tehaiImpl) KanPairs(inHai *hai.Hai) ([][3]*hai.Hai, error) {
 	for k, v := range cnt {
 		if v >= 3 && k == inHai {
 			pairs = append(pairs, [3]*hai.Hai{k, k, k})
+		}
+	}
+	return pairs, nil
+}
+
+func (t *tehaiImpl) CanAnKan(inHai *hai.Hai) (bool, error) {
+	hais, err := t.AnKanPairs(inHai)
+	return len(hais) != 0, err
+}
+
+func (t *tehaiImpl) AnKanPairs(inHai *hai.Hai) ([][4]*hai.Hai, error) {
+	pairs := [][4]*hai.Hai{}
+	cnt := map[*hai.Hai]int{}
+	cnt[inHai]++
+	for _, h := range t.hais {
+		cnt[h]++
+	}
+
+	for k, v := range cnt {
+		if v >= 4 {
+			pairs = append(pairs, [4]*hai.Hai{k, k, k, k})
 		}
 	}
 	return pairs, nil

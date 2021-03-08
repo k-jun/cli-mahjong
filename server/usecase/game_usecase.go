@@ -162,7 +162,7 @@ func (gu *gameUsecaseImpl) InputController(id string, c player.Player) {
 				}
 				if strings.HasPrefix(haiName, "kan") {
 					err = Board.TakeAction(c, func(inHai *hai.Hai) error {
-						pairs, err := c.Tehai().KanPairs(inHai)
+						pairs, err := c.Tehai().MinKanPairs(inHai)
 						if err != nil {
 							return err
 						}
@@ -174,7 +174,7 @@ func (gu *gameUsecaseImpl) InputController(id string, c player.Player) {
 						if idx >= len(pairs) || idx < 0 {
 							return GameUsecaseInvalidActionErr
 						}
-						return c.Kan(inHai, pairs[idx])
+						return c.MinKan(inHai, pairs[idx])
 					})
 				}
 				if haiName == "ron" {
@@ -260,7 +260,7 @@ func (gu *gameUsecaseImpl) OutputController(id string, c player.Player, channel 
 				}
 			}
 			// kan
-			kans, err := c.Tehai().KanPairs(hai)
+			kans, err := c.Tehai().MinKanPairs(hai)
 			if err != nil {
 				return err
 			}

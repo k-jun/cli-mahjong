@@ -207,7 +207,7 @@ func (t *boardImpl) setAction() error {
 		}
 		ok, err := tc.Tehai().CanPon(inHai)
 		args = append(args, Arg{ok, err})
-		ok, err = tc.Tehai().CanKan(inHai)
+		ok, err = tc.Tehai().CanMinKan(inHai)
 		args = append(args, Arg{ok, err})
 		ok, err = tc.Tehai().CanRon(inHai)
 		args = append(args, Arg{ok, err})

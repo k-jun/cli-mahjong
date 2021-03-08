@@ -5,13 +5,14 @@ import "mahjong/model/hai"
 var _ Tehai = &TehaiMock{}
 
 type TehaiMock struct {
-	HaiMock   *hai.Hai
-	HaisMock  []*hai.Hai
-	ChiiMock  [][2]*hai.Hai
-	PonMock   [][2]*hai.Hai
-	KanMock   [][3]*hai.Hai
-	BoolMock  bool
-	ErrorMock error
+	HaiMock    *hai.Hai
+	HaisMock   []*hai.Hai
+	ChiiMock   [][2]*hai.Hai
+	PonMock    [][2]*hai.Hai
+	MinKanMock [][3]*hai.Hai
+	AnKanMock  [][4]*hai.Hai
+	BoolMock   bool
+	ErrorMock  error
 }
 
 func (t *TehaiMock) Hais() []*hai.Hai {
@@ -52,8 +53,12 @@ func (t *TehaiMock) PonPairs(_ *hai.Hai) ([][2]*hai.Hai, error) {
 	return t.PonMock, t.ErrorMock
 }
 
-func (t *TehaiMock) KanPairs(_ *hai.Hai) ([][3]*hai.Hai, error) {
-	return t.KanMock, t.ErrorMock
+func (t *TehaiMock) MinKanPairs(_ *hai.Hai) ([][3]*hai.Hai, error) {
+	return t.MinKanMock, t.ErrorMock
+}
+
+func (t *TehaiMock) AnKanPairs(_ *hai.Hai) ([][4]*hai.Hai, error) {
+	return t.AnKanMock, t.ErrorMock
 }
 
 func (t *TehaiMock) RiichiHais(_ *hai.Hai) ([]*hai.Hai, error) {
@@ -68,7 +73,11 @@ func (t *TehaiMock) CanPon(_ *hai.Hai) (bool, error) {
 	return t.BoolMock, t.ErrorMock
 }
 
-func (t *TehaiMock) CanKan(_ *hai.Hai) (bool, error) {
+func (t *TehaiMock) CanMinKan(_ *hai.Hai) (bool, error) {
+	return t.BoolMock, t.ErrorMock
+}
+
+func (t *TehaiMock) CanAnKan(_ *hai.Hai) (bool, error) {
 	return t.BoolMock, t.ErrorMock
 }
 

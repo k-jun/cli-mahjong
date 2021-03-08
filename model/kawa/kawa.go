@@ -14,9 +14,7 @@ type kawaImpl struct {
 }
 
 func New() Kawa {
-
 	return &kawaImpl{}
-
 }
 
 func (h *kawaImpl) Hais() []*hai.Hai {

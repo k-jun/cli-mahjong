@@ -69,11 +69,14 @@ func (c *PlayerMock) Pon(inHai *hai.Hai, outHais [2]*hai.Hai) error {
 	return c.ErrorMock
 }
 
-func (c *PlayerMock) Kan(inHai *hai.Hai, outHais [3]*hai.Hai) error {
+func (c *PlayerMock) MinKan(inHai *hai.Hai, outHais [3]*hai.Hai) error {
 	return c.ErrorMock
 }
 
-func (c *PlayerMock) Kakan(inHai *hai.Hai) error {
+func (c *PlayerMock) AnKan(_ [4]*hai.Hai) error {
+	return c.ErrorMock
+}
+func (c *PlayerMock) Kakan() error {
 	return c.ErrorMock
 }
 
@@ -83,8 +86,16 @@ func (c *PlayerMock) FindRiichiHai() ([]*hai.Hai, error) {
 
 func (c *PlayerMock) CanTsumoAgari() (bool, error) {
 	return c.BoolMock, c.ErrorMock
-
 }
+
+func (c *PlayerMock) CanRiichi() (bool, error) {
+	return c.BoolMock, c.ErrorMock
+}
+
+func (c *PlayerMock) CanAnKan() (bool, error) {
+	return c.BoolMock, c.ErrorMock
+}
+
 func (c *PlayerMock) Actions(_ *hai.Hai) ([]Action, error) {
 	return c.ActionsMock, c.ErrorMock
 }

@@ -6,6 +6,7 @@ var _ Naki = &NakiMock{}
 
 type NakiMock struct {
 	ErrorMock error
+	BoolMock  bool
 
 	PonMock     [3]*hai.Hai
 	PonsMock    [][3]*hai.Hai
@@ -20,12 +21,15 @@ type NakiMock struct {
 func (h *NakiMock) Pons() [][3]*hai.Hai {
 	return h.PonsMock
 }
+
 func (h *NakiMock) Chiis() [][3]*hai.Hai {
 	return h.ChiisMock
 }
+
 func (h *NakiMock) MinKans() [][4]*hai.Hai {
 	return h.MinKansMock
 }
+
 func (h *NakiMock) AnKans() [][4]*hai.Hai {
 	return h.AnKansMock
 }
@@ -44,9 +48,14 @@ func (h *NakiMock) SetMinKan(hais [4]*hai.Hai) error {
 	h.MinKanMock = hais
 	return h.ErrorMock
 }
+
 func (h *NakiMock) SetAnKan(hais [4]*hai.Hai) error {
 	h.AnKanMock = hais
 	return h.ErrorMock
+}
+
+func (h *NakiMock) CanKakan(x *hai.Hai) bool {
+	return h.BoolMock
 }
 
 func (h *NakiMock) Kakan(x *hai.Hai) error {

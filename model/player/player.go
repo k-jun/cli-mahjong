@@ -21,16 +21,18 @@ type Player interface {
 	SetYama(yama.Yama) error
 
 	// judger
+	CanRiichi() (bool, error)
 	CanTsumoAgari() (bool, error)
-	Actions(*hai.Hai) ([]Action, error)
+	CanAnKan() (bool, error)
 
 	Tsumo() error
 	Dahai(*hai.Hai) error
 	Haipai() error
 	Chii(*hai.Hai, [2]*hai.Hai) error
 	Pon(*hai.Hai, [2]*hai.Hai) error
-	Kan(*hai.Hai, [3]*hai.Hai) error
-	Kakan(*hai.Hai) error
+	AnKan([4]*hai.Hai) error
+	MinKan(*hai.Hai, [3]*hai.Hai) error
+	Kakan() error
 	Riichi(*hai.Hai) error
 }
 
@@ -190,10 +192,7 @@ func (c *playerImpl) Pon(inHai *hai.Hai, outHais [2]*hai.Hai) error {
 	return c.naki.SetPon(meld)
 }
 
-func (c *playerImpl) Kan(inHai *hai.Hai, outHais [3]*hai.Hai) error {
-	if inHai == c.tsumohai {
-		c.tsumohai = nil
-	}
+func (c *playerImpl) MinKan(inHai *hai.Hai, outHais [3]*hai.Hai) error {
 	hais, err := c.tehai.Removes([]*hai.Hai{outHais[0], outHais[1], outHais[2]})
 	if err != nil {
 		return err
@@ -203,14 +202,31 @@ func (c *playerImpl) Kan(inHai *hai.Hai, outHais [3]*hai.Hai) error {
 	return c.naki.SetMinKan(meld)
 }
 
-func (c *playerImpl) Kakan(inHai *hai.Hai) error {
-	if inHai == c.tsumohai {
-		c.tsumohai = nil
+func (c *playerImpl) AnKan(hais [4]*hai.Hai) error {
+	if err := c.Tehai().Add(c.tsumohai); err != nil {
+		return err
 	}
-	return c.naki.Kakan(inHai)
+	c.tsumohai = nil
+	_, err := c.tehai.Removes([]*hai.Hai{hais[0], hais[1], hais[2], hais[3]})
+	if err != nil {
+		return err
+	}
+	return c.naki.SetAnKan([4]*hai.Hai{hais[0], hais[1], hais[2], hais[3]})
+}
+
+func (c *playerImpl) Kakan() error {
+	err := c.naki.Kakan(c.tsumohai)
+	if err != nil {
+		return err
+	}
+	c.tsumohai = nil
+	return nil
 }
 
 func (c *playerImpl) Riichi(inHai *hai.Hai) error {
+	if c.isRiichi {
+		return PlayerAlreadyRiichiErr
+	}
 	err := c.Dahai(inHai)
 	if err != nil {
 		return err
@@ -219,47 +235,51 @@ func (c *playerImpl) Riichi(inHai *hai.Hai) error {
 	return nil
 }
 
-func (c *playerImpl) FindAnKanHai() ([][3]*hai.Hai, error) {
-	return c.tehai.KanPairs(c.tsumohai)
+func (c *playerImpl) CanAnKan() (bool, error) {
+	return c.tehai.CanRiichi(c.tsumohai)
+}
+
+func (c *playerImpl) CanRiichi() (bool, error) {
+	return c.tehai.CanRiichi(c.tsumohai)
 }
 
 func (c *playerImpl) CanTsumoAgari() (bool, error) {
 	return c.tehai.CanRon(c.tsumohai)
 }
 
-func (c *playerImpl) Actions(inHai *hai.Hai) ([]Action, error) {
-	actions := []Action{}
-
-	type Arg struct {
-		ok bool
-		e  error
-		a  Action
-	}
-	args := []Arg{}
-	// chii
-	ok, err := c.tehai.CanChii(inHai)
-	args = append(args, Arg{ok, err, Chii})
-
-	// pon
-	ok, err = c.tehai.CanPon(inHai)
-	args = append(args, Arg{ok, err, Pon})
-
-	// kan
-	ok, err = c.tehai.CanKan(inHai)
-	args = append(args, Arg{ok, err, Kan})
-
-	// ron
-	ok, err = c.tehai.CanRon(inHai)
-	args = append(args, Arg{ok, err, Ron})
-
-	for _, arg := range args {
-		if arg.e != nil {
-			return actions, arg.e
-		}
-		if ok {
-			actions = append(actions, arg.a)
-		}
-
-	}
-	return actions, nil
-}
+// func (c *playerImpl) Actions(inHai *hai.Hai) ([]Action, error) {
+// 	actions := []Action{}
+//
+// 	type Arg struct {
+// 		ok bool
+// 		e  error
+// 		a  Action
+// 	}
+// 	args := []Arg{}
+// 	// chii
+// 	ok, err := c.tehai.CanChii(inHai)
+// 	args = append(args, Arg{ok, err, Chii})
+//
+// 	// pon
+// 	ok, err = c.tehai.CanPon(inHai)
+// 	args = append(args, Arg{ok, err, Pon})
+//
+// 	// kan
+// 	ok, err = c.tehai.CanKan(inHai)
+// 	args = append(args, Arg{ok, err, Kan})
+//
+// 	// ron
+// 	ok, err = c.tehai.CanRon(inHai)
+// 	args = append(args, Arg{ok, err, Ron})
+//
+// 	for _, arg := range args {
+// 		if arg.e != nil {
+// 			return actions, arg.e
+// 		}
+// 		if ok {
+// 			actions = append(actions, arg.a)
+// 		}
+//
+// 	}
+// 	return actions, nil
+// }

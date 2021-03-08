@@ -88,7 +88,7 @@ func (gu *gameUsecaseImpl) CommandParser(raw []byte) (*InputCommand, error) {
 	case "kan":
 		ic.actionType = Kan
 	case "ron":
-		ic.actionType = Chii
+		ic.actionType = Ron
 	case "no":
 		ic.actionType = Cancel
 	default:

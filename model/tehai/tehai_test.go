@@ -274,7 +274,7 @@ func TestKanPairs(t *testing.T) {
 
 	for _, c := range cases {
 		tehai := tehaiImpl{hais: c.beforeHais}
-		pairs, err := tehai.KanPairs(c.inHai)
+		pairs, err := tehai.MinKanPairs(c.inHai)
 		if err != nil {
 			assert.Equal(t, nil, err)
 			continue

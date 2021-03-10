@@ -236,7 +236,7 @@ func (c *playerImpl) Riichi(inHai *hai.Hai) error {
 }
 
 func (c *playerImpl) CanAnKan() (bool, error) {
-	return c.tehai.CanRiichi(c.tsumohai)
+	return c.tehai.CanAnKan(c.tsumohai)
 }
 
 func (c *playerImpl) CanRiichi() (bool, error) {

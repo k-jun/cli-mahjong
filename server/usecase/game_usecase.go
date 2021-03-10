@@ -38,21 +38,8 @@ func NewGameUsecase(ts storage.BoardStorage, write func(string) error, read func
 	}
 }
 
-type ActionType string
-
-var (
-	Normal ActionType = ""
-	Tsumo  ActionType = "tsumo"
-	Riichi ActionType = "riichi"
-	Chii   ActionType = "chii"
-	Pon    ActionType = "pon"
-	Kan    ActionType = "kan"
-	Ron    ActionType = "ron"
-	Cancel ActionType = "no"
-)
-
 type InputCommand struct {
-	actionType  ActionType
+	actionType  board.ActionType
 	actionIndex int
 	hai         *hai.Hai
 }
@@ -66,7 +53,7 @@ func (gu *gameUsecaseImpl) CommandParser(raw []byte) (*InputCommand, error) {
 		return nil, err
 	}
 
-	ic := InputCommand{actionType: Normal, actionIndex: 0, hai: h}
+	ic := InputCommand{actionType: board.Normal, actionIndex: 0, hai: h}
 	if h != nil {
 		return &ic, nil
 	}
@@ -78,19 +65,19 @@ func (gu *gameUsecaseImpl) CommandParser(raw []byte) (*InputCommand, error) {
 
 	switch actions[0] {
 	case "tsumo":
-		ic.actionType = Tsumo
+		ic.actionType = board.Tsumo
 	case "riichi":
-		ic.actionType = Riichi
+		ic.actionType = board.Riichi
 	case "chii":
-		ic.actionType = Chii
+		ic.actionType = board.Chii
 	case "pon":
-		ic.actionType = Pon
+		ic.actionType = board.Pon
 	case "kan":
-		ic.actionType = Kan
+		ic.actionType = board.Kan
 	case "ron":
-		ic.actionType = Ron
+		ic.actionType = board.Ron
 	case "no":
-		ic.actionType = Cancel
+		ic.actionType = board.Cancel
 	default:
 		return &ic, GameUsecaseInvalidActionErr
 	}
@@ -121,11 +108,7 @@ func (gu *gameUsecaseImpl) Tsumo(b board.Board, p player.Player, ic *InputComman
 	if !ok {
 		return GameUsecaseInvalidActionErr
 	}
-	idx, err := b.MyTurn(p)
-	if err != nil {
-		return err
-	}
-	if err := b.SetWinIndex(idx); err != nil {
+	if err := b.SetWinner(p); err != nil {
 		return err
 	}
 	b.Broadcast()
@@ -151,8 +134,22 @@ func (gu *gameUsecaseImpl) Riichi(b board.Board, p player.Player, ic *InputComma
 	return b.TurnEnd()
 }
 
-func (gu *gameUsecaseImpl) AnKan(b board.Board, p player.Player, ic InputCommand) {
+func (gu *gameUsecaseImpl) AnKan(b board.Board, p player.Player, ic *InputCommand) error {
+	pairs, err := p.Tehai().AnKanPairs(p.Tsumohai())
+	if err != nil {
+		return err
+	}
 
+	if len(pairs) == 0 {
+		return GameUsecaseInvalidActionErr
+	}
+	if ic.actionIndex >= len(pairs) || ic.actionIndex < 0 {
+		return GameUsecaseInvalidActionErr
+	}
+	if err := p.AnKan(pairs[ic.actionIndex]); err != nil {
+		return err
+	}
+	return p.Tsumo()
 }
 
 func (gu *gameUsecaseImpl) Chii(b board.Board, p player.Player, ic *InputCommand) error {
@@ -213,12 +210,7 @@ func (gu *gameUsecaseImpl) MinKan(b board.Board, p player.Player, ic *InputComma
 }
 
 func (gu *gameUsecaseImpl) Ron(b board.Board, p player.Player, ic *InputCommand) error {
-	turnIdx, err := b.MyTurn(p)
-	if err != nil {
-		return err
-	}
-
-	err = b.TakeAction(p, func(inHai *hai.Hai) error {
+	err := b.TakeAction(p, func(inHai *hai.Hai) error {
 		ok, err := p.Tehai().CanRon(inHai)
 		if err != nil {
 			return err
@@ -226,7 +218,7 @@ func (gu *gameUsecaseImpl) Ron(b board.Board, p player.Player, ic *InputCommand)
 		if !ok {
 			return GameUsecaseInvalidActionErr
 		}
-		if err := b.SetWinIndex(turnIdx); err != nil {
+		if err := b.SetWinner(p); err != nil {
 			return err
 		}
 		b.Broadcast()
@@ -269,30 +261,30 @@ func (gu *gameUsecaseImpl) InputController(id string, p player.Player) {
 		if b.CurrentTurn() == turnIdx {
 			// my turn
 			switch command.actionType {
-			case Normal:
+			case board.Normal:
 				err = gu.Normal(b, p, command)
-			case Tsumo:
+			case board.Tsumo:
 				err = gu.Tsumo(b, p, command)
-			case Riichi:
+			case board.Riichi:
 				err = gu.Riichi(b, p, command)
-			case Kan:
-				continue
+			case board.Kan:
+				err = gu.AnKan(b, p, command)
 			default:
 				continue
 			}
 		} else {
 			// not my turn
-			if b.NextTurn() == turnIdx && command.actionType == Chii {
+			if b.NextTurn() == turnIdx && command.actionType == board.Chii {
 				err = gu.Chii(b, p, command)
 			} else {
 				switch command.actionType {
-				case Pon:
+				case board.Pon:
 					err = gu.Pon(b, p, command)
-				case Kan:
+				case board.Kan:
 					err = gu.MinKan(b, p, command)
-				case Ron:
+				case board.Ron:
 					err = gu.Ron(b, p, command)
-				case Cancel:
+				case board.Cancel:
 					err = b.CancelAction(p)
 				default:
 					continue
@@ -305,108 +297,178 @@ func (gu *gameUsecaseImpl) InputController(id string, p player.Player) {
 	}
 }
 
-func (gu *gameUsecaseImpl) OutputController(c player.Player, channel chan board.Board) error {
+func (gu *gameUsecaseImpl) ChiiChoice(b board.Board, p player.Player) (string, error) {
+	str := ""
+	hai, err := b.LastKawa()
+	if err != nil {
+		return str, err
+	}
+	pairs, err := p.Tehai().ChiiPairs(hai)
+	if err != nil {
+		return str, err
+	}
+	if len(pairs) != 0 {
+		str += "\n" + "chii>> "
+		for i, h := range pairs {
+			str += strconv.Itoa(i) + ": (" + h[0].Name() + " " + h[1].Name() + ") "
+		}
+	}
+	return str, nil
+}
+
+func (gu *gameUsecaseImpl) PonChoice(b board.Board, p player.Player) (string, error) {
+	str := ""
+	hai, err := b.LastKawa()
+	if err != nil {
+		return str, err
+	}
+	pairs, err := p.Tehai().PonPairs(hai)
+	if err != nil {
+		return str, err
+	}
+	if len(pairs) != 0 {
+		str += "\n" + "pon>> "
+		for i, h := range pairs {
+			str += strconv.Itoa(i) + ": (" + h[0].Name() + " " + h[1].Name() + ") "
+		}
+	}
+	return str, nil
+}
+
+func (gu *gameUsecaseImpl) MinKanChoice(b board.Board, p player.Player) (string, error) {
+	str := ""
+	hai, err := b.LastKawa()
+	if err != nil {
+		return str, err
+	}
+	pairs, err := p.Tehai().MinKanPairs(hai)
+	if err != nil {
+		return str, err
+	}
+	if len(pairs) != 0 {
+		str += "\n" + "kan>> "
+		for i, h := range pairs {
+			str += strconv.Itoa(i) + ": (" + h[0].Name() + " " + h[1].Name() + " " + h[2].Name() + ") "
+		}
+	}
+	return str, nil
+}
+
+func (gu *gameUsecaseImpl) AnKanChoice(b board.Board, p player.Player) (string, error) {
+	str := ""
+	hais, err := p.Tehai().AnKanPairs(p.Tsumohai())
+	if err != nil {
+		return str, err
+	}
+	if len(hais) != 0 {
+		str += "\n" + "kan>>"
+		for i, h := range hais {
+			str += strconv.Itoa(i) + ": (" + h[0].Name() + " " + h[1].Name() + " " + h[2].Name() + ") "
+		}
+	}
+	return str, nil
+}
+
+func (gu *gameUsecaseImpl) RiichiChoice(b board.Board, p player.Player) (string, error) {
+	str := ""
+	hais, err := p.Tehai().RiichiHais(p.Tsumohai())
+	if err != nil {
+		return str, err
+	}
+	if len(hais) != 0 {
+		str += "\n" + "riichi>>"
+		for i, h := range hais {
+			str += strconv.Itoa(i) + ": (" + h.Name() + ") "
+		}
+	}
+	return str, nil
+}
+
+func (gu *gameUsecaseImpl) TsumoAgariChoice(b board.Board, p player.Player) (string, error) {
+	str := ""
+	ok, err := p.CanTsumoAgari()
+	if err != nil {
+		return str, err
+	}
+	if ok {
+		str += "\n" + "tsumo>> "
+	}
+	return str, nil
+}
+
+func (gu *gameUsecaseImpl) OutputController(p player.Player, channel chan board.Board) error {
 	for {
-		board, ok := <-channel
+		b, ok := <-channel
 		if !ok {
 			return GameUsecaseBoardChannelClosedErr
 		}
 
-		turnIdx, err := board.MyTurn(c)
+		str, err := view.BoardString(p, b)
+		if err != nil {
+			return err
+		}
+		turnIdx, err := b.MyTurn(p)
 		if err != nil {
 			return err
 		}
 
-		tehaistr, err := view.BoardString(c, board)
-		if err != nil {
-			return err
-		}
+		if b.CurrentTurn() == turnIdx {
+			// my turn
 
-		// huros
-		if board.ActionCounter() != 0 && board.CurrentTurn() != turnIdx {
-			hai, err := board.LastKawa()
+			// ankan
+			ankan, err := gu.AnKanChoice(b, p)
 			if err != nil {
 				return err
 			}
-			actions := []player.Action{}
-			// chii
-			if board.NextTurn() == turnIdx {
-				chiis, err := c.Tehai().ChiiPairs(hai)
+			str += ankan
+
+			// riichi
+			riichi, err := gu.RiichiChoice(b, p)
+			if err != nil {
+				return err
+			}
+			str += riichi
+			// tsumo agari
+			tsumo, err := gu.TsumoAgariChoice(b, p)
+			if err != nil {
+				return err
+			}
+			str += tsumo
+
+		} else {
+			// not my turn
+			// naki
+			actions, err := b.MyAction(p)
+			if err != nil {
+				return err
+			}
+
+			for _, action := range actions {
+				choice := ""
+				switch action {
+				case board.Chii:
+					choice, err = gu.ChiiChoice(b, p)
+				case board.Pon:
+					choice, err = gu.PonChoice(b, p)
+				case board.Kan:
+					choice, err = gu.MinKanChoice(b, p)
+				case board.Ron:
+					choice = "ron>> "
+				}
 				if err != nil {
 					return err
 				}
-				if len(chiis) != 0 {
-					tehaistr += "\n" + "do you do Chii "
-					for i, h := range chiis {
-						tehaistr += strconv.Itoa(i) + ": " + h[0].Name() + "," + h[1].Name() + "   "
-					}
-				}
+				str += choice
 			}
-
-			// pon
-			pons, err := c.Tehai().PonPairs(hai)
-			if err != nil {
-				return err
-			}
-			if len(pons) != 0 {
-				tehaistr += "\n" + "do you do Pon "
-				for i, h := range pons {
-					tehaistr += strconv.Itoa(i) + ": " + h[0].Name() + "," + h[1].Name() + "   "
-				}
-			}
-			// kan
-			kans, err := c.Tehai().MinKanPairs(hai)
-			if err != nil {
-				return err
-			}
-			if len(kans) != 0 {
-				tehaistr += "\n" + "do you do Kan "
-				for i, h := range kans {
-					tehaistr += strconv.Itoa(i) + ": " + h[0].Name() + "," + h[1].Name() + "," + h[2].Name() + "   "
-				}
-			}
-			// ron
-			ok, err := c.Tehai().CanRon(hai)
-			if err != nil {
-				return err
-			}
-			if ok {
-				actions = append(actions, player.Ron)
-			}
-
-			if err != nil {
-				return err
-			}
-			for _, a := range actions {
-				tehaistr += "\n" + "do you want " + string(a)
-			}
-		}
-		// riichi
-		hais, err := c.Tehai().RiichiHais(c.Tsumohai())
-		if err != nil {
-			return err
-		}
-		if len(hais) != 0 {
-			tehaistr += "\n" + "do you do Riichi "
-			for i, h := range hais {
-				tehaistr += strconv.Itoa(i) + ": " + h.Name() + " "
-			}
-		}
-		// tsumo agari
-		ok, err = c.CanTsumoAgari()
-		if err != nil {
-			return err
-		}
-		if ok {
-			tehaistr += "\n" + "do you do Tsumo "
-		}
-		if board.ActionCounter() == 0 && board.CurrentTurn() == turnIdx {
-			tehaistr += "\n" + ">>"
-		} else {
-			tehaistr += "\n"
 		}
 
-		if err := gu.write(tehaistr); err != nil {
+		str += "\n"
+
+		if len(b.ActionPlayers()) == 0 && b.CurrentTurn() == turnIdx {
+			str += ">>"
+		}
+
+		if err := gu.write(str); err != nil {
 			return err
 		}
 	}

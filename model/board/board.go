@@ -11,13 +11,27 @@ var (
 	MaxNumberOfUsers = 4
 )
 
+type ActionType string
+
+var (
+	Normal ActionType = "noaction"
+	Tsumo  ActionType = "tsumo"
+	Riichi ActionType = "riichi"
+	Chii   ActionType = "chii"
+	Pon    ActionType = "pon"
+	Kan    ActionType = "kan"
+	Ron    ActionType = "ron"
+	Cancel ActionType = "no"
+)
+
 type Board interface {
 	// getter
 	Players() []*boardPlayer
+	ActionPlayers() []*boardActionPlayer
 	MaxNumberOfUser() int
 
 	// setter
-	SetWinIndex(int) error
+	SetWinner(player.Player) error
 
 	// game
 	JoinPlayer(player.Player) (chan Board, error)
@@ -30,11 +44,11 @@ type Board interface {
 	MyTurn(player.Player) (int, error)
 	TurnEnd() error
 
-	// last ho
+	// last hai
 	LastKawa() (*hai.Hai, error)
 
-	// action counter
-	ActionCounter() int
+	// actions
+	MyAction(p player.Player) ([]ActionType, error)
 	CancelAction(c player.Player) error
 	TakeAction(player.Player, func(*hai.Hai) error) error
 }
@@ -42,26 +56,26 @@ type Board interface {
 func New(maxNOU int, y yama.Yama) Board {
 	return &boardImpl{
 		players:         []*boardPlayer{},
+		actionPlayers:   []*boardActionPlayer{},
 		yama:            y,
 		turnIndex:       0,
 		maxNumberOfUser: maxNOU,
 		isPlaying:       true,
-		actionPlayers:   []*boardPlayer{},
-		winIndex:        -1,
+		winner:          nil,
 	}
 }
 
 type boardImpl struct {
 	sync.Mutex
 	players         []*boardPlayer
+	actionPlayers   []*boardActionPlayer
 	yama            yama.Yama
 	turnIndex       int
 	maxNumberOfUser int
 	isPlaying       bool
-	actionPlayers   []*boardPlayer
 
 	// win
-	winIndex int
+	winner player.Player
 }
 
 type boardPlayer struct {
@@ -69,19 +83,28 @@ type boardPlayer struct {
 	player.Player
 }
 
+type boardActionPlayer struct {
+	actions []ActionType
+	player.Player
+}
+
 func (b *boardImpl) Players() []*boardPlayer {
 	return b.players
+}
+
+func (t *boardImpl) ActionPlayers() []*boardActionPlayer {
+	return t.actionPlayers
 }
 
 func (b *boardImpl) MaxNumberOfUser() int {
 	return b.maxNumberOfUser
 }
 
-func (t *boardImpl) SetWinIndex(idx int) error {
-	if idx >= len(t.players) || idx < 0 {
-		return BoardIndexOutOfRangeErr
+func (t *boardImpl) SetWinner(p player.Player) error {
+	if p == nil {
+		return BoardPlayerNilError
 	}
-	t.winIndex = idx
+	t.winner = p
 	return nil
 }
 
@@ -158,7 +181,7 @@ func (t *boardImpl) NextTurn() int {
 func (t *boardImpl) TurnEnd() error {
 	t.Lock()
 	defer t.Unlock()
-	err := t.setAction()
+	err := t.setActionPlayer()
 	if err != nil {
 		return err
 	}
@@ -183,8 +206,8 @@ func (t *boardImpl) turnchange(idx int) error {
 	return nil
 }
 
-func (t *boardImpl) setAction() error {
-	players := []*boardPlayer{}
+func (t *boardImpl) setActionPlayer() error {
+	actionPlayers := []*boardActionPlayer{}
 
 	inHai, err := t.players[t.CurrentTurn()].Kawa().Last()
 	if err != nil {
@@ -196,36 +219,41 @@ func (t *boardImpl) setAction() error {
 		}
 
 		type Arg struct {
-			ok bool
-			e  error
+			ok     bool
+			e      error
+			action ActionType
 		}
 		args := []Arg{}
-		flag := false
 		if i == t.NextTurn() {
 			ok, err := tc.Tehai().CanChii(inHai)
-			args = append(args, Arg{ok, err})
+			args = append(args, Arg{ok, err, Chii})
 		}
 		ok, err := tc.Tehai().CanPon(inHai)
-		args = append(args, Arg{ok, err})
+		args = append(args, Arg{ok, err, Pon})
 		ok, err = tc.Tehai().CanMinKan(inHai)
-		args = append(args, Arg{ok, err})
+		args = append(args, Arg{ok, err, Kan})
 		ok, err = tc.Tehai().CanRon(inHai)
-		args = append(args, Arg{ok, err})
+		args = append(args, Arg{ok, err, Ron})
 
+		actions := []ActionType{}
 		for _, arg := range args {
 			if arg.e != nil {
 				return arg.e
 			}
 			if arg.ok {
-				flag = true
+				actions = append(actions, arg.action)
 			}
 		}
+		if len(actions) != 0 {
+			actionPlayer := boardActionPlayer{
+				Player:  tc.Player,
+				actions: actions,
+			}
+			actionPlayers = append(actionPlayers, &actionPlayer)
 
-		if flag {
-			players = append(players, tc)
 		}
 	}
-	t.actionPlayers = players
+	t.actionPlayers = actionPlayers
 	return nil
 }
 
@@ -233,11 +261,16 @@ func (t *boardImpl) LastKawa() (*hai.Hai, error) {
 	return t.players[t.CurrentTurn()].Kawa().Last()
 }
 
-func (t *boardImpl) ActionCounter() int {
-	return len(t.actionPlayers)
+func (t *boardImpl) MyAction(p player.Player) ([]ActionType, error) {
+	for _, ap := range t.actionPlayers {
+		if ap.Player == p {
+			return ap.actions, nil
+		}
+	}
+	return []ActionType{}, nil
 }
 
-func (t *boardImpl) CancelAction(c player.Player) error {
+func (t *boardImpl) CancelAction(p player.Player) error {
 	t.Lock()
 	defer t.Unlock()
 	if len(t.actionPlayers) == 0 {
@@ -246,7 +279,7 @@ func (t *boardImpl) CancelAction(c player.Player) error {
 
 	found := false
 	for i, tc := range t.actionPlayers {
-		if tc.Player == c {
+		if tc.Player == p {
 			found = true
 			t.actionPlayers = append(t.actionPlayers[:i], t.actionPlayers[i+1:]...)
 		}
@@ -295,7 +328,7 @@ func (t *boardImpl) TakeAction(c player.Player, action func(*hai.Hai) error) err
 	if err != nil {
 		return err
 	}
-	t.actionPlayers = []*boardPlayer{}
+	t.actionPlayers = []*boardActionPlayer{}
 
 	turnIdx, err := t.MyTurn(c)
 	if err != nil {

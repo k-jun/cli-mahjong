@@ -254,7 +254,7 @@ func TestKan(t *testing.T) {
 			naki:  c.beforeNaki,
 		}
 
-		err := Player.Kan(c.inHai, c.inHais)
+		err := Player.MinKan(c.inHai, c.inHais)
 		if err != nil {
 			assert.Equal(t, c.outError, err)
 			continue
@@ -269,7 +269,6 @@ func TestKakan(t *testing.T) {
 	cases := []struct {
 		beforeNaki     naki.Naki
 		beforeTsumohai *hai.Hai
-		inHai          *hai.Hai
 		afterNaki      naki.Naki
 		afterTomohai   *hai.Hai
 		outError       error
@@ -277,22 +276,19 @@ func TestKakan(t *testing.T) {
 		{
 			beforeNaki:     &naki.NakiMock{PonMock: [3]*hai.Hai{hai.Haku, hai.Haku, hai.Haku}},
 			beforeTsumohai: hai.Haku,
-			inHai:          hai.Haku,
 			afterNaki:      &naki.NakiMock{MinKanMock: [4]*hai.Hai{hai.Haku, hai.Haku, hai.Haku, hai.Haku}},
 			afterTomohai:   nil,
 			outError:       nil,
 		},
 		{
 			beforeNaki:     &naki.NakiMock{PonMock: [3]*hai.Hai{hai.Haku, hai.Haku, hai.Haku}},
-			beforeTsumohai: nil,
-			inHai:          hai.Haku,
+			beforeTsumohai: hai.Haku,
 			afterNaki:      &naki.NakiMock{MinKanMock: [4]*hai.Hai{hai.Haku, hai.Haku, hai.Haku, hai.Haku}},
 			afterTomohai:   nil,
 			outError:       nil,
 		},
 		{
 			beforeNaki: &naki.NakiMock{ErrorMock: errors.New("")},
-			inHai:      hai.Haku,
 			afterNaki:  nil,
 			outError:   errors.New(""),
 		},
@@ -304,7 +300,7 @@ func TestKakan(t *testing.T) {
 			naki:     c.beforeNaki,
 		}
 
-		err := Player.Kakan(c.inHai)
+		err := Player.Kakan()
 		if err != nil {
 			assert.Equal(t, c.outError, err)
 			continue

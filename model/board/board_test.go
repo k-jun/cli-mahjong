@@ -200,20 +200,20 @@ func TestTurnEnd(t *testing.T) {
 		name              string
 		beforePlayers     []*boardPlayer
 		beforeTurnIndex   int
-		afterActionPlayer []*boardPlayer
+		afterActionPlayer []*boardActionPlayer
 		outError          error
 	}{
 		{
 			name:              "success: no actions",
 			beforePlayers:     []*boardPlayer{{Player: testPlayer1}, {Player: testPlayer2}},
 			beforeTurnIndex:   0,
-			afterActionPlayer: []*boardPlayer{},
+			afterActionPlayer: []*boardActionPlayer{},
 		},
 		{
 			name:              "success: actions",
 			beforePlayers:     []*boardPlayer{{Player: testPlayer1}, {Player: testPlayer3}},
 			beforeTurnIndex:   0,
-			afterActionPlayer: []*boardPlayer{{Player: testPlayer3}},
+			afterActionPlayer: []*boardActionPlayer{{Player: testPlayer3, actions: []ActionType{Chii, Pon, Kan, Ron}}},
 		},
 	}
 
@@ -280,20 +280,20 @@ func TestCancelAction(t *testing.T) {
 	cases := []struct {
 		name                string
 		inPlayer            player.Player
-		beforeActionPlayers []*boardPlayer
+		beforeActionPlayers []*boardActionPlayer
 		outError            error
-		afterActionPlayer   []*boardPlayer
+		afterActionPlayer   []*boardActionPlayer
 	}{
 		{
 			name:                "success: 2 actioner",
 			inPlayer:            testPlayer1,
-			beforeActionPlayers: []*boardPlayer{{Player: testPlayer1}, {Player: testPlayer2}},
-			afterActionPlayer:   []*boardPlayer{{Player: testPlayer2}},
+			beforeActionPlayers: []*boardActionPlayer{{Player: testPlayer1}, {Player: testPlayer2}},
+			afterActionPlayer:   []*boardActionPlayer{{Player: testPlayer2}},
 		},
 		{
 			name:                "success: after action taken",
-			beforeActionPlayers: []*boardPlayer{},
-			afterActionPlayer:   []*boardPlayer{},
+			beforeActionPlayers: []*boardActionPlayer{},
+			afterActionPlayer:   []*boardActionPlayer{},
 		},
 	}
 
@@ -318,26 +318,26 @@ func TestTakeAction(t *testing.T) {
 	testPlayer1 := &player.PlayerMock{KawaMock: &kawa.KawaMock{HaiMock: hai.Haku}}
 	cases := []struct {
 		name                string
-		beforeActionPlayers []*boardPlayer
+		beforeActionPlayers []*boardActionPlayer
 		beforePlayers       []*boardPlayer
 		inPlayer            player.Player
 		inFunc              func(*hai.Hai) error
 		outError            error
-		afterActionPlayer   []*boardPlayer
+		afterActionPlayer   []*boardActionPlayer
 	}{
 		{
 			name:                "success",
-			beforeActionPlayers: []*boardPlayer{{Player: testPlayer1}},
+			beforeActionPlayers: []*boardActionPlayer{{Player: testPlayer1}},
 			beforePlayers:       []*boardPlayer{{Player: testPlayer1}},
 			inPlayer:            testPlayer1,
 			inFunc:              func(_ *hai.Hai) error { return nil },
 
-			afterActionPlayer: []*boardPlayer{},
+			afterActionPlayer: []*boardActionPlayer{},
 		},
 		{
 			name:                "failure",
+			beforeActionPlayers: []*boardActionPlayer{},
 			beforePlayers:       []*boardPlayer{},
-			beforeActionPlayers: []*boardPlayer{},
 			inFunc:              func(_ *hai.Hai) error { return nil },
 			outError:            BoardActionAlreadyTokenErr,
 		},

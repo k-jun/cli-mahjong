@@ -2,8 +2,6 @@ package yama
 
 import (
 	"mahjong/model/hai"
-	"math/rand"
-	"time"
 )
 
 type Yama interface {
@@ -24,6 +22,10 @@ type yamaImpl struct {
 
 var (
 	all = []*hai.Hai{
+		hai.Ton, hai.Ton, hai.Ton, hai.Ton,
+		hai.Nan, hai.Nan, hai.Nan, hai.Nan,
+		hai.Sha, hai.Sha, hai.Sha, hai.Sha,
+		hai.Pei, hai.Pei, hai.Pei, hai.Pei,
 		hai.Manzu1, hai.Manzu2, hai.Manzu3, hai.Manzu4, hai.Manzu5, hai.Manzu6, hai.Manzu7, hai.Manzu8, hai.Manzu9,
 		hai.Manzu1, hai.Manzu2, hai.Manzu3, hai.Manzu4, hai.Manzu5, hai.Manzu6, hai.Manzu7, hai.Manzu8, hai.Manzu9,
 		hai.Manzu1, hai.Manzu2, hai.Manzu3, hai.Manzu4, hai.Manzu5, hai.Manzu6, hai.Manzu7, hai.Manzu8, hai.Manzu9,
@@ -38,11 +40,6 @@ var (
 		hai.Souzu1, hai.Souzu2, hai.Souzu3, hai.Souzu4, hai.Souzu5, hai.Souzu6, hai.Souzu7, hai.Souzu8, hai.Souzu9,
 		hai.Souzu1, hai.Souzu2, hai.Souzu3, hai.Souzu4, hai.Souzu5, hai.Souzu6, hai.Souzu7, hai.Souzu8, hai.Souzu9,
 		hai.Souzu1, hai.Souzu2, hai.Souzu3, hai.Souzu4, hai.Souzu5, hai.Souzu6, hai.Souzu7, hai.Souzu8, hai.Souzu9,
-
-		hai.Ton, hai.Nan, hai.Sha, hai.Pei,
-		hai.Ton, hai.Nan, hai.Sha, hai.Pei,
-		hai.Ton, hai.Nan, hai.Sha, hai.Pei,
-		hai.Ton, hai.Nan, hai.Sha, hai.Pei,
 
 		hai.Haku, hai.Hatsu, hai.Chun,
 		hai.Haku, hai.Hatsu, hai.Chun,
@@ -51,14 +48,10 @@ var (
 	}
 )
 
-var (
-	TimeNowUnix = time.Now().Unix()
-)
-
 func New() Yama {
 	allHai := append([]*hai.Hai{}, all...)
-	rand.Seed(TimeNowUnix)
-	rand.Shuffle(len(allHai), func(i, j int) { allHai[i], allHai[j] = allHai[j], allHai[i] })
+	// rand.Seed(time.Now().Unix())
+	// rand.Shuffle(len(allHai), func(i, j int) { allHai[i], allHai[j] = allHai[j], allHai[i] })
 	return &yamaImpl{
 		yamaHai:   allHai[:122],
 		wanHai:    allHai[122:],

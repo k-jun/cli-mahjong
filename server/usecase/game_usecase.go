@@ -16,7 +16,7 @@ import (
 type GameUsecase interface {
 	JoinBoard(string, player.Player) (chan board.Board, error)
 	InputController(string, player.Player)
-	OutputController(player.Player, chan board.Board) error
+	OutputController(string, player.Player, chan board.Board) error
 }
 
 type gameUsecaseImpl struct {
@@ -104,7 +104,6 @@ func (gu *gameUsecaseImpl) Tsumo(b board.Board, p player.Player, ic *InputComman
 	if err != nil {
 		return err
 	}
-
 	if !ok {
 		return GameUsecaseInvalidActionErr
 	}
@@ -112,7 +111,7 @@ func (gu *gameUsecaseImpl) Tsumo(b board.Board, p player.Player, ic *InputComman
 		return err
 	}
 	b.Broadcast()
-	return b.LeavePlayer(p)
+	return nil
 }
 
 func (gu *gameUsecaseImpl) Riichi(b board.Board, p player.Player, ic *InputCommand) error {
@@ -149,7 +148,11 @@ func (gu *gameUsecaseImpl) AnKan(b board.Board, p player.Player, ic *InputComman
 	if err := p.AnKan(pairs[ic.actionIndex]); err != nil {
 		return err
 	}
-	return p.Tsumo()
+	if err := p.Tsumo(); err != nil {
+		return err
+	}
+	b.Broadcast()
+	return nil
 }
 
 func (gu *gameUsecaseImpl) Chii(b board.Board, p player.Player, ic *InputCommand) error {
@@ -210,7 +213,7 @@ func (gu *gameUsecaseImpl) MinKan(b board.Board, p player.Player, ic *InputComma
 }
 
 func (gu *gameUsecaseImpl) Ron(b board.Board, p player.Player, ic *InputCommand) error {
-	err := b.TakeAction(p, func(inHai *hai.Hai) error {
+	return b.TakeAction(p, func(inHai *hai.Hai) error {
 		ok, err := p.Tehai().CanRon(inHai)
 		if err != nil {
 			return err
@@ -224,10 +227,6 @@ func (gu *gameUsecaseImpl) Ron(b board.Board, p player.Player, ic *InputCommand)
 		b.Broadcast()
 		return nil
 	})
-	if err != nil {
-		return err
-	}
-	return b.LeavePlayer(p)
 }
 
 func (gu *gameUsecaseImpl) InputController(id string, p player.Player) {
@@ -241,6 +240,9 @@ func (gu *gameUsecaseImpl) InputController(id string, p player.Player) {
 		if err := gu.read(buffer); err != nil {
 			// dead check
 			log.Println(err)
+			if err := gu.BoardStorage.Remove(id); err != nil {
+				log.Println(err)
+			}
 			if err := b.LeavePlayer(p); err != nil {
 				log.Println(err)
 			}
@@ -255,7 +257,6 @@ func (gu *gameUsecaseImpl) InputController(id string, p player.Player) {
 		turnIdx, err := b.MyTurn(p)
 		if err != nil {
 			log.Println(err)
-			b.LeavePlayer(p)
 			break
 		}
 		if b.CurrentTurn() == turnIdx {
@@ -361,7 +362,7 @@ func (gu *gameUsecaseImpl) AnKanChoice(b board.Board, p player.Player) (string, 
 		return str, err
 	}
 	if len(hais) != 0 {
-		str += "\n" + "kan>>"
+		str += "\n" + "kan>> "
 		for i, h := range hais {
 			str += strconv.Itoa(i) + ": (" + h[0].Name() + " " + h[1].Name() + " " + h[2].Name() + ") "
 		}
@@ -371,12 +372,16 @@ func (gu *gameUsecaseImpl) AnKanChoice(b board.Board, p player.Player) (string, 
 
 func (gu *gameUsecaseImpl) RiichiChoice(b board.Board, p player.Player) (string, error) {
 	str := ""
+	ok, err := p.CanRiichi()
+	if !ok || err != nil {
+		return "", err
+	}
 	hais, err := p.Tehai().RiichiHais(p.Tsumohai())
 	if err != nil {
 		return str, err
 	}
 	if len(hais) != 0 {
-		str += "\n" + "riichi>>"
+		str += "\n" + "riichi>> "
 		for i, h := range hais {
 			str += strconv.Itoa(i) + ": (" + h.Name() + ") "
 		}
@@ -396,11 +401,34 @@ func (gu *gameUsecaseImpl) TsumoAgariChoice(b board.Board, p player.Player) (str
 	return str, nil
 }
 
-func (gu *gameUsecaseImpl) OutputController(p player.Player, channel chan board.Board) error {
+func (gu *gameUsecaseImpl) OutputController(id string, p player.Player, channel chan board.Board) error {
 	for {
 		b, ok := <-channel
 		if !ok {
 			return GameUsecaseBoardChannelClosedErr
+		}
+
+		winner := b.Winner()
+		if winner != nil {
+			str := "GAME SET!!\n"
+			lastHai, err := b.LastKawa()
+			if err != nil {
+				return err
+			}
+
+			winner.Tehai().Add(lastHai)
+			winner.Tehai().Sort()
+			str = view.TehaiOpen(winner).String()
+			if err := gu.write(str); err != nil {
+				log.Println(err)
+			}
+			if err := gu.BoardStorage.Remove(id); err != nil {
+				log.Println(err)
+			}
+			if err := b.LeavePlayer(p); err != nil {
+				log.Println(err)
+			}
+			return nil
 		}
 
 		str, err := view.BoardString(p, b)
@@ -475,10 +503,10 @@ func (gu *gameUsecaseImpl) OutputController(p player.Player, channel chan board.
 }
 
 func (gu *gameUsecaseImpl) JoinBoard(id string, c player.Player) (chan board.Board, error) {
-	Board, err := gu.BoardStorage.Find(id)
+	b, err := gu.BoardStorage.Find(id)
 	if err != nil {
 		return nil, err
 	}
 
-	return Board.JoinPlayer(c)
+	return b.JoinPlayer(c)
 }

@@ -29,8 +29,8 @@ func TestAdd(t *testing.T) {
 		{
 			name:       "failure",
 			beforeHais: append(copy(hai.Manzu), hai.Souzu[:4]...),
-			inHai:      hai.Haku,
-			outError:   TehaiReachMaxHaiErr,
+			inHai:      nil,
+			outError:   TehaiHaiIsNilErr,
 		},
 	}
 
@@ -65,8 +65,8 @@ func TestAdds(t *testing.T) {
 		{
 			name:       "failure",
 			beforeHais: copy(hai.Manzu),
-			inHais:     hai.Pinzu[:5],
-			outError:   TehaiReachMaxHaiErr,
+			inHais:     []*hai.Hai{nil},
+			outError:   TehaiHaiIsNilErr,
 		},
 	}
 
@@ -79,7 +79,6 @@ func TestAdds(t *testing.T) {
 				return
 			}
 			assert.Equal(t, c.afterHais, tehai.hais)
-
 		})
 	}
 }

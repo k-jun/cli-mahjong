@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"log"
 	"mahjong/model/kawa"
 	"mahjong/model/naki"
@@ -34,6 +35,7 @@ func (h *handlerImpl) Run() {
 	user := user.New(h.id.String())
 
 	roomId, err := h.matchUsecase.JoinRandomRoom(user)
+	fmt.Println("roomId: ", roomId)
 	if err != nil {
 		log.Println(err)
 		return
@@ -49,7 +51,7 @@ func (h *handlerImpl) Run() {
 		return
 	}
 	go h.gameUsecase.InputController(roomId, cha)
-	err = h.gameUsecase.OutputController(cha, roomChan)
+	err = h.gameUsecase.OutputController(roomId, cha, roomChan)
 	if err != nil {
 		log.Println(err)
 	}

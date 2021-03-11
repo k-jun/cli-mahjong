@@ -23,7 +23,7 @@ type nakiImpl struct {
 	pons    [][3]*hai.Hai
 	chiis   [][3]*hai.Hai
 	minKans [][4]*hai.Hai
-	ankans  [][4]*hai.Hai
+	anKans  [][4]*hai.Hai
 }
 
 func New() Naki {
@@ -31,7 +31,7 @@ func New() Naki {
 		pons:    [][3]*hai.Hai{},
 		chiis:   [][3]*hai.Hai{},
 		minKans: [][4]*hai.Hai{},
-		ankans:  [][4]*hai.Hai{},
+		anKans:  [][4]*hai.Hai{},
 	}
 }
 
@@ -45,7 +45,7 @@ func (h *nakiImpl) MinKans() [][4]*hai.Hai {
 	return h.minKans
 }
 func (h *nakiImpl) AnKans() [][4]*hai.Hai {
-	return h.ankans
+	return h.anKans
 }
 
 func (h *nakiImpl) SetPon(hais [3]*hai.Hai) error {
@@ -63,7 +63,7 @@ func (h *nakiImpl) SetMinKan(hais [4]*hai.Hai) error {
 	return nil
 }
 func (h *nakiImpl) SetAnKan(hais [4]*hai.Hai) error {
-	h.ankans = append(h.ankans, hais)
+	h.anKans = append(h.anKans, hais)
 	return nil
 }
 

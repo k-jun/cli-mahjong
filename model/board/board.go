@@ -29,6 +29,7 @@ type Board interface {
 	Players() []*boardPlayer
 	ActionPlayers() []*boardActionPlayer
 	MaxNumberOfUser() int
+	Winner() player.Player
 
 	// setter
 	SetWinner(player.Player) error
@@ -98,6 +99,10 @@ func (t *boardImpl) ActionPlayers() []*boardActionPlayer {
 
 func (b *boardImpl) MaxNumberOfUser() int {
 	return b.maxNumberOfUser
+}
+
+func (b *boardImpl) Winner() player.Player {
+	return b.winner
 }
 
 func (t *boardImpl) SetWinner(p player.Player) error {

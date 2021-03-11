@@ -22,13 +22,13 @@ type boardViewBoard struct {
 	hais [20][20]*boardViewHai
 }
 
-func NewBoardPlayer(p player.Player) *boardViewPlayer {
+func NewBoardPlayer(p player.Player, isOpen bool) *boardViewPlayer {
 	hais := [20]*boardViewHai{}
 	for i, h := range p.Tehai().Hais() {
-		hais[i] = &boardViewHai{Hai: h, isOpen: true}
+		hais[i] = &boardViewHai{Hai: h, isOpen: isOpen}
 	}
 	if p.Tsumohai() != nil {
-		hais[len(p.Tehai().Hais())+1] = &boardViewHai{Hai: p.Tsumohai(), isOpen: true}
+		hais[len(p.Tehai().Hais())+1] = &boardViewHai{Hai: p.Tsumohai(), isOpen: isOpen}
 	}
 
 	head := 20
@@ -50,7 +50,7 @@ func NewBoardPlayer(p player.Player) *boardViewPlayer {
 	for _, meld := range p.Naki().AnKans() {
 		for i, h := range meld {
 			isOpen := true
-			if i == 0 || i == 3 {
+			if i == 1 || i == 2 {
 				isOpen = false
 			}
 			head--
@@ -77,8 +77,12 @@ func NewBoardPlayer(p player.Player) *boardViewPlayer {
 
 }
 
-func TehaiJichaOrToimen(p player.Player) *boardViewPlayer {
-	return NewBoardPlayer(p)
+func TehaiOpen(p player.Player) *boardViewPlayer {
+	return NewBoardPlayer(p, true)
+}
+
+func TehaiHide(p player.Player) *boardViewPlayer {
+	return NewBoardPlayer(p, false)
 }
 
 func (p *boardViewPlayer) String() string {
@@ -98,23 +102,22 @@ func (p *boardViewPlayer) String() string {
 			lines = []string{"┏", "━", "┓", "┃", " ", "┃", "┗", "━", "┛"}
 		}
 		if h.isDown {
-			strs[0] += lines[0] + lines[1] + lines[1] + lines[2]
-			strs[1] += lines[3] + h.Name() + lines[5]
-			strs[2] += lines[6] + lines[7] + lines[7] + lines[8]
-			strs[3] += lines[6] + lines[7] + lines[7] + lines[8]
-		} else {
 			if h.isOpen {
-				strs[0] += "    "
-				strs[1] += lines[0] + lines[1] + lines[1] + lines[2]
-				strs[2] += lines[3] + h.Name() + lines[5]
+				strs[0] += lines[0] + lines[1] + lines[1] + lines[2]
+				strs[1] += lines[3] + h.Name() + lines[5]
+				strs[2] += lines[6] + lines[7] + lines[7] + lines[8]
 				strs[3] += lines[6] + lines[7] + lines[7] + lines[8]
-
 			} else {
-				strs[0] += "    "
-				strs[1] += lines[0] + lines[1] + lines[1] + lines[2]
-				strs[2] += lines[3] + lines[4] + lines[4] + lines[5]
+				strs[0] += lines[0] + lines[1] + lines[1] + lines[2]
+				strs[1] += lines[3] + lines[4] + lines[4] + lines[5]
+				strs[2] += lines[6] + lines[7] + lines[7] + lines[8]
 				strs[3] += lines[6] + lines[7] + lines[7] + lines[8]
 			}
+		} else {
+			strs[0] += "    "
+			strs[1] += lines[0] + lines[1] + lines[1] + lines[2]
+			strs[2] += lines[3] + h.Name() + lines[5]
+			strs[3] += lines[6] + lines[7] + lines[7] + lines[8]
 		}
 	}
 	return strings.Join(strs, "\n") + "\n"
@@ -131,13 +134,13 @@ func TehaiKamichaShimochaAndKawaAll(p player.Player, b board.Board) *boardViewBo
 	kamicha := players[(idx+3)%b.MaxNumberOfUser()]
 
 	// tehai
-	for i, h := range NewBoardPlayer(kamicha).hais {
+	for i, h := range TehaiHide(kamicha).hais {
 		if h == nil {
 			continue
 		}
 		hais[i][0] = h
 	}
-	for i, h := range NewBoardPlayer(shimocha).hais {
+	for i, h := range TehaiHide(shimocha).hais {
 		if h == nil {
 			continue
 		}
@@ -235,8 +238,8 @@ func BoardString(p player.Player, b board.Board) (string, error) {
 		return str, err
 	}
 	toimen := b.Players()[(idx+2)%b.MaxNumberOfUser()]
-	str += TehaiJichaOrToimen(toimen).String()
+	str += TehaiHide(toimen).String()
 	str += TehaiKamichaShimochaAndKawaAll(p, b).String()
-	str += TehaiJichaOrToimen(p).String()
+	str += TehaiOpen(p).String()
 	return str, nil
 }

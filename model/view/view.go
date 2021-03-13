@@ -85,6 +85,13 @@ func TehaiHide(p player.Player) *boardViewPlayer {
 	return NewBoardPlayer(p, false)
 }
 
+func (p *boardViewPlayer) Reverse() *boardViewPlayer {
+	for i := 0; i < len(p.hais)/2; i++ {
+		p.hais[i], p.hais[len(p.hais)-i-1] = p.hais[len(p.hais)-i-1], p.hais[i]
+	}
+	return p
+}
+
 func (p *boardViewPlayer) String() string {
 	strs := []string{"", "", "", ""}
 	for _, h := range p.hais {
@@ -245,7 +252,7 @@ func BoardString(p player.Player, b board.Board) (string, error) {
 		return str, err
 	}
 	toimen := b.Players()[(idx+2)%b.MaxNumberOfUser()]
-	str += TehaiHide(toimen).String()
+	str += TehaiHide(toimen).Reverse().String()
 	str += TehaiKamichaShimochaAndKawaAll(p, b).String()
 	str += TehaiOpen(p).String()
 	return str, nil

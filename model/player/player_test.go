@@ -376,6 +376,7 @@ func TestCanTsumoAgari(t *testing.T) {
 		name           string
 		beforeTehai    tehai.Tehai
 		beforeTsumohai *hai.Hai
+		beforeNaki     naki.Naki
 		outBool        bool
 		outError       error
 	}{
@@ -384,6 +385,7 @@ func TestCanTsumoAgari(t *testing.T) {
 				BoolMock: true,
 			},
 			beforeTsumohai: hai.Hatsu,
+			beforeNaki:     &naki.NakiMock{},
 			outBool:        true,
 		},
 		{
@@ -391,13 +393,14 @@ func TestCanTsumoAgari(t *testing.T) {
 				BoolMock: false,
 			},
 			beforeTsumohai: hai.Hatsu,
+			beforeNaki:     &naki.NakiMock{},
 			outBool:        false,
 		},
 	}
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			p := playerImpl{tehai: c.beforeTehai, tsumohai: c.beforeTsumohai}
+			p := playerImpl{tehai: c.beforeTehai, tsumohai: c.beforeTsumohai, naki: c.beforeNaki}
 			isTsumo, err := p.CanTsumoAgari()
 			if err != nil {
 				assert.Equal(t, c.outError, err)
@@ -414,6 +417,7 @@ func TestCanTanyao(t *testing.T) {
 	cases := []struct {
 		name        string
 		beforeTehai tehai.Tehai
+		beforeNaki  naki.Naki
 		inHai       *hai.Hai
 		outBool     bool
 		outError    error
@@ -427,8 +431,9 @@ func TestCanTanyao(t *testing.T) {
 					hai.Manzu5,
 				},
 			},
-			inHai:   hai.Manzu5,
-			outBool: true,
+			beforeNaki: &naki.NakiMock{},
+			inHai:      hai.Manzu5,
+			outBool:    true,
 		},
 		{
 			name: "failure",
@@ -439,14 +444,15 @@ func TestCanTanyao(t *testing.T) {
 					hai.Manzu5,
 				},
 			},
-			inHai:   hai.Manzu5,
-			outBool: false,
+			beforeNaki: &naki.NakiMock{},
+			inHai:      hai.Manzu5,
+			outBool:    false,
 		},
 	}
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			p := playerImpl{tehai: c.beforeTehai}
+			p := playerImpl{tehai: c.beforeTehai, naki: c.beforeNaki}
 			ok, err := p.CanTanyao(c.inHai)
 			if err != nil {
 				assert.Equal(t, c.outError, err)

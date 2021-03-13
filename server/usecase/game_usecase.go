@@ -249,7 +249,7 @@ func (gu *gameUsecaseImpl) MinKan(b board.Board, p player.Player, ic *InputComma
 
 func (gu *gameUsecaseImpl) Ron(b board.Board, p player.Player, ic *InputCommand) error {
 	return b.TakeAction(p, func(inHai *hai.Hai) error {
-		ok, err := p.Tehai().CanRon(inHai)
+		ok, err := p.CanRon(inHai)
 		if err != nil {
 			return err
 		}

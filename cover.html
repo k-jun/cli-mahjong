@@ -1,0 +1,2150 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">mahjong/model/board/board.go (75.6%)</option>
+				
+				<option value="file1">mahjong/model/hai/hai.go (95.8%)</option>
+				
+				<option value="file2">mahjong/model/kawa/kawa.go (83.3%)</option>
+				
+				<option value="file3">mahjong/model/kawa/kawa_mock.go (0.0%)</option>
+				
+				<option value="file4">mahjong/model/naki/naki.go (57.7%)</option>
+				
+				<option value="file5">mahjong/model/naki/naki_mock.go (0.0%)</option>
+				
+				<option value="file6">mahjong/model/player/player.go (65.3%)</option>
+				
+				<option value="file7">mahjong/model/player/player_mock.go (0.0%)</option>
+				
+				<option value="file8">mahjong/model/tehai/tehai.go (66.2%)</option>
+				
+				<option value="file9">mahjong/model/tehai/tehai_mock.go (0.0%)</option>
+				
+				<option value="file10">mahjong/model/tehai/utils.go (92.0%)</option>
+				
+				<option value="file11">mahjong/model/yama/yama.go (81.8%)</option>
+				
+				<option value="file12">mahjong/model/yama/yama_mock.go (0.0%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package board
+
+import (
+        "mahjong/model/hai"
+        "mahjong/model/player"
+        "mahjong/model/yama"
+        "sync"
+)
+
+var (
+        MaxNumberOfUsers = 4
+)
+
+type ActionType string
+
+var (
+        Normal ActionType = "noaction"
+        Tsumo  ActionType = "tsumo"
+        Riichi ActionType = "riichi"
+        Chii   ActionType = "chii"
+        Pon    ActionType = "pon"
+        Kan    ActionType = "kan"
+        Ron    ActionType = "ron"
+        Cancel ActionType = "no"
+)
+
+type Board interface {
+        // getter
+        Players() []*boardPlayer
+        ActionPlayers() []*boardActionPlayer
+        MaxNumberOfUser() int
+        Winner() player.Player
+
+        // setter
+        SetWinner(player.Player) error
+
+        // game
+        JoinPlayer(player.Player) (chan Board, error)
+        LeavePlayer(player.Player) error
+        Broadcast()
+
+        // turn
+        CurrentTurn() int
+        NextTurn() int
+        MyTurn(player.Player) (int, error)
+        TurnEnd() error
+
+        // last hai
+        LastKawa() (*hai.Hai, error)
+
+        // actions
+        MyAction(p player.Player) ([]ActionType, error)
+        CancelAction(c player.Player) error
+        TakeAction(player.Player, func(*hai.Hai) error) error
+}
+
+func New(maxNOU int, y yama.Yama) Board <span class="cov0" title="0">{
+        return &amp;boardImpl{
+                players:         []*boardPlayer{},
+                actionPlayers:   []*boardActionPlayer{},
+                yama:            y,
+                turnIndex:       0,
+                maxNumberOfUser: maxNOU,
+                isPlaying:       true,
+                winner:          nil,
+        }
+}</span>
+
+type boardImpl struct {
+        sync.Mutex
+        players         []*boardPlayer
+        actionPlayers   []*boardActionPlayer
+        yama            yama.Yama
+        turnIndex       int
+        maxNumberOfUser int
+        isPlaying       bool
+
+        // win
+        winner player.Player
+}
+
+type boardPlayer struct {
+        channel chan Board
+        player.Player
+}
+
+type boardActionPlayer struct {
+        actions []ActionType
+        player.Player
+}
+
+func (b *boardImpl) Players() []*boardPlayer <span class="cov0" title="0">{
+        return b.players
+}</span>
+
+func (t *boardImpl) ActionPlayers() []*boardActionPlayer <span class="cov0" title="0">{
+        return t.actionPlayers
+}</span>
+
+func (b *boardImpl) MaxNumberOfUser() int <span class="cov0" title="0">{
+        return b.maxNumberOfUser
+}</span>
+
+func (b *boardImpl) Winner() player.Player <span class="cov0" title="0">{
+        return b.winner
+}</span>
+
+func (t *boardImpl) SetWinner(p player.Player) error <span class="cov0" title="0">{
+        if p == nil </span><span class="cov0" title="0">{
+                return BoardPlayerNilError
+        }</span>
+        <span class="cov0" title="0">t.winner = p
+        return nil</span>
+}
+
+func (t *boardImpl) JoinPlayer(c player.Player) (chan Board, error) <span class="cov8" title="1">{
+        t.Lock()
+        defer t.Unlock()
+        if len(t.players) &gt;= t.maxNumberOfUser </span><span class="cov8" title="1">{
+                return nil, BoardMaxNOUErr
+        }</span>
+
+        <span class="cov8" title="1">if err := c.SetYama(t.yama); err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">channel := make(chan Board, t.maxNumberOfUser*3)
+        t.players = append(t.players, &amp;boardPlayer{Player: c, channel: channel})
+
+        if len(t.players) &gt;= t.maxNumberOfUser </span><span class="cov8" title="1">{
+                t.gameStart()
+                go t.Broadcast()
+        }</span>
+
+        <span class="cov8" title="1">return channel, nil</span>
+}
+
+func (t *boardImpl) LeavePlayer(c player.Player) error <span class="cov8" title="1">{
+        t.Lock()
+        defer t.Unlock()
+        // terminate the game
+        if t.isPlaying </span><span class="cov8" title="1">{
+                t.isPlaying = false
+                for _, tu := range t.players </span><span class="cov8" title="1">{
+                        close(tu.channel)
+                }</span>
+                <span class="cov8" title="1">t.players = []*boardPlayer{}</span>
+        }
+        <span class="cov8" title="1">return nil</span>
+}
+
+func (t *boardImpl) Broadcast() <span class="cov8" title="1">{
+        for _, tu := range t.players </span><span class="cov8" title="1">{
+                tu.channel &lt;- t
+        }</span>
+}
+
+func (t *boardImpl) gameStart() error <span class="cov8" title="1">{
+        // tehai assign
+        for _, tc := range t.players </span><span class="cov8" title="1">{
+                if err := tc.Haipai(); err != nil </span><span class="cov0" title="0">{
+                        return err
+                }</span>
+        }
+
+        // tsumo
+        <span class="cov8" title="1">return t.players[t.CurrentTurn()].Tsumo()</span>
+}
+
+func (t *boardImpl) CurrentTurn() int <span class="cov8" title="1">{
+        return t.turnIndex
+}</span>
+
+func (t *boardImpl) MyTurn(c player.Player) (int, error) <span class="cov8" title="1">{
+        for i, tc := range t.players </span><span class="cov8" title="1">{
+                if tc.Player == c </span><span class="cov8" title="1">{
+                        return i, nil
+                }</span>
+        }
+        <span class="cov8" title="1">return -1, BoardPlayerNotFoundErr</span>
+}
+
+func (t *boardImpl) NextTurn() int <span class="cov8" title="1">{
+        return (t.turnIndex + 1) % t.maxNumberOfUser
+}</span>
+
+func (t *boardImpl) TurnEnd() error <span class="cov8" title="1">{
+        t.Lock()
+        defer t.Unlock()
+        err := t.setActionPlayer()
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov8" title="1">if len(t.actionPlayers) == 0 </span><span class="cov8" title="1">{
+                if err := t.turnchange(t.NextTurn()); err != nil </span><span class="cov0" title="0">{
+                        return err
+                }</span>
+                <span class="cov8" title="1">if err := t.players[t.CurrentTurn()].Tsumo(); err != nil </span><span class="cov0" title="0">{
+                        return err
+                }</span>
+        }
+        <span class="cov8" title="1">go t.Broadcast()
+        return nil</span>
+}
+
+func (t *boardImpl) turnchange(idx int) error <span class="cov8" title="1">{
+        if idx &lt; 0 || idx &gt;= len(t.players) </span><span class="cov0" title="0">{
+                return BoardIndexOutOfRangeErr
+        }</span>
+        <span class="cov8" title="1">t.turnIndex = idx
+        return nil</span>
+}
+
+func (t *boardImpl) setActionPlayer() error <span class="cov8" title="1">{
+        actionPlayers := []*boardActionPlayer{}
+
+        inHai, err := t.players[t.CurrentTurn()].Kawa().Last()
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov8" title="1">for i, tc := range t.players </span><span class="cov8" title="1">{
+                if tc == t.players[t.CurrentTurn()] </span><span class="cov8" title="1">{
+                        continue</span>
+                }
+
+                <span class="cov8" title="1">type Arg struct {
+                        ok     bool
+                        e      error
+                        action ActionType
+                }
+                args := []Arg{}
+                if i == t.NextTurn() </span><span class="cov8" title="1">{
+                        ok, err := tc.CanChii(inHai)
+                        args = append(args, Arg{ok, err, Chii})
+                }</span>
+                <span class="cov8" title="1">ok, err := tc.CanPon(inHai)
+                args = append(args, Arg{ok, err, Pon})
+                ok, err = tc.CanMinKan(inHai)
+                args = append(args, Arg{ok, err, Kan})
+                ok, err = tc.CanRon(inHai)
+                args = append(args, Arg{ok, err, Ron})
+
+                actions := []ActionType{}
+                for _, arg := range args </span><span class="cov8" title="1">{
+                        if arg.e != nil </span><span class="cov0" title="0">{
+                                return arg.e
+                        }</span>
+                        <span class="cov8" title="1">if arg.ok </span><span class="cov8" title="1">{
+                                actions = append(actions, arg.action)
+                        }</span>
+                }
+                <span class="cov8" title="1">if len(actions) != 0 </span><span class="cov8" title="1">{
+                        actionPlayer := boardActionPlayer{
+                                Player:  tc.Player,
+                                actions: actions,
+                        }
+                        actionPlayers = append(actionPlayers, &amp;actionPlayer)
+
+                }</span>
+        }
+        <span class="cov8" title="1">t.actionPlayers = actionPlayers
+        return nil</span>
+}
+
+func (t *boardImpl) LastKawa() (*hai.Hai, error) <span class="cov8" title="1">{
+        return t.players[t.CurrentTurn()].Kawa().Last()
+}</span>
+
+func (t *boardImpl) MyAction(p player.Player) ([]ActionType, error) <span class="cov0" title="0">{
+        for _, ap := range t.actionPlayers </span><span class="cov0" title="0">{
+                if ap.Player == p </span><span class="cov0" title="0">{
+                        return ap.actions, nil
+                }</span>
+        }
+        <span class="cov0" title="0">return []ActionType{}, nil</span>
+}
+
+func (t *boardImpl) CancelAction(p player.Player) error <span class="cov8" title="1">{
+        t.Lock()
+        defer t.Unlock()
+        if len(t.actionPlayers) == 0 </span><span class="cov8" title="1">{
+                return nil
+        }</span>
+
+        <span class="cov8" title="1">found := false
+        for i, tc := range t.actionPlayers </span><span class="cov8" title="1">{
+                if tc.Player == p </span><span class="cov8" title="1">{
+                        found = true
+                        t.actionPlayers = append(t.actionPlayers[:i], t.actionPlayers[i+1:]...)
+                }</span>
+        }
+        <span class="cov8" title="1">if !found </span><span class="cov0" title="0">{
+                return BoardPlayerNotFoundErr
+        }</span>
+
+        <span class="cov8" title="1">if len(t.actionPlayers) == 0 </span><span class="cov0" title="0">{
+                if err := t.turnchange(t.NextTurn()); err != nil </span><span class="cov0" title="0">{
+                        return err
+                }</span>
+                <span class="cov0" title="0">if err := t.players[t.CurrentTurn()].Tsumo(); err != nil </span><span class="cov0" title="0">{
+                        return err
+                }</span>
+                <span class="cov0" title="0">go t.Broadcast()</span>
+        }
+        <span class="cov8" title="1">return nil</span>
+}
+
+func (t *boardImpl) TakeAction(c player.Player, action func(*hai.Hai) error) error <span class="cov8" title="1">{
+        t.Lock()
+        defer t.Unlock()
+        if len(t.actionPlayers) == 0 </span><span class="cov8" title="1">{
+                return BoardActionAlreadyTokenErr
+        }</span>
+
+        <span class="cov8" title="1">found := false
+        for _, tc := range t.actionPlayers </span><span class="cov8" title="1">{
+                if tc.Player == c </span><span class="cov8" title="1">{
+                        found = true
+                }</span>
+        }
+        <span class="cov8" title="1">if !found </span><span class="cov0" title="0">{
+                return BoardPlayerNotFoundErr
+        }</span>
+
+        <span class="cov8" title="1">h, err := t.players[t.CurrentTurn()].Kawa().Last()
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov8" title="1">if err := action(h); err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov8" title="1">_, err = t.players[t.CurrentTurn()].Kawa().RemoveLast()
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov8" title="1">t.actionPlayers = []*boardActionPlayer{}
+
+        turnIdx, err := t.MyTurn(c)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov8" title="1">if err := t.turnchange(turnIdx); err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov8" title="1">go t.Broadcast()
+        return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package hai
+
+import (
+        "mahjong/model/hai/attribute"
+)
+
+type Hai struct {
+        attributes []*attribute.Attribute
+        name       string
+}
+
+var (
+        All = []*Hai{
+                Manzu1, Manzu2, Manzu3, Manzu4, Manzu5, Manzu6, Manzu7, Manzu8, Manzu9,
+                Pinzu1, Pinzu2, Pinzu3, Pinzu4, Pinzu5, Pinzu6, Pinzu7, Pinzu8, Pinzu9,
+                Souzu1, Souzu2, Souzu3, Souzu4, Souzu5, Souzu6, Souzu7, Souzu8, Souzu9,
+                Ton, Nan, Sha, Pei, Haku, Hatsu, Chun,
+        }
+        Manzu   = []*Hai{Manzu1, Manzu2, Manzu3, Manzu4, Manzu5, Manzu6, Manzu7, Manzu8, Manzu9}
+        Pinzu   = []*Hai{Pinzu1, Pinzu2, Pinzu3, Pinzu4, Pinzu5, Pinzu6, Pinzu7, Pinzu8, Pinzu9}
+        Souzu   = []*Hai{Souzu1, Souzu2, Souzu3, Souzu4, Souzu5, Souzu6, Souzu7, Souzu8, Souzu9}
+        KazeHai = []*Hai{Ton, Nan, Sha, Pei}
+        YakuHai = []*Hai{Haku, Hatsu, Chun}
+)
+
+var (
+        Pinzu1 = &amp;Hai{
+                attributes: []*attribute.Attribute{&amp;attribute.Suhai, &amp;attribute.One, &amp;attribute.Pinzu},
+                name:       "p1",
+        }
+        Pinzu2 = &amp;Hai{
+                attributes: []*attribute.Attribute{&amp;attribute.Suhai, &amp;attribute.Two, &amp;attribute.Pinzu},
+                name:       "p2",
+        }
+        Pinzu3 = &amp;Hai{
+                attributes: []*attribute.Attribute{&amp;attribute.Suhai, &amp;attribute.Three, &amp;attribute.Pinzu},
+                name:       "p3",
+        }
+        Pinzu4 = &amp;Hai{
+                attributes: []*attribute.Attribute{&amp;attribute.Suhai, &amp;attribute.Four, &amp;attribute.Pinzu},
+                name:       "p4",
+        }
+        Pinzu5 = &amp;Hai{
+                attributes: []*attribute.Attribute{&amp;attribute.Suhai, &amp;attribute.Five, &amp;attribute.Pinzu},
+                name:       "p5",
+        }
+        Pinzu6 = &amp;Hai{
+                attributes: []*attribute.Attribute{&amp;attribute.Suhai, &amp;attribute.Six, &amp;attribute.Pinzu},
+                name:       "p6",
+        }
+        Pinzu7 = &amp;Hai{
+                attributes: []*attribute.Attribute{&amp;attribute.Suhai, &amp;attribute.Seven, &amp;attribute.Pinzu},
+                name:       "p7",
+        }
+        Pinzu8 = &amp;Hai{
+                attributes: []*attribute.Attribute{&amp;attribute.Suhai, &amp;attribute.Eight, &amp;attribute.Pinzu},
+                name:       "p8",
+        }
+        Pinzu9 = &amp;Hai{
+                attributes: []*attribute.Attribute{&amp;attribute.Suhai, &amp;attribute.Nine, &amp;attribute.Pinzu},
+                name:       "p9",
+        }
+        Souzu1 = &amp;Hai{
+                attributes: []*attribute.Attribute{&amp;attribute.Suhai, &amp;attribute.One, &amp;attribute.Souzu},
+                name:       "s1",
+        }
+        Souzu2 = &amp;Hai{
+                attributes: []*attribute.Attribute{&amp;attribute.Suhai, &amp;attribute.Two, &amp;attribute.Souzu},
+                name:       "s2",
+        }
+        Souzu3 = &amp;Hai{
+                attributes: []*attribute.Attribute{&amp;attribute.Suhai, &amp;attribute.Three, &amp;attribute.Souzu},
+                name:       "s3",
+        }
+        Souzu4 = &amp;Hai{
+                attributes: []*attribute.Attribute{&amp;attribute.Suhai, &amp;attribute.Four, &amp;attribute.Souzu},
+                name:       "s4",
+        }
+        Souzu5 = &amp;Hai{
+                attributes: []*attribute.Attribute{&amp;attribute.Suhai, &amp;attribute.Five, &amp;attribute.Souzu},
+                name:       "s5",
+        }
+        Souzu6 = &amp;Hai{
+                attributes: []*attribute.Attribute{&amp;attribute.Suhai, &amp;attribute.Six, &amp;attribute.Souzu},
+                name:       "s6",
+        }
+        Souzu7 = &amp;Hai{
+                attributes: []*attribute.Attribute{&amp;attribute.Suhai, &amp;attribute.Seven, &amp;attribute.Souzu},
+                name:       "s7",
+        }
+        Souzu8 = &amp;Hai{
+                attributes: []*attribute.Attribute{&amp;attribute.Suhai, &amp;attribute.Eight, &amp;attribute.Souzu},
+                name:       "s8",
+        }
+        Souzu9 = &amp;Hai{
+                attributes: []*attribute.Attribute{&amp;attribute.Suhai, &amp;attribute.Nine, &amp;attribute.Souzu},
+                name:       "s9",
+        }
+        Manzu1 = &amp;Hai{
+                attributes: []*attribute.Attribute{&amp;attribute.Suhai, &amp;attribute.One, &amp;attribute.Manzu},
+                name:       "m1",
+        }
+        Manzu2 = &amp;Hai{
+                attributes: []*attribute.Attribute{&amp;attribute.Suhai, &amp;attribute.Two, &amp;attribute.Manzu},
+                name:       "m2",
+        }
+        Manzu3 = &amp;Hai{
+                attributes: []*attribute.Attribute{&amp;attribute.Suhai, &amp;attribute.Three, &amp;attribute.Manzu},
+                name:       "m3",
+        }
+        Manzu4 = &amp;Hai{
+                attributes: []*attribute.Attribute{&amp;attribute.Suhai, &amp;attribute.Four, &amp;attribute.Manzu},
+                name:       "m4",
+        }
+        Manzu5 = &amp;Hai{
+                attributes: []*attribute.Attribute{&amp;attribute.Suhai, &amp;attribute.Five, &amp;attribute.Manzu},
+                name:       "m5",
+        }
+        Manzu6 = &amp;Hai{
+                attributes: []*attribute.Attribute{&amp;attribute.Suhai, &amp;attribute.Six, &amp;attribute.Manzu},
+                name:       "m6",
+        }
+        Manzu7 = &amp;Hai{
+                attributes: []*attribute.Attribute{&amp;attribute.Suhai, &amp;attribute.Seven, &amp;attribute.Manzu},
+                name:       "m7",
+        }
+        Manzu8 = &amp;Hai{
+                attributes: []*attribute.Attribute{&amp;attribute.Suhai, &amp;attribute.Eight, &amp;attribute.Manzu},
+                name:       "m8",
+        }
+        Manzu9 = &amp;Hai{
+                attributes: []*attribute.Attribute{&amp;attribute.Suhai, &amp;attribute.Nine, &amp;attribute.Manzu},
+                name:       "m9",
+        }
+
+        Chun = &amp;Hai{
+                attributes: []*attribute.Attribute{&amp;attribute.Jihai, &amp;attribute.Sangen, &amp;attribute.Chun},
+                name:       "中",
+        }
+        Hatsu = &amp;Hai{
+                attributes: []*attribute.Attribute{&amp;attribute.Jihai, &amp;attribute.Sangen, &amp;attribute.Hatsu},
+                name:       "発",
+        }
+        Haku = &amp;Hai{
+                attributes: []*attribute.Attribute{&amp;attribute.Jihai, &amp;attribute.Sangen, &amp;attribute.Haku},
+                name:       "白",
+        }
+        Ton = &amp;Hai{
+                attributes: []*attribute.Attribute{&amp;attribute.Jihai, &amp;attribute.Kaze, &amp;attribute.Ton},
+                name:       "東",
+        }
+        Nan = &amp;Hai{
+                attributes: []*attribute.Attribute{&amp;attribute.Jihai, &amp;attribute.Kaze, &amp;attribute.Nan},
+                name:       "南",
+        }
+        Sha = &amp;Hai{
+                attributes: []*attribute.Attribute{&amp;attribute.Jihai, &amp;attribute.Kaze, &amp;attribute.Sha},
+                name:       "西",
+        }
+        Pei = &amp;Hai{
+                attributes: []*attribute.Attribute{&amp;attribute.Jihai, &amp;attribute.Kaze, &amp;attribute.Pei},
+                name:       "北",
+        }
+)
+
+func AtoHai(hainame string) (*Hai, error) <span class="cov8" title="1">{
+        for _, hai := range All </span><span class="cov8" title="1">{
+                if hai.name == hainame </span><span class="cov8" title="1">{
+                        return hai, nil
+                }</span>
+        }
+        <span class="cov8" title="1">return nil, HaiInvalidArgumentErr</span>
+}
+
+func HaitoI(h *Hai) (int, error) <span class="cov8" title="1">{
+        if h == nil </span><span class="cov8" title="1">{
+                return 0, HaiInvalidArgumentErr
+        }</span>
+
+        <span class="cov8" title="1">for i, num := range attribute.Numbers </span><span class="cov8" title="1">{
+                if h.HasAttribute(num) </span><span class="cov8" title="1">{
+                        return i + 1, nil
+                }</span>
+        }
+
+        <span class="cov8" title="1">return 0, HaiInvalidArgumentErr</span>
+}
+
+func HaitoSuits(h *Hai) ([]*Hai, error) <span class="cov8" title="1">{
+        if h == nil </span><span class="cov8" title="1">{
+                return []*Hai{}, HaiInvalidArgumentErr
+        }</span>
+        <span class="cov8" title="1">if h.HasAttribute(&amp;attribute.Manzu) </span><span class="cov8" title="1">{
+                return Manzu, nil
+        }</span>
+        <span class="cov8" title="1">if h.HasAttribute(&amp;attribute.Pinzu) </span><span class="cov8" title="1">{
+                return Pinzu, nil
+        }</span>
+        <span class="cov8" title="1">if h.HasAttribute(&amp;attribute.Souzu) </span><span class="cov8" title="1">{
+                return Souzu, nil
+        }</span>
+        <span class="cov8" title="1">return []*Hai{}, HaiInvalidArgumentErr</span>
+}
+
+func (h *Hai) Name() string <span class="cov0" title="0">{
+        return h.name
+}</span>
+
+func (h *Hai) HasAttribute(attr *attribute.Attribute) bool <span class="cov8" title="1">{
+        for _, a := range h.attributes </span><span class="cov8" title="1">{
+                if a == attr </span><span class="cov8" title="1">{
+                        return true
+                }</span>
+        }
+
+        <span class="cov8" title="1">return false</span>
+}
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">package kawa
+
+import "mahjong/model/hai"
+
+type Kawa interface {
+        Add(inHai *hai.Hai) error
+        Hais() []*hai.Hai
+        Last() (*hai.Hai, error)
+        RemoveLast() (*hai.Hai, error)
+}
+
+type kawaImpl struct {
+        hais []*hai.Hai
+}
+
+func New() Kawa <span class="cov0" title="0">{
+        return &amp;kawaImpl{}
+}</span>
+
+func (h *kawaImpl) Hais() []*hai.Hai <span class="cov0" title="0">{
+        return h.hais
+}</span>
+
+func (h *kawaImpl) Add(inHai *hai.Hai) error <span class="cov8" title="1">{
+        h.hais = append(h.hais, inHai)
+        return nil
+}</span>
+
+func (h *kawaImpl) Last() (*hai.Hai, error) <span class="cov8" title="1">{
+        if len(h.hais) == 0 </span><span class="cov8" title="1">{
+                return nil, KawaNoHaiError
+        }</span>
+        <span class="cov8" title="1">return h.hais[len(h.hais)-1], nil</span>
+}
+
+func (h *kawaImpl) RemoveLast() (*hai.Hai, error) <span class="cov8" title="1">{
+        if len(h.hais) == 0 </span><span class="cov8" title="1">{
+                return nil, KawaNoHaiError
+        }</span>
+        <span class="cov8" title="1">outHai := h.hais[len(h.hais)-1]
+        h.hais = h.hais[:len(h.hais)-1]
+
+        return outHai, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file3" style="display: none">package kawa
+
+import (
+        "mahjong/model/hai"
+)
+
+var _ Kawa = &amp;KawaMock{}
+
+type KawaMock struct {
+        ErrorMock error
+        HaiMock   *hai.Hai
+        HaisMock  []*hai.Hai
+}
+
+func (h *KawaMock) Hais() []*hai.Hai <span class="cov0" title="0">{
+        return h.HaisMock
+}</span>
+
+func (h *KawaMock) Add(inHai *hai.Hai) error <span class="cov0" title="0">{
+        h.HaiMock = inHai
+        return h.ErrorMock
+}</span>
+
+func (h *KawaMock) Last() (*hai.Hai, error) <span class="cov0" title="0">{
+        return h.HaiMock, h.ErrorMock
+}</span>
+
+func (h *KawaMock) RemoveLast() (*hai.Hai, error) <span class="cov0" title="0">{
+        return h.HaiMock, h.ErrorMock
+}</span>
+</pre>
+		
+		<pre class="file" id="file4" style="display: none">package naki
+
+import (
+        "mahjong/model/hai"
+)
+
+type Naki interface {
+        SetPon([3]*hai.Hai) error
+        SetChii([3]*hai.Hai) error
+        SetMinKan([4]*hai.Hai) error
+        SetAnKan([4]*hai.Hai) error
+
+        Pons() [][3]*hai.Hai
+        Chiis() [][3]*hai.Hai
+        MinKans() [][4]*hai.Hai
+        AnKans() [][4]*hai.Hai
+
+        CanKakan(*hai.Hai) bool
+        Kakan(*hai.Hai) error
+}
+
+type nakiImpl struct {
+        pons    [][3]*hai.Hai
+        chiis   [][3]*hai.Hai
+        minKans [][4]*hai.Hai
+        anKans  [][4]*hai.Hai
+}
+
+func New() Naki <span class="cov0" title="0">{
+        return &amp;nakiImpl{
+                pons:    [][3]*hai.Hai{},
+                chiis:   [][3]*hai.Hai{},
+                minKans: [][4]*hai.Hai{},
+                anKans:  [][4]*hai.Hai{},
+        }
+}</span>
+
+func (h *nakiImpl) Pons() [][3]*hai.Hai <span class="cov0" title="0">{
+        return h.pons
+}</span>
+func (h *nakiImpl) Chiis() [][3]*hai.Hai <span class="cov0" title="0">{
+        return h.chiis
+}</span>
+func (h *nakiImpl) MinKans() [][4]*hai.Hai <span class="cov0" title="0">{
+        return h.minKans
+}</span>
+func (h *nakiImpl) AnKans() [][4]*hai.Hai <span class="cov0" title="0">{
+        return h.anKans
+}</span>
+
+func (h *nakiImpl) SetPon(hais [3]*hai.Hai) error <span class="cov8" title="1">{
+        h.pons = append(h.pons, hais)
+        return nil
+}</span>
+
+func (h *nakiImpl) SetChii(hais [3]*hai.Hai) error <span class="cov8" title="1">{
+        h.chiis = append(h.chiis, hais)
+        return nil
+}</span>
+
+func (h *nakiImpl) SetMinKan(hais [4]*hai.Hai) error <span class="cov8" title="1">{
+        h.minKans = append(h.minKans, hais)
+        return nil
+}</span>
+func (h *nakiImpl) SetAnKan(hais [4]*hai.Hai) error <span class="cov0" title="0">{
+        h.anKans = append(h.anKans, hais)
+        return nil
+}</span>
+
+func (h *nakiImpl) CanKakan(inHai *hai.Hai) bool <span class="cov0" title="0">{
+        for _, pon := range h.pons </span><span class="cov0" title="0">{
+                if pon[0] == inHai </span><span class="cov0" title="0">{
+                        return true
+                }</span>
+        }
+        <span class="cov0" title="0">return false</span>
+}
+
+func (h *nakiImpl) Kakan(inHai *hai.Hai) error <span class="cov8" title="1">{
+        for idx, pon := range h.pons </span><span class="cov8" title="1">{
+                if pon[0] == inHai </span><span class="cov8" title="1">{
+                        h.pons[idx] = h.pons[0]
+                        h.pons = h.pons[1:]
+
+                        set := [4]*hai.Hai{}
+                        set[0], set[1], set[2], set[3] = pon[0], pon[1], pon[2], inHai
+                        h.minKans = append(h.minKans, set)
+                        return nil
+                }</span>
+        }
+
+        <span class="cov8" title="1">return NakiNotFoundErr</span>
+}
+</pre>
+		
+		<pre class="file" id="file5" style="display: none">package naki
+
+import "mahjong/model/hai"
+
+var _ Naki = &amp;NakiMock{}
+
+type NakiMock struct {
+        ErrorMock error
+        BoolMock  bool
+
+        PonMock     [3]*hai.Hai
+        PonsMock    [][3]*hai.Hai
+        ChiiMock    [3]*hai.Hai
+        ChiisMock   [][3]*hai.Hai
+        MinKanMock  [4]*hai.Hai
+        MinKansMock [][4]*hai.Hai
+        AnKanMock   [4]*hai.Hai
+        AnKansMock  [][4]*hai.Hai
+}
+
+func (h *NakiMock) Pons() [][3]*hai.Hai <span class="cov0" title="0">{
+        return h.PonsMock
+}</span>
+
+func (h *NakiMock) Chiis() [][3]*hai.Hai <span class="cov0" title="0">{
+        return h.ChiisMock
+}</span>
+
+func (h *NakiMock) MinKans() [][4]*hai.Hai <span class="cov0" title="0">{
+        return h.MinKansMock
+}</span>
+
+func (h *NakiMock) AnKans() [][4]*hai.Hai <span class="cov0" title="0">{
+        return h.AnKansMock
+}</span>
+
+func (h *NakiMock) SetPon(hais [3]*hai.Hai) error <span class="cov0" title="0">{
+        h.PonMock = hais
+        return h.ErrorMock
+}</span>
+
+func (h *NakiMock) SetChii(hais [3]*hai.Hai) error <span class="cov0" title="0">{
+        h.ChiiMock = hais
+        return h.ErrorMock
+}</span>
+
+func (h *NakiMock) SetMinKan(hais [4]*hai.Hai) error <span class="cov0" title="0">{
+        h.MinKanMock = hais
+        return h.ErrorMock
+}</span>
+
+func (h *NakiMock) SetAnKan(hais [4]*hai.Hai) error <span class="cov0" title="0">{
+        h.AnKanMock = hais
+        return h.ErrorMock
+}</span>
+
+func (h *NakiMock) CanKakan(x *hai.Hai) bool <span class="cov0" title="0">{
+        return h.BoolMock
+}</span>
+
+func (h *NakiMock) Kakan(x *hai.Hai) error <span class="cov0" title="0">{
+        h.MinKanMock = [4]*hai.Hai{h.PonMock[0], h.PonMock[1], h.PonMock[2], x}
+        h.PonMock = [3]*hai.Hai{}
+        return h.ErrorMock
+}</span>
+</pre>
+		
+		<pre class="file" id="file6" style="display: none">package player
+
+import (
+        "mahjong/model/hai"
+        "mahjong/model/hai/attribute"
+        "mahjong/model/kawa"
+        "mahjong/model/naki"
+        "mahjong/model/tehai"
+        "mahjong/model/yama"
+
+        "github.com/google/uuid"
+)
+
+type Player interface {
+        // getter
+        Tehai() tehai.Tehai
+        Kawa() kawa.Kawa
+        Tsumohai() *hai.Hai
+        Naki() naki.Naki
+        IsRiichi() bool
+        // setter
+        SetYama(yama.Yama) error
+
+        // my turn
+        CanRiichi() (bool, error)
+        CanTsumoAgari() (bool, error)
+        CanAnKan() (bool, error)
+        // not my turn
+        CanChii(*hai.Hai) (bool, error)
+        CanPon(*hai.Hai) (bool, error)
+        CanMinKan(*hai.Hai) (bool, error)
+        CanRon(*hai.Hai) (bool, error)
+
+        CanTanyao(*hai.Hai) (bool, error)
+        CanPinfu() (bool, error)
+
+        Tsumo() error
+        Dahai(*hai.Hai) error
+        Haipai() error
+        Chii(*hai.Hai, [2]*hai.Hai) error
+        Pon(*hai.Hai, [2]*hai.Hai) error
+        AnKan([4]*hai.Hai) error
+        MinKan(*hai.Hai, [3]*hai.Hai) error
+        Kakan() error
+        Riichi(*hai.Hai) error
+}
+
+type Action string
+
+var (
+        Chii       Action = "chii"
+        Pon        Action = "pon"
+        Kan        Action = "kan"
+        Ron        Action = "ron"
+        Riichi     Action = "riichi"
+        Tsumo      Action = "tsumo"
+        AllActions        = []Action{Chii, Pon, Kan, Ron, Riichi, Tsumo}
+)
+
+func AtoAction(s string) (Action, error) <span class="cov0" title="0">{
+        for _, a := range AllActions </span><span class="cov0" title="0">{
+                if string(a) == s </span><span class="cov0" title="0">{
+                        return a, nil
+                }</span>
+        }
+
+        <span class="cov0" title="0">return "", PlayerActionInvalidErr</span>
+}
+
+type playerImpl struct {
+        id       uuid.UUID
+        tsumohai *hai.Hai
+        kawa     kawa.Kawa
+        tehai    tehai.Tehai
+        naki     naki.Naki
+        yama     yama.Yama
+        isRiichi bool
+}
+
+func New(id uuid.UUID, k kawa.Kawa, t tehai.Tehai, n naki.Naki) Player <span class="cov0" title="0">{
+        return &amp;playerImpl{
+                id:       id,
+                kawa:     k,
+                tehai:    t,
+                naki:     n,
+                yama:     nil,
+                isRiichi: false,
+        }
+}</span>
+
+func (c *playerImpl) Tehai() tehai.Tehai <span class="cov8" title="1">{
+        return c.tehai
+}</span>
+
+func (c *playerImpl) Kawa() kawa.Kawa <span class="cov0" title="0">{
+        return c.kawa
+}</span>
+
+func (c *playerImpl) Naki() naki.Naki <span class="cov0" title="0">{
+        return c.naki
+}</span>
+
+func (c *playerImpl) Tsumohai() *hai.Hai <span class="cov0" title="0">{
+        return c.tsumohai
+}</span>
+
+func (c *playerImpl) IsRiichi() bool <span class="cov0" title="0">{
+        return c.isRiichi
+}</span>
+
+func (c *playerImpl) Tsumo() error <span class="cov8" title="1">{
+        if c.tsumohai != nil </span><span class="cov8" title="1">{
+                return PlayerAlreadyHaveTsumohaiErr
+        }</span>
+
+        <span class="cov8" title="1">tsumohai, err := c.yama.Draw()
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov8" title="1">c.tsumohai = tsumohai
+        return nil</span>
+}
+
+func (c *playerImpl) Dahai(outHai *hai.Hai) error <span class="cov8" title="1">{
+        var err error
+        if c.isRiichi &amp;&amp; outHai != c.tsumohai </span><span class="cov0" title="0">{
+                return PlayerAlreadyRiichiErr
+        }</span>
+        <span class="cov8" title="1">if outHai != c.tsumohai </span><span class="cov8" title="1">{
+                if c.tsumohai == nil </span><span class="cov0" title="0">{
+                        outHai, err = c.tehai.Remove(outHai)
+                }</span> else<span class="cov8" title="1"> {
+                        outHai, err = c.tehai.Replace(c.tsumohai, outHai)
+                }</span>
+
+                <span class="cov8" title="1">if err != nil </span><span class="cov0" title="0">{
+                        return err
+                }</span>
+                <span class="cov8" title="1">if err := c.tehai.Sort(); err != nil </span><span class="cov0" title="0">{
+                        return err
+                }</span>
+        }
+        <span class="cov8" title="1">c.tsumohai = nil
+
+        return c.kawa.Add(outHai)</span>
+}
+
+func (c *playerImpl) SetYama(y yama.Yama) error <span class="cov8" title="1">{
+        if c.yama != nil </span><span class="cov8" title="1">{
+                return PlayerAlreadyHaveYamaErr
+        }</span>
+        <span class="cov8" title="1">c.yama = y
+        return nil</span>
+}
+
+func (c *playerImpl) Haipai() error <span class="cov8" title="1">{
+        if len(c.tehai.Hais()) != 0 </span><span class="cov8" title="1">{
+                return PlayerAlreadyDidHaipaiErr
+        }</span>
+
+        <span class="cov8" title="1">for i := 0; i &lt; tehai.MaxHaisLen-1; i++ </span><span class="cov8" title="1">{
+                tsumoHai, err := c.yama.Draw()
+                if err != nil </span><span class="cov0" title="0">{
+                        return err
+                }</span>
+                <span class="cov8" title="1">if err := c.tehai.Add(tsumoHai); err != nil </span><span class="cov8" title="1">{
+                        return err
+                }</span>
+        }
+
+        <span class="cov8" title="1">if err := c.tehai.Sort(); err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov8" title="1">return nil</span>
+}
+
+func (c *playerImpl) Chii(inHai *hai.Hai, outHais [2]*hai.Hai) error <span class="cov8" title="1">{
+        if inHai == c.tsumohai </span><span class="cov0" title="0">{
+                c.tsumohai = nil
+        }</span>
+        <span class="cov8" title="1">hais, err := c.tehai.Removes([]*hai.Hai{outHais[0], outHais[1]})
+        if err != nil </span><span class="cov8" title="1">{
+                return err
+        }</span>
+        <span class="cov8" title="1">meld := [3]*hai.Hai{inHai, hais[0], hais[1]}
+
+        return c.naki.SetChii(meld)</span>
+}
+
+func (c *playerImpl) Pon(inHai *hai.Hai, outHais [2]*hai.Hai) error <span class="cov8" title="1">{
+        if inHai == c.tsumohai </span><span class="cov0" title="0">{
+                c.tsumohai = nil
+        }</span>
+        <span class="cov8" title="1">hais, err := c.tehai.Removes([]*hai.Hai{outHais[0], outHais[1]})
+        if err != nil </span><span class="cov8" title="1">{
+                return err
+        }</span>
+        <span class="cov8" title="1">meld := [3]*hai.Hai{inHai, hais[0], hais[1]}
+
+        return c.naki.SetPon(meld)</span>
+}
+
+func (c *playerImpl) MinKan(inHai *hai.Hai, outHais [3]*hai.Hai) error <span class="cov8" title="1">{
+        hais, err := c.tehai.Removes([]*hai.Hai{outHais[0], outHais[1], outHais[2]})
+        if err != nil </span><span class="cov8" title="1">{
+                return err
+        }</span>
+        <span class="cov8" title="1">meld := [4]*hai.Hai{inHai, hais[0], hais[1], hais[2]}
+
+        return c.naki.SetMinKan(meld)</span>
+}
+
+func (c *playerImpl) AnKan(hais [4]*hai.Hai) error <span class="cov0" title="0">{
+        if c.tsumohai == hais[0] </span><span class="cov0" title="0">{
+                if _, err := c.tehai.Removes([]*hai.Hai{hais[0], hais[1], hais[2]}); err != nil </span><span class="cov0" title="0">{
+                        return err
+                }</span>
+        } else<span class="cov0" title="0"> {
+                if _, err := c.tehai.Removes([]*hai.Hai{hais[0], hais[1], hais[2], hais[3]}); err != nil </span><span class="cov0" title="0">{
+                        return err
+                }</span>
+                <span class="cov0" title="0">if err := c.tehai.Add(c.tsumohai); err != nil </span><span class="cov0" title="0">{
+                        return err
+                }</span>
+        }
+        <span class="cov0" title="0">c.tsumohai = nil
+        return c.naki.SetAnKan([4]*hai.Hai{hais[0], hais[1], hais[2], hais[3]})</span>
+}
+
+func (c *playerImpl) Kakan() error <span class="cov8" title="1">{
+        err := c.naki.Kakan(c.tsumohai)
+        if err != nil </span><span class="cov8" title="1">{
+                return err
+        }</span>
+        <span class="cov8" title="1">c.tsumohai = nil
+        return nil</span>
+}
+
+func (c *playerImpl) Riichi(inHai *hai.Hai) error <span class="cov0" title="0">{
+        if c.isRiichi </span><span class="cov0" title="0">{
+                return PlayerAlreadyRiichiErr
+        }</span>
+        <span class="cov0" title="0">err := c.Dahai(inHai)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov0" title="0">c.isRiichi = true
+        return nil</span>
+}
+
+func (c *playerImpl) CanAnKan() (bool, error) <span class="cov0" title="0">{
+        return c.tehai.CanAnKan(c.tsumohai)
+}</span>
+
+func (c *playerImpl) CanRiichi() (bool, error) <span class="cov0" title="0">{
+        cntChii := len(c.naki.Chiis())
+        cntPon := len(c.naki.Pons())
+        cntKan := len(c.naki.MinKans())
+        if cntChii == 0 &amp;&amp; cntPon == 0 &amp;&amp; cntKan == 0 &amp;&amp; c.isRiichi == false </span><span class="cov0" title="0">{
+                return c.tehai.CanRiichi(c.tsumohai)
+        }</span>
+
+        <span class="cov0" title="0">return false, nil</span>
+}
+
+func (c *playerImpl) CanTsumoAgari() (bool, error) <span class="cov8" title="1">{
+        if c.isRiichi </span><span class="cov0" title="0">{
+                return c.tehai.CanRon(c.tsumohai)
+        }</span> else<span class="cov8" title="1"> {
+                ron, err := c.tehai.CanRon(c.tsumohai)
+                if err != nil </span><span class="cov0" title="0">{
+                        return false, err
+                }</span>
+                <span class="cov8" title="1">tanyao, err := c.CanTanyao(c.tsumohai)
+                if err != nil </span><span class="cov0" title="0">{
+                        return false, err
+                }</span>
+                <span class="cov8" title="1">pinfu, err := c.CanPinfu()
+                if err != nil </span><span class="cov0" title="0">{
+                        return false, err
+                }</span>
+                <span class="cov8" title="1">return ron &amp;&amp; (tanyao || pinfu), nil</span>
+        }
+}
+
+func (c *playerImpl) CanRon(inHai *hai.Hai) (bool, error) <span class="cov8" title="1">{
+        if c.isRiichi </span><span class="cov8" title="1">{
+                return c.tehai.CanRon(inHai)
+        }</span> else<span class="cov8" title="1"> {
+                ron, err := c.tehai.CanRon(inHai)
+                if err != nil </span><span class="cov0" title="0">{
+                        return false, err
+                }</span>
+                <span class="cov8" title="1">tanyao, err := c.CanTanyao(inHai)
+                if err != nil </span><span class="cov0" title="0">{
+                        return false, err
+                }</span>
+                <span class="cov8" title="1">pinfu, err := c.CanPinfu()
+                if err != nil </span><span class="cov0" title="0">{
+                        return false, err
+                }</span>
+                <span class="cov8" title="1">return ron &amp;&amp; (tanyao || pinfu), nil</span>
+        }
+}
+
+func (c *playerImpl) CanChii(inHai *hai.Hai) (bool, error) <span class="cov0" title="0">{
+        if c.isRiichi </span><span class="cov0" title="0">{
+                return false, nil
+        }</span>
+        <span class="cov0" title="0">return c.tehai.CanChii(inHai)</span>
+}
+
+func (p *playerImpl) CanPon(inHai *hai.Hai) (bool, error) <span class="cov0" title="0">{
+        if p.isRiichi </span><span class="cov0" title="0">{
+                return false, nil
+        }</span>
+        <span class="cov0" title="0">return p.tehai.CanPon(inHai)</span>
+}
+
+func (c *playerImpl) CanMinKan(inHai *hai.Hai) (bool, error) <span class="cov0" title="0">{
+        if c.isRiichi </span><span class="cov0" title="0">{
+                return false, nil
+        }</span>
+        <span class="cov0" title="0">return c.tehai.CanMinKan(inHai)</span>
+}
+
+func (p *playerImpl) CanTanyao(inHai *hai.Hai) (bool, error) <span class="cov8" title="1">{
+
+        hais := []*hai.Hai{}
+        hais = append(hais, p.tehai.Hais()...)
+        for _, set := range p.naki.Chiis() </span><span class="cov8" title="1">{
+                hais = append(hais, set[0], set[1], set[2])
+        }</span>
+        <span class="cov8" title="1">for _, set := range p.naki.Pons() </span><span class="cov0" title="0">{
+                hais = append(hais, set[0], set[1], set[2])
+        }</span>
+        <span class="cov8" title="1">for _, set := range p.naki.MinKans() </span><span class="cov0" title="0">{
+                hais = append(hais, set[0], set[1], set[2], set[3])
+        }</span>
+        <span class="cov8" title="1">for _, set := range p.naki.AnKans() </span><span class="cov0" title="0">{
+                hais = append(hais, set[0], set[1], set[2], set[3])
+        }</span>
+
+<span class="cov8" title="1">outer:
+        for _, h := range hais </span><span class="cov8" title="1">{
+                for _, num := range attribute.Numbers[1:8] </span><span class="cov8" title="1">{
+                        if h.HasAttribute(num) </span><span class="cov8" title="1">{
+                                continue outer</span>
+                        }
+                }
+                <span class="cov8" title="1">return false, nil</span>
+
+        }
+        <span class="cov8" title="1">return true, nil</span>
+}
+
+func (p *playerImpl) CanPinfu() (bool, error) <span class="cov8" title="1">{
+        cntChii := len(p.naki.Chiis())
+        cntPon := len(p.naki.Pons())
+        cntKan := len(p.naki.MinKans())
+        if cntChii != 0 || cntPon != 0 || cntKan != 0 </span><span class="cov8" title="1">{
+                return false, nil
+        }</span>
+        <span class="cov8" title="1">tehaiObj := tehai.New()
+        tehaiObj.Adds(p.Tehai().Hais())
+
+        // count by hai
+        haisMap := map[*hai.Hai]int{}
+        for _, h := range tehaiObj.Hais() </span><span class="cov8" title="1">{
+                haisMap[h]++
+        }</span>
+        <span class="cov8" title="1">for k, v := range haisMap </span><span class="cov8" title="1">{
+                if v &lt; 2 || k.HasAttribute(&amp;attribute.Sangen) </span><span class="cov8" title="1">{
+                        continue</span>
+                }
+                // deep copy
+                <span class="cov8" title="1">tehaiObj2 := tehai.New()
+                tehaiObj2.Adds(tehaiObj.Hais())
+
+                if _, err := tehaiObj2.Removes([]*hai.Hai{k, k}); err != nil </span><span class="cov0" title="0">{
+                        return false, err
+                }</span>
+
+                // shuntsu
+                <span class="cov8" title="1">pairs, err := tehai.Shuntsu(tehaiObj2.Hais())
+                if err != nil </span><span class="cov0" title="0">{
+                        return false, err
+                }</span>
+                // remove
+                <span class="cov8" title="1">for j := 0; j &lt; len(pairs); j++ </span><span class="cov8" title="1">{
+                        if !(tehaiObj2.HasHai(pairs[j][0]) &amp;&amp; tehaiObj2.HasHai(pairs[j][1]) &amp;&amp; tehaiObj2.HasHai(pairs[j][2])) </span><span class="cov8" title="1">{
+                                continue</span>
+                        }
+                        <span class="cov8" title="1">if _, err := tehaiObj2.Removes(pairs[j]); err != nil </span><span class="cov0" title="0">{
+                                return false, err
+                        }</span>
+                }
+
+                // machi check
+                <span class="cov8" title="1">if len(tehaiObj2.Hais()) == 2 </span><span class="cov8" title="1">{
+                        a := tehaiObj2.Hais()[0]
+                        b := tehaiObj2.Hais()[1]
+                        ok, err := isRyanmen(a, b)
+                        if err != nil </span><span class="cov0" title="0">{
+                                return false, err
+                        }</span>
+                        <span class="cov8" title="1">if ok </span><span class="cov8" title="1">{
+                                return true, nil
+                        }</span>
+                }
+        }
+
+        <span class="cov8" title="1">return false, nil</span>
+}
+
+func isRyanmen(a *hai.Hai, b *hai.Hai) (bool, error) <span class="cov8" title="1">{
+        found := false
+        for _, x := range attribute.Suits </span><span class="cov8" title="1">{
+                if a.HasAttribute(x) &amp;&amp; b.HasAttribute(x) </span><span class="cov8" title="1">{
+                        found = true
+                }</span>
+        }
+        <span class="cov8" title="1">if !found </span><span class="cov8" title="1">{
+                return false, nil
+        }</span>
+
+        <span class="cov8" title="1">if !a.HasAttribute(&amp;attribute.Suhai) || !b.HasAttribute(&amp;attribute.Suhai) </span><span class="cov0" title="0">{
+                return false, nil
+        }</span>
+
+        <span class="cov8" title="1">ai, err := hai.HaitoI(a)
+        if err != nil </span><span class="cov0" title="0">{
+                return false, err
+        }</span>
+        <span class="cov8" title="1">bi, err := hai.HaitoI(b)
+        if err != nil </span><span class="cov0" title="0">{
+                return false, err
+        }</span>
+
+        <span class="cov8" title="1">if abs(ai, bi) != 1 || min(ai, bi) == 1 || max(ai, bi) == 9 </span><span class="cov8" title="1">{
+                return false, nil
+        }</span>
+        <span class="cov8" title="1">return true, nil</span>
+}
+
+func abs(a int, b int) int <span class="cov8" title="1">{
+        return max(a, b) - min(a, b)
+}</span>
+
+func min(a int, b int) int <span class="cov8" title="1">{
+        if a &lt;= b </span><span class="cov8" title="1">{
+                return a
+        }</span> else<span class="cov0" title="0"> {
+                return b
+        }</span>
+}
+
+func max(a int, b int) int <span class="cov8" title="1">{
+        if a &gt;= b </span><span class="cov0" title="0">{
+                return a
+        }</span> else<span class="cov8" title="1"> {
+                return b
+        }</span>
+}
+</pre>
+		
+		<pre class="file" id="file7" style="display: none">package player
+
+import (
+        "mahjong/model/hai"
+        "mahjong/model/kawa"
+        "mahjong/model/naki"
+        "mahjong/model/tehai"
+        "mahjong/model/yama"
+)
+
+var _ Player = &amp;PlayerMock{}
+
+type PlayerMock struct {
+        ErrorMock   error
+        TehaiMock   tehai.Tehai
+        NakiMock    naki.Naki
+        HaiMock     *hai.Hai
+        HaisMock    []*hai.Hai
+        ActionsMock []Action
+        KawaMock    kawa.Kawa
+        BoolMock    bool
+}
+
+func (c *PlayerMock) Tehai() tehai.Tehai <span class="cov0" title="0">{
+        return c.TehaiMock
+}</span>
+
+func (c *PlayerMock) Kawa() kawa.Kawa <span class="cov0" title="0">{
+        return c.KawaMock
+}</span>
+
+func (c *PlayerMock) Naki() naki.Naki <span class="cov0" title="0">{
+        return c.NakiMock
+}</span>
+
+func (c *PlayerMock) Tsumohai() *hai.Hai <span class="cov0" title="0">{
+        return c.HaiMock
+}</span>
+
+func (c *PlayerMock) IsRiichi() bool <span class="cov0" title="0">{
+        return c.BoolMock
+}</span>
+
+func (c *PlayerMock) Tsumo() error <span class="cov0" title="0">{
+        return c.ErrorMock
+}</span>
+
+func (c *PlayerMock) Dahai(outHai *hai.Hai) error <span class="cov0" title="0">{
+        return c.ErrorMock
+}</span>
+
+func (c *PlayerMock) Riichi(_ *hai.Hai) error <span class="cov0" title="0">{
+        return c.ErrorMock
+}</span>
+
+func (c *PlayerMock) SetYama(_ yama.Yama) error <span class="cov0" title="0">{
+        return c.ErrorMock
+}</span>
+
+func (c *PlayerMock) Haipai() error <span class="cov0" title="0">{
+        return c.ErrorMock
+}</span>
+
+func (c *PlayerMock) Chii(inHai *hai.Hai, outHais [2]*hai.Hai) error <span class="cov0" title="0">{
+        return c.ErrorMock
+}</span>
+
+func (c *PlayerMock) Pon(inHai *hai.Hai, outHais [2]*hai.Hai) error <span class="cov0" title="0">{
+        return c.ErrorMock
+}</span>
+
+func (c *PlayerMock) MinKan(inHai *hai.Hai, outHais [3]*hai.Hai) error <span class="cov0" title="0">{
+        return c.ErrorMock
+}</span>
+
+func (c *PlayerMock) AnKan(_ [4]*hai.Hai) error <span class="cov0" title="0">{
+        return c.ErrorMock
+}</span>
+func (c *PlayerMock) Kakan() error <span class="cov0" title="0">{
+        return c.ErrorMock
+}</span>
+
+func (c *PlayerMock) FindRiichiHai() ([]*hai.Hai, error) <span class="cov0" title="0">{
+        return c.HaisMock, c.ErrorMock
+}</span>
+
+func (c *PlayerMock) CanTsumoAgari() (bool, error) <span class="cov0" title="0">{
+        return c.BoolMock, c.ErrorMock
+}</span>
+
+func (c *PlayerMock) CanRiichi() (bool, error) <span class="cov0" title="0">{
+        return c.BoolMock, c.ErrorMock
+}</span>
+
+func (c *PlayerMock) CanAnKan() (bool, error) <span class="cov0" title="0">{
+        return c.BoolMock, c.ErrorMock
+}</span>
+
+func (c *PlayerMock) CanMinKan(_ *hai.Hai) (bool, error) <span class="cov0" title="0">{
+        return c.BoolMock, c.ErrorMock
+}</span>
+
+func (c *PlayerMock) CanChii(_ *hai.Hai) (bool, error) <span class="cov0" title="0">{
+        return c.BoolMock, c.ErrorMock
+}</span>
+
+func (c *PlayerMock) CanPon(_ *hai.Hai) (bool, error) <span class="cov0" title="0">{
+        return c.BoolMock, c.ErrorMock
+}</span>
+
+func (c *PlayerMock) CanRon(_ *hai.Hai) (bool, error) <span class="cov0" title="0">{
+        return c.BoolMock, c.ErrorMock
+}</span>
+
+func (c *PlayerMock) CanTanyao(_ *hai.Hai) (bool, error) <span class="cov0" title="0">{
+        return c.BoolMock, c.ErrorMock
+}</span>
+
+func (c *PlayerMock) CanPinfu() (bool, error) <span class="cov0" title="0">{
+        return c.BoolMock, c.ErrorMock
+}</span>
+</pre>
+		
+		<pre class="file" id="file8" style="display: none">package tehai
+
+import (
+        "mahjong/model/hai"
+        "mahjong/model/hai/attribute"
+        "sort"
+)
+
+var (
+        MaxHaisLen = 14
+)
+
+type Tehai interface {
+        Hais() []*hai.Hai
+
+        Add(*hai.Hai) error
+        Adds([]*hai.Hai) error
+        Remove(*hai.Hai) (*hai.Hai, error)
+        Removes([]*hai.Hai) ([]*hai.Hai, error)
+        Replace(*hai.Hai, *hai.Hai) (*hai.Hai, error)
+
+        ChiiPairs(*hai.Hai) ([][2]*hai.Hai, error)
+        PonPairs(*hai.Hai) ([][2]*hai.Hai, error)
+        MinKanPairs(*hai.Hai) ([][3]*hai.Hai, error)
+        AnKanPairs(*hai.Hai) ([][4]*hai.Hai, error)
+        RiichiHais(*hai.Hai) ([]*hai.Hai, error)
+
+        CanChii(*hai.Hai) (bool, error)
+        CanPon(*hai.Hai) (bool, error)
+        CanMinKan(*hai.Hai) (bool, error)
+        CanAnKan(*hai.Hai) (bool, error)
+        CanRiichi(*hai.Hai) (bool, error)
+        CanRon(*hai.Hai) (bool, error)
+
+        Sort() error
+        HasHai(*hai.Hai) bool
+}
+
+type tehaiImpl struct {
+        hais []*hai.Hai
+}
+
+func New() Tehai <span class="cov0" title="0">{
+        return &amp;tehaiImpl{hais: []*hai.Hai{}}
+}</span>
+
+func (t *tehaiImpl) Hais() []*hai.Hai <span class="cov0" title="0">{
+        return t.hais
+}</span>
+
+func (t *tehaiImpl) Sort() error <span class="cov8" title="1">{
+        sort.Slice(t.hais, func(i int, j int) bool </span><span class="cov8" title="1">{
+                return t.hais[i].Name() &lt; t.hais[j].Name()
+        }</span>)
+        <span class="cov8" title="1">return nil</span>
+}
+
+func (t *tehaiImpl) Add(inHai *hai.Hai) error <span class="cov8" title="1">{
+        if inHai == nil </span><span class="cov8" title="1">{
+                return TehaiHaiIsNilErr
+        }</span>
+        <span class="cov8" title="1">if len(t.hais) &gt;= MaxHaisLen </span><span class="cov0" title="0">{
+                return TehaiReachMaxHaiErr
+        }</span>
+
+        <span class="cov8" title="1">t.hais = append(t.hais, inHai)
+        return nil</span>
+}
+
+func (t *tehaiImpl) Adds(inHais []*hai.Hai) error <span class="cov8" title="1">{
+        for _, hai := range inHais </span><span class="cov8" title="1">{
+                if err := t.Add(hai); err != nil </span><span class="cov8" title="1">{
+                        return err
+                }</span>
+        }
+
+        <span class="cov8" title="1">return nil</span>
+}
+
+func (t *tehaiImpl) Remove(outHai *hai.Hai) (*hai.Hai, error) <span class="cov8" title="1">{
+        for idx, hai := range t.hais </span><span class="cov8" title="1">{
+                if hai == outHai </span><span class="cov8" title="1">{
+                        outHai = t.hais[idx]
+                        t.hais = append(t.hais[:idx], t.hais[idx+1:]...)
+                        return outHai, nil
+                }</span>
+
+        }
+        <span class="cov8" title="1">return nil, TehaiHaiNotFoundErr</span>
+}
+
+func (t *tehaiImpl) Removes(outHais []*hai.Hai) ([]*hai.Hai, error) <span class="cov8" title="1">{
+        hais := []*hai.Hai{}
+        for _, outHai := range outHais </span><span class="cov8" title="1">{
+                outHai, err := t.Remove(outHai)
+                if err != nil </span><span class="cov8" title="1">{
+                        return outHais, err
+                }</span>
+                <span class="cov8" title="1">hais = append(hais, outHai)</span>
+
+        }
+        <span class="cov8" title="1">return outHais, nil</span>
+}
+
+func (t *tehaiImpl) Replace(inHai *hai.Hai, outHai *hai.Hai) (*hai.Hai, error) <span class="cov8" title="1">{
+        for idx, hai := range t.hais </span><span class="cov8" title="1">{
+                if hai == outHai </span><span class="cov8" title="1">{
+                        outHai = t.hais[idx]
+                        t.hais[idx] = inHai
+                        return outHai, nil
+                }</span>
+        }
+        <span class="cov8" title="1">return nil, TehaiHaiNotFoundErr</span>
+}
+
+func (t *tehaiImpl) CanChii(inHai *hai.Hai) (bool, error) <span class="cov0" title="0">{
+        hais, err := t.ChiiPairs(inHai)
+        return len(hais) != 0, err
+}</span>
+
+func (t *tehaiImpl) ChiiPairs(inHai *hai.Hai) ([][2]*hai.Hai, error) <span class="cov8" title="1">{
+        pairs := [][2]*hai.Hai{}
+        if inHai == nil || !inHai.HasAttribute(&amp;attribute.Suhai) </span><span class="cov8" title="1">{
+                return pairs, nil
+        }</span>
+        // detect suit
+        <span class="cov8" title="1">suit, err := hai.HaitoSuits(inHai)
+        if err != nil </span><span class="cov0" title="0">{
+                return pairs, nil
+        }</span>
+        // detect hai's number
+        <span class="cov8" title="1">num, err := hai.HaitoI(inHai)
+        if err != nil </span><span class="cov0" title="0">{
+                return pairs, nil
+        }</span>
+
+        //  right pair
+        <span class="cov8" title="1">if num &gt;= 3 &amp;&amp; t.HasHai(suit[num-3]) &amp;&amp; t.HasHai(suit[num-2]) </span><span class="cov8" title="1">{
+                pairs = append(pairs, [2]*hai.Hai{suit[num-3], suit[num-2]})
+        }</span>
+        //  center pair
+        <span class="cov8" title="1">if num &gt;= 2 &amp;&amp; num &lt;= 8 &amp;&amp; t.HasHai(suit[num-2]) &amp;&amp; t.HasHai(suit[num]) </span><span class="cov8" title="1">{
+                pairs = append(pairs, [2]*hai.Hai{suit[num-2], suit[num]})
+        }</span>
+        //  left pair
+        <span class="cov8" title="1">if num &lt;= 7 &amp;&amp; t.HasHai(suit[num]) &amp;&amp; t.HasHai(suit[num+1]) </span><span class="cov8" title="1">{
+                pairs = append(pairs, [2]*hai.Hai{suit[num], suit[num+1]})
+        }</span>
+
+        <span class="cov8" title="1">return pairs, nil</span>
+}
+
+func (t *tehaiImpl) CanPon(inHai *hai.Hai) (bool, error) <span class="cov0" title="0">{
+        hais, err := t.PonPairs(inHai)
+        return len(hais) != 0, err
+}</span>
+
+func (t *tehaiImpl) PonPairs(inHai *hai.Hai) ([][2]*hai.Hai, error) <span class="cov8" title="1">{
+        pairs := [][2]*hai.Hai{}
+        if inHai == nil </span><span class="cov0" title="0">{
+                return pairs, nil
+        }</span>
+        <span class="cov8" title="1">cnt := map[*hai.Hai]int{}
+        for _, h := range t.hais </span><span class="cov8" title="1">{
+                cnt[h] += 1
+        }</span>
+
+        <span class="cov8" title="1">for k, v := range cnt </span><span class="cov8" title="1">{
+                if v &gt;= 2 &amp;&amp; k == inHai </span><span class="cov8" title="1">{
+                        pairs = append(pairs, [2]*hai.Hai{k, k})
+                }</span>
+        }
+
+        <span class="cov8" title="1">return pairs, nil</span>
+}
+
+func (t *tehaiImpl) CanMinKan(inHai *hai.Hai) (bool, error) <span class="cov0" title="0">{
+        hais, err := t.MinKanPairs(inHai)
+        return len(hais) != 0, err
+}</span>
+
+func (t *tehaiImpl) MinKanPairs(inHai *hai.Hai) ([][3]*hai.Hai, error) <span class="cov8" title="1">{
+        pairs := [][3]*hai.Hai{}
+        if inHai == nil </span><span class="cov0" title="0">{
+                return pairs, nil
+        }</span>
+        <span class="cov8" title="1">cnt := map[*hai.Hai]int{}
+        for _, h := range t.hais </span><span class="cov8" title="1">{
+                cnt[h] += 1
+        }</span>
+
+        <span class="cov8" title="1">for k, v := range cnt </span><span class="cov8" title="1">{
+                if v &gt;= 3 &amp;&amp; k == inHai </span><span class="cov8" title="1">{
+                        pairs = append(pairs, [3]*hai.Hai{k, k, k})
+                }</span>
+        }
+        <span class="cov8" title="1">return pairs, nil</span>
+}
+
+func (t *tehaiImpl) CanAnKan(inHai *hai.Hai) (bool, error) <span class="cov0" title="0">{
+        hais, err := t.AnKanPairs(inHai)
+        return len(hais) != 0, err
+}</span>
+
+func (t *tehaiImpl) AnKanPairs(inHai *hai.Hai) ([][4]*hai.Hai, error) <span class="cov0" title="0">{
+        pairs := [][4]*hai.Hai{}
+        if inHai == nil </span><span class="cov0" title="0">{
+                return pairs, nil
+        }</span>
+        <span class="cov0" title="0">cnt := map[*hai.Hai]int{}
+        cnt[inHai]++
+        for _, h := range t.hais </span><span class="cov0" title="0">{
+                cnt[h]++
+        }</span>
+
+        <span class="cov0" title="0">for k, v := range cnt </span><span class="cov0" title="0">{
+                if v &gt;= 4 </span><span class="cov0" title="0">{
+                        pairs = append(pairs, [4]*hai.Hai{k, k, k, k})
+                }</span>
+        }
+        <span class="cov0" title="0">return pairs, nil</span>
+}
+
+func (t *tehaiImpl) CanRon(inHai *hai.Hai) (bool, error) <span class="cov8" title="1">{
+        if inHai == nil </span><span class="cov0" title="0">{
+                return false, nil
+        }</span>
+        <span class="cov8" title="1">tehai := tehaiImpl{append([]*hai.Hai{inHai}, t.hais...)}
+        tehai.Sort()
+
+        // count by hai
+        haisMap := map[*hai.Hai]int{}
+        for _, h := range tehai.hais </span><span class="cov8" title="1">{
+                haisMap[h]++
+        }</span>
+        <span class="cov8" title="1">for k, v := range haisMap </span><span class="cov8" title="1">{
+                if v &lt; 2 </span><span class="cov8" title="1">{
+                        continue</span>
+                }
+                // deep copy
+                <span class="cov8" title="1">tehai := tehaiImpl{append([]*hai.Hai{}, tehai.hais...)}
+                if _, err := tehai.Removes([]*hai.Hai{k, k}); err != nil </span><span class="cov0" title="0">{
+                        return false, err
+                }</span>
+
+                // kotsu
+                <span class="cov8" title="1">pairs := Kotsu(tehai.hais)
+                for i := 0; i &lt; 1&lt;&lt;len(pairs); i++ </span><span class="cov8" title="1">{
+                        // deep copy
+                        tehai := tehaiImpl{append([]*hai.Hai{}, tehai.hais...)}
+                        // remove
+                        for j := 0; j &lt; len(pairs); j++ </span><span class="cov8" title="1">{
+                                if i&gt;&gt;j&amp;1 == 1 </span><span class="cov8" title="1">{
+                                        if _, err := tehai.Removes(pairs[j]); err != nil </span><span class="cov0" title="0">{
+                                                return false, err
+                                        }</span>
+                                }
+                        }
+
+                        // shuntsu
+                        <span class="cov8" title="1">pairs, err := Shuntsu(tehai.hais)
+                        if err != nil </span><span class="cov0" title="0">{
+                                return false, err
+                        }</span>
+                        // remove
+                        <span class="cov8" title="1">for j := 0; j &lt; len(pairs); j++ </span><span class="cov8" title="1">{
+                                if !(tehai.HasHai(pairs[j][0]) &amp;&amp; tehai.HasHai(pairs[j][1]) &amp;&amp; tehai.HasHai(pairs[j][2])) </span><span class="cov8" title="1">{
+                                        continue</span>
+                                }
+                                <span class="cov8" title="1">if _, err := tehai.Removes(pairs[j]); err != nil </span><span class="cov0" title="0">{
+                                        return false, err
+                                }</span>
+                        }
+
+                        <span class="cov8" title="1">if len(tehai.hais) == 0 </span><span class="cov8" title="1">{
+                                return true, nil
+                        }</span>
+                }
+        }
+
+        <span class="cov8" title="1">return false, nil</span>
+}
+
+func (t *tehaiImpl) CanRiichi(inHai *hai.Hai) (bool, error) <span class="cov0" title="0">{
+        if inHai == nil </span><span class="cov0" title="0">{
+                return false, nil
+        }</span>
+        <span class="cov0" title="0">hais, err := t.RiichiHais(inHai)
+        return len(hais) != 0, err</span>
+}
+
+func (t *tehaiImpl) RiichiHais(inHai *hai.Hai) ([]*hai.Hai, error) <span class="cov0" title="0">{
+        outHais := []*hai.Hai{}
+        if inHai == nil </span><span class="cov0" title="0">{
+                return outHais, nil
+        }</span>
+        <span class="cov0" title="0">hais := append([]*hai.Hai{}, t.hais...)
+        hais = append(hais, inHai)
+        for i, outHai := range hais </span><span class="cov0" title="0">{
+                // deep copy, and remove outHai
+                hais_copy := append([]*hai.Hai{}, hais[:i]...)
+                hais_copy = append(hais_copy, hais[i+1:]...)
+
+                // check machihai
+                tehai := tehaiImpl{hais: hais_copy}
+                hais, err := tehai.Machihai()
+                if err != nil </span><span class="cov0" title="0">{
+                        return outHais, err
+                }</span>
+                <span class="cov0" title="0">if len(hais) != 0 </span><span class="cov0" title="0">{
+                        outHais = append(outHais, outHai)
+                }</span>
+        }
+
+        <span class="cov0" title="0">return outHais, nil</span>
+}
+
+func (t *tehaiImpl) Machihai() ([]*hai.Hai, error) <span class="cov8" title="1">{
+        machihai := []*hai.Hai{}
+
+        for _, h := range hai.All </span><span class="cov8" title="1">{
+                ok, err := t.CanRon(h)
+                if err != nil </span><span class="cov0" title="0">{
+                        return machihai, err
+                }</span>
+                <span class="cov8" title="1">if ok </span><span class="cov8" title="1">{
+                        machihai = append(machihai, h)
+                }</span>
+        }
+        <span class="cov8" title="1">return machihai, nil</span>
+}
+
+func (t *tehaiImpl) HasHai(inHai *hai.Hai) bool <span class="cov8" title="1">{
+        for _, h := range t.hais </span><span class="cov8" title="1">{
+                if h == inHai </span><span class="cov8" title="1">{
+                        return true
+                }</span>
+        }
+
+        <span class="cov8" title="1">return false</span>
+}
+</pre>
+		
+		<pre class="file" id="file9" style="display: none">package tehai
+
+import "mahjong/model/hai"
+
+var _ Tehai = &amp;TehaiMock{}
+
+type TehaiMock struct {
+        HaiMock    *hai.Hai
+        HaisMock   []*hai.Hai
+        ChiiMock   [][2]*hai.Hai
+        PonMock    [][2]*hai.Hai
+        MinKanMock [][3]*hai.Hai
+        AnKanMock  [][4]*hai.Hai
+        BoolMock   bool
+        ErrorMock  error
+}
+
+func (t *TehaiMock) Hais() []*hai.Hai <span class="cov0" title="0">{
+        return t.HaisMock
+}</span>
+
+func (t *TehaiMock) Sort() error <span class="cov0" title="0">{
+        return t.ErrorMock
+}</span>
+
+func (t *TehaiMock) Add(_ *hai.Hai) error <span class="cov0" title="0">{
+        return t.ErrorMock
+}</span>
+
+func (t *TehaiMock) Adds(_ []*hai.Hai) error <span class="cov0" title="0">{
+        return t.ErrorMock
+}</span>
+
+func (t *TehaiMock) Remove(_ *hai.Hai) (*hai.Hai, error) <span class="cov0" title="0">{
+        return t.HaiMock, t.ErrorMock
+}</span>
+
+func (t *TehaiMock) Removes(_ []*hai.Hai) ([]*hai.Hai, error) <span class="cov0" title="0">{
+        return t.HaisMock, t.ErrorMock
+}</span>
+
+func (t *TehaiMock) Replace(inHai *hai.Hai, _ *hai.Hai) (*hai.Hai, error) <span class="cov0" title="0">{
+        outhai := t.HaiMock
+        t.HaiMock = inHai
+        return outhai, t.ErrorMock
+}</span>
+
+func (t *TehaiMock) ChiiPairs(_ *hai.Hai) ([][2]*hai.Hai, error) <span class="cov0" title="0">{
+        return t.ChiiMock, t.ErrorMock
+}</span>
+
+func (t *TehaiMock) PonPairs(_ *hai.Hai) ([][2]*hai.Hai, error) <span class="cov0" title="0">{
+        return t.PonMock, t.ErrorMock
+}</span>
+
+func (t *TehaiMock) MinKanPairs(_ *hai.Hai) ([][3]*hai.Hai, error) <span class="cov0" title="0">{
+        return t.MinKanMock, t.ErrorMock
+}</span>
+
+func (t *TehaiMock) AnKanPairs(_ *hai.Hai) ([][4]*hai.Hai, error) <span class="cov0" title="0">{
+        return t.AnKanMock, t.ErrorMock
+}</span>
+
+func (t *TehaiMock) RiichiHais(_ *hai.Hai) ([]*hai.Hai, error) <span class="cov0" title="0">{
+        return t.HaisMock, t.ErrorMock
+}</span>
+
+func (t *TehaiMock) CanChii(_ *hai.Hai) (bool, error) <span class="cov0" title="0">{
+        return t.BoolMock, t.ErrorMock
+}</span>
+
+func (t *TehaiMock) CanPon(_ *hai.Hai) (bool, error) <span class="cov0" title="0">{
+        return t.BoolMock, t.ErrorMock
+}</span>
+
+func (t *TehaiMock) CanMinKan(_ *hai.Hai) (bool, error) <span class="cov0" title="0">{
+        return t.BoolMock, t.ErrorMock
+}</span>
+
+func (t *TehaiMock) CanAnKan(_ *hai.Hai) (bool, error) <span class="cov0" title="0">{
+        return t.BoolMock, t.ErrorMock
+}</span>
+
+func (t *TehaiMock) CanRiichi(_ *hai.Hai) (bool, error) <span class="cov0" title="0">{
+        return t.BoolMock, t.ErrorMock
+}</span>
+
+func (t *TehaiMock) CanRon(_ *hai.Hai) (bool, error) <span class="cov0" title="0">{
+        return t.BoolMock, t.ErrorMock
+}</span>
+
+func (t *TehaiMock) HasHai(_ *hai.Hai) bool <span class="cov0" title="0">{
+        return t.BoolMock
+}</span>
+</pre>
+		
+		<pre class="file" id="file10" style="display: none">package tehai
+
+import (
+        "mahjong/model/hai"
+        "mahjong/model/hai/attribute"
+)
+
+func Kotsu(inHais []*hai.Hai) [][]*hai.Hai <span class="cov8" title="1">{
+        cnt := map[*hai.Hai]int{}
+        for _, h := range inHais </span><span class="cov8" title="1">{
+                cnt[h]++
+        }</span>
+        <span class="cov8" title="1">outHais := [][]*hai.Hai{}
+        for k, v := range cnt </span><span class="cov8" title="1">{
+                if v &gt;= 3 </span><span class="cov8" title="1">{
+                        outHais = append(outHais, []*hai.Hai{k, k, k})
+                }</span>
+        }
+
+        <span class="cov8" title="1">return outHais</span>
+}
+
+func Shuntsu(inHais []*hai.Hai) ([][]*hai.Hai, error) <span class="cov8" title="1">{
+        outHais := [][]*hai.Hai{}
+        for _, h := range inHais </span><span class="cov8" title="1">{
+                if h.HasAttribute(&amp;attribute.Jihai) </span><span class="cov8" title="1">{
+                        continue</span>
+                }
+                <span class="cov8" title="1">suit, err := hai.HaitoSuits(h)
+                if err != nil </span><span class="cov0" title="0">{
+                        return outHais, err
+                }</span>
+                <span class="cov8" title="1">num, err := hai.HaitoI(h)
+                if err != nil </span><span class="cov0" title="0">{
+                        return outHais, err
+                }</span>
+                <span class="cov8" title="1">if num &lt;= 7 &amp;&amp; contain(inHais, suit[num]) &amp;&amp; contain(inHais, suit[num+1]) </span><span class="cov8" title="1">{
+                        outHais = append(outHais, []*hai.Hai{h, suit[num], suit[num+1]})
+                }</span>
+        }
+
+        <span class="cov8" title="1">return outHais, nil</span>
+}
+
+func contain(hais []*hai.Hai, hai *hai.Hai) bool <span class="cov8" title="1">{
+        for _, h := range hais </span><span class="cov8" title="1">{
+                if h == hai </span><span class="cov8" title="1">{
+                        return true
+                }</span>
+        }
+        <span class="cov8" title="1">return false</span>
+}
+</pre>
+		
+		<pre class="file" id="file11" style="display: none">package yama
+
+import (
+        "mahjong/model/hai"
+        "math/rand"
+        "time"
+)
+
+type Yama interface {
+        SetYamaHai([]*hai.Hai) error
+        Draw() (*hai.Hai, error)
+        Kan() error
+
+        OmoteDora() []*hai.Hai
+        UraDora() []*hai.Hai
+}
+
+type yamaImpl struct {
+        yamaHai   []*hai.Hai
+        wanHai    []*hai.Hai
+        uraDora   []*hai.Hai
+        omoteDora []*hai.Hai
+}
+
+var (
+        all = []*hai.Hai{
+                hai.Manzu1, hai.Manzu2, hai.Manzu3, hai.Manzu4, hai.Manzu5, hai.Manzu6, hai.Manzu7, hai.Manzu8, hai.Manzu9,
+                hai.Manzu1, hai.Manzu2, hai.Manzu3, hai.Manzu4, hai.Manzu5, hai.Manzu6, hai.Manzu7, hai.Manzu8, hai.Manzu9,
+                hai.Manzu1, hai.Manzu2, hai.Manzu3, hai.Manzu4, hai.Manzu5, hai.Manzu6, hai.Manzu7, hai.Manzu8, hai.Manzu9,
+                hai.Manzu1, hai.Manzu2, hai.Manzu3, hai.Manzu4, hai.Manzu5, hai.Manzu6, hai.Manzu7, hai.Manzu8, hai.Manzu9,
+
+                hai.Pinzu1, hai.Pinzu2, hai.Pinzu3, hai.Pinzu4, hai.Pinzu5, hai.Pinzu6, hai.Pinzu7, hai.Pinzu8, hai.Pinzu9,
+                hai.Pinzu1, hai.Pinzu2, hai.Pinzu3, hai.Pinzu4, hai.Pinzu5, hai.Pinzu6, hai.Pinzu7, hai.Pinzu8, hai.Pinzu9,
+                hai.Pinzu1, hai.Pinzu2, hai.Pinzu3, hai.Pinzu4, hai.Pinzu5, hai.Pinzu6, hai.Pinzu7, hai.Pinzu8, hai.Pinzu9,
+                hai.Pinzu1, hai.Pinzu2, hai.Pinzu3, hai.Pinzu4, hai.Pinzu5, hai.Pinzu6, hai.Pinzu7, hai.Pinzu8, hai.Pinzu9,
+
+                hai.Souzu1, hai.Souzu2, hai.Souzu3, hai.Souzu4, hai.Souzu5, hai.Souzu6, hai.Souzu7, hai.Souzu8, hai.Souzu9,
+                hai.Souzu1, hai.Souzu2, hai.Souzu3, hai.Souzu4, hai.Souzu5, hai.Souzu6, hai.Souzu7, hai.Souzu8, hai.Souzu9,
+                hai.Souzu1, hai.Souzu2, hai.Souzu3, hai.Souzu4, hai.Souzu5, hai.Souzu6, hai.Souzu7, hai.Souzu8, hai.Souzu9,
+                hai.Souzu1, hai.Souzu2, hai.Souzu3, hai.Souzu4, hai.Souzu5, hai.Souzu6, hai.Souzu7, hai.Souzu8, hai.Souzu9,
+
+                hai.Ton, hai.Ton, hai.Ton, hai.Ton,
+                hai.Nan, hai.Nan, hai.Nan, hai.Nan,
+                hai.Sha, hai.Sha, hai.Sha, hai.Sha,
+                hai.Pei, hai.Pei, hai.Pei, hai.Pei,
+
+                hai.Haku, hai.Haku, hai.Haku, hai.Haku,
+                hai.Hatsu, hai.Hatsu, hai.Hatsu, hai.Hatsu,
+                hai.Chun, hai.Chun, hai.Chun, hai.Chun,
+        }
+)
+
+func New() Yama <span class="cov8" title="1">{
+        allHai := append([]*hai.Hai{}, all...)
+        rand.Seed(time.Now().Unix())
+        rand.Shuffle(len(allHai), func(i, j int) </span><span class="cov8" title="1">{ allHai[i], allHai[j] = allHai[j], allHai[i] }</span>)
+        <span class="cov8" title="1">return &amp;yamaImpl{
+                yamaHai:   allHai[:122],
+                wanHai:    allHai[122:],
+                omoteDora: []*hai.Hai{},
+                uraDora:   []*hai.Hai{},
+        }</span>
+}
+
+func (y *yamaImpl) SetYamaHai(hais []*hai.Hai) error <span class="cov0" title="0">{
+        y.yamaHai = hais
+        return nil
+}</span>
+
+func (y *yamaImpl) OmoteDora() []*hai.Hai <span class="cov0" title="0">{
+        return y.omoteDora
+}</span>
+
+func (y *yamaImpl) UraDora() []*hai.Hai <span class="cov0" title="0">{
+        return y.uraDora
+}</span>
+
+func (y *yamaImpl) Draw() (*hai.Hai, error) <span class="cov8" title="1">{
+        if len(y.yamaHai)+(len(y.wanHai)/3) == 4 </span><span class="cov8" title="1">{
+                return nil, YamaNoMoreHaiErr
+        }</span>
+        <span class="cov8" title="1">outHai := y.yamaHai[0]
+        y.yamaHai = y.yamaHai[1:]
+
+        return outHai, nil</span>
+}
+
+func (y *yamaImpl) Kan() error <span class="cov8" title="1">{
+        if len(y.wanHai) &lt; 2 </span><span class="cov8" title="1">{
+                return YamaNoMoreHaiErr
+        }</span>
+        <span class="cov8" title="1">od := y.wanHai[0]
+        ud := y.wanHai[1]
+        y.omoteDora = append(y.omoteDora, od)
+        y.uraDora = append(y.uraDora, ud)
+
+        y.wanHai = y.wanHai[2:]
+        return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file12" style="display: none">package yama
+
+import "mahjong/model/hai"
+
+var _ Yama = &amp;YamaMock{}
+
+type YamaMock struct {
+        HaiMock   *hai.Hai
+        ErrorMock error
+        HaisMock  []*hai.Hai
+}
+
+func (y *YamaMock) SetYamaHai(_ []*hai.Hai) error <span class="cov0" title="0">{
+        return y.ErrorMock
+}</span>
+
+func (y *YamaMock) Draw() (*hai.Hai, error) <span class="cov0" title="0">{
+        return y.HaiMock, y.ErrorMock
+}</span>
+
+func (y *YamaMock) OmoteDora() []*hai.Hai <span class="cov0" title="0">{
+        return y.HaisMock
+}</span>
+
+func (y *YamaMock) UraDora() []*hai.Hai <span class="cov0" title="0">{
+        return y.HaisMock
+}</span>
+
+func (y *YamaMock) Kan() error <span class="cov0" title="0">{
+        return y.ErrorMock
+
+}</span>
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>

@@ -5,7 +5,6 @@ import (
 	"mahjong/model/hai"
 	"mahjong/model/kawa"
 	"mahjong/model/player"
-	"mahjong/model/tehai"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -192,10 +191,8 @@ func TestMyTurn(t *testing.T) {
 
 func TestTurnEnd(t *testing.T) {
 	testPlayer1 := &player.PlayerMock{KawaMock: &kawa.KawaMock{HaiMock: hai.Haku}}
-	TehaiMock1 := &tehai.TehaiMock{BoolMock: false}
-	TehaiMock2 := &tehai.TehaiMock{BoolMock: true}
-	testPlayer2 := &player.PlayerMock{TehaiMock: TehaiMock1}
-	testPlayer3 := &player.PlayerMock{TehaiMock: TehaiMock2}
+	testPlayer2 := &player.PlayerMock{BoolMock: false}
+	testPlayer3 := &player.PlayerMock{BoolMock: true}
 	cases := []struct {
 		name              string
 		beforePlayers     []*boardPlayer
@@ -219,17 +216,17 @@ func TestTurnEnd(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			Board := boardImpl{
+			b := boardImpl{
 				players:         c.beforePlayers,
 				turnIndex:       c.beforeTurnIndex,
 				maxNumberOfUser: MaxNumberOfUsers,
 			}
-			err := Board.TurnEnd()
+			err := b.TurnEnd()
 			if err != nil {
 				assert.Equal(t, c.outError, err)
 				return
 			}
-			assert.Equal(t, c.afterActionPlayer, Board.actionPlayers)
+			assert.Equal(t, c.afterActionPlayer, b.actionPlayers)
 		})
 	}
 }

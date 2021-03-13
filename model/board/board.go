@@ -237,7 +237,7 @@ func (t *boardImpl) setActionPlayer() error {
 		args = append(args, Arg{ok, err, Pon})
 		ok, err = tc.CanMinKan(inHai)
 		args = append(args, Arg{ok, err, Kan})
-		ok, err = tc.Tehai().CanRon(inHai)
+		ok, err = tc.CanRon(inHai)
 		args = append(args, Arg{ok, err, Ron})
 
 		actions := []ActionType{}

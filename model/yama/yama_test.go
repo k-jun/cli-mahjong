@@ -54,7 +54,7 @@ func TestFlipDora(t *testing.T) {
 		{
 			beforeWanHai:   all[122:],
 			afterWanHai:    all[124:],
-			afterOmoteDora: []*hai.Hai{hai.Sha},
+			afterOmoteDora: []*hai.Hai{hai.Pei},
 			afterUraDora:   []*hai.Hai{hai.Pei},
 			outError:       nil,
 		},

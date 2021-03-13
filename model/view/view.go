@@ -114,10 +114,17 @@ func (p *boardViewPlayer) String() string {
 				strs[3] += lines[6] + lines[7] + lines[7] + lines[8]
 			}
 		} else {
-			strs[0] += "    "
-			strs[1] += lines[0] + lines[1] + lines[1] + lines[2]
-			strs[2] += lines[3] + h.Name() + lines[5]
-			strs[3] += lines[6] + lines[7] + lines[7] + lines[8]
+			if h.isOpen {
+				strs[0] += "    "
+				strs[1] += lines[0] + lines[1] + lines[1] + lines[2]
+				strs[2] += lines[3] + h.Name() + lines[5]
+				strs[3] += lines[6] + lines[7] + lines[7] + lines[8]
+			} else {
+				strs[0] += "    "
+				strs[1] += lines[0] + lines[1] + lines[1] + lines[2]
+				strs[2] += lines[3] + lines[4] + lines[4] + lines[5]
+				strs[3] += lines[6] + lines[7] + lines[7] + lines[8]
+			}
 		}
 	}
 	return strings.Join(strs, "\n") + "\n"

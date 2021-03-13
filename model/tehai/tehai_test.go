@@ -564,3 +564,56 @@ func TestMachihai(t *testing.T) {
 	}
 
 }
+
+func TestCanRon(t *testing.T) {
+	cases := []struct {
+		name       string
+		beforeHais []*hai.Hai
+		inHai      *hai.Hai
+		outBool    bool
+		outError   error
+	}{
+		{
+			name: "success",
+			beforeHais: []*hai.Hai{
+				hai.Pinzu1, hai.Pinzu2, hai.Pinzu3, hai.Pinzu4, hai.Pinzu4, hai.Pinzu5,
+				hai.Pinzu5, hai.Pinzu6, hai.Pinzu6, hai.Pinzu7, hai.Pinzu7, hai.Pinzu8,
+				hai.Pinzu9,
+			},
+			inHai:   hai.Pinzu1,
+			outBool: true,
+		},
+		{
+			name: "success",
+			beforeHais: []*hai.Hai{
+				hai.Souzu1, hai.Pinzu2, hai.Pinzu3, hai.Pinzu4, hai.Pinzu4, hai.Pinzu5,
+				hai.Pinzu5, hai.Pinzu6, hai.Pinzu6, hai.Pinzu7, hai.Pinzu7, hai.Pinzu8,
+				hai.Pinzu9,
+			},
+			inHai:   hai.Pinzu1,
+			outBool: false,
+		},
+		{
+			name: "success",
+			beforeHais: []*hai.Hai{
+				hai.Pinzu2, hai.Pinzu3, hai.Pinzu4, hai.Pinzu4, hai.Pinzu4, hai.Pinzu5,
+				hai.Pinzu5, hai.Pinzu6, hai.Pinzu6, hai.Pinzu7, hai.Pinzu7, hai.Pinzu8,
+				hai.Pinzu6,
+			},
+			inHai:   hai.Pinzu7,
+			outBool: true,
+		},
+	}
+	for _, c := range cases {
+
+		t.Run(c.name, func(t *testing.T) {
+			tehai := tehaiImpl{c.beforeHais}
+			ok, err := tehai.CanRon(c.inHai)
+			if err != nil {
+				assert.Equal(t, c.outError, err)
+				return
+			}
+			assert.Equal(t, c.outBool, ok)
+		})
+	}
+}

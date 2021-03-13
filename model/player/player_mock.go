@@ -96,6 +96,26 @@ func (c *PlayerMock) CanAnKan() (bool, error) {
 	return c.BoolMock, c.ErrorMock
 }
 
-func (c *PlayerMock) Actions(_ *hai.Hai) ([]Action, error) {
-	return c.ActionsMock, c.ErrorMock
+func (c *PlayerMock) CanMinKan(_ *hai.Hai) (bool, error) {
+	return c.BoolMock, c.ErrorMock
+}
+
+func (c *PlayerMock) CanChii(_ *hai.Hai) (bool, error) {
+	return c.BoolMock, c.ErrorMock
+}
+
+func (c *PlayerMock) CanPon(_ *hai.Hai) (bool, error) {
+	return c.BoolMock, c.ErrorMock
+}
+
+func (c *PlayerMock) CanRon(_ *hai.Hai) (bool, error) {
+	return c.BoolMock, c.ErrorMock
+}
+
+func (c *PlayerMock) CanTanyao(_ *hai.Hai) (bool, error) {
+	return c.BoolMock, c.ErrorMock
+}
+
+func (c *PlayerMock) CanPinfu() (bool, error) {
+	return c.BoolMock, c.ErrorMock
 }

@@ -397,8 +397,8 @@ func TestCanTsumoAgari(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			Player := playerImpl{tehai: c.beforeTehai, tsumohai: c.beforeTsumohai}
-			isTsumo, err := Player.CanTsumoAgari()
+			p := playerImpl{tehai: c.beforeTehai, tsumohai: c.beforeTsumohai}
+			isTsumo, err := p.CanTsumoAgari()
 			if err != nil {
 				assert.Equal(t, c.outError, err)
 				return
@@ -408,4 +408,201 @@ func TestCanTsumoAgari(t *testing.T) {
 		})
 	}
 
+}
+
+func TestCanTanyao(t *testing.T) {
+	cases := []struct {
+		name        string
+		beforeTehai tehai.Tehai
+		inHai       *hai.Hai
+		outBool     bool
+		outError    error
+	}{
+		{
+			name: "success",
+			beforeTehai: &tehai.TehaiMock{
+				HaisMock: []*hai.Hai{
+					hai.Manzu2, hai.Manzu3, hai.Manzu4, hai.Manzu2, hai.Manzu3, hai.Manzu4,
+					hai.Manzu2, hai.Manzu3, hai.Manzu4, hai.Pinzu2, hai.Pinzu2, hai.Pinzu2,
+					hai.Manzu5,
+				},
+			},
+			inHai:   hai.Manzu5,
+			outBool: true,
+		},
+		{
+			name: "failure",
+			beforeTehai: &tehai.TehaiMock{
+				HaisMock: []*hai.Hai{
+					hai.Manzu1, hai.Manzu3, hai.Manzu4, hai.Manzu2, hai.Manzu3, hai.Manzu4,
+					hai.Manzu2, hai.Manzu3, hai.Manzu4, hai.Pinzu2, hai.Pinzu2, hai.Pinzu2,
+					hai.Manzu5,
+				},
+			},
+			inHai:   hai.Manzu5,
+			outBool: false,
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			p := playerImpl{tehai: c.beforeTehai}
+			ok, err := p.CanTanyao(c.inHai)
+			if err != nil {
+				assert.Equal(t, c.outError, err)
+				return
+
+			}
+			assert.Equal(t, c.outBool, ok)
+		})
+	}
+}
+
+func TestCanPinfu(t *testing.T) {
+	cases := []struct {
+		name        string
+		beforeTehai tehai.Tehai
+		beforeNaki  naki.Naki
+		outBool     bool
+		outError    error
+	}{
+		{
+			name: "success",
+			beforeTehai: &tehai.TehaiMock{
+				HaisMock: []*hai.Hai{
+					hai.Manzu2, hai.Manzu3, hai.Manzu4, hai.Manzu2, hai.Manzu3, hai.Manzu4,
+					hai.Manzu2, hai.Manzu3, hai.Manzu4, hai.Pinzu2, hai.Pinzu3, hai.Pinzu4,
+					hai.Manzu5,
+				},
+			},
+			beforeNaki: &naki.NakiMock{},
+			outBool:    true,
+		},
+		{
+			name: "failure: naki",
+			beforeTehai: &tehai.TehaiMock{
+				HaisMock: []*hai.Hai{
+					hai.Manzu2, hai.Manzu3, hai.Manzu4, hai.Manzu2, hai.Manzu3, hai.Manzu4,
+					hai.Manzu2, hai.Manzu3, hai.Manzu4,
+					hai.Manzu5,
+				},
+			},
+			beforeNaki: &naki.NakiMock{
+				ChiisMock: [][3]*hai.Hai{{hai.Pinzu2, hai.Pinzu3, hai.Pinzu4}},
+			},
+			outBool: false,
+		},
+		{
+			name: "failure: head",
+			beforeTehai: &tehai.TehaiMock{
+				HaisMock: []*hai.Hai{
+					hai.Manzu2, hai.Manzu3, hai.Manzu4, hai.Manzu2, hai.Manzu3, hai.Manzu4,
+					hai.Manzu2, hai.Manzu3, hai.Manzu4, hai.Pinzu2, hai.Pinzu3, hai.Haku,
+					hai.Haku,
+				},
+			},
+			beforeNaki: &naki.NakiMock{},
+			outBool:    false,
+		},
+		{
+			name: "failure: kotsu",
+			beforeTehai: &tehai.TehaiMock{
+				HaisMock: []*hai.Hai{
+					hai.Manzu2, hai.Manzu3, hai.Manzu4, hai.Manzu2, hai.Manzu3, hai.Manzu4,
+					hai.Manzu2, hai.Manzu3, hai.Manzu4, hai.Pinzu2, hai.Pinzu2, hai.Pinzu2,
+					hai.Manzu5,
+				},
+			},
+			beforeNaki: &naki.NakiMock{},
+			outBool:    false,
+		},
+		{
+			name: "failure: machi1",
+			beforeTehai: &tehai.TehaiMock{
+				HaisMock: []*hai.Hai{
+					hai.Manzu2, hai.Manzu3, hai.Manzu4, hai.Manzu2, hai.Manzu3, hai.Manzu4,
+					hai.Manzu2, hai.Manzu3, hai.Manzu4, hai.Pinzu2, hai.Pinzu2, hai.Manzu7,
+					hai.Manzu5,
+				},
+			},
+			beforeNaki: &naki.NakiMock{},
+			outBool:    false,
+		},
+		{
+			name: "failure: machi2",
+			beforeTehai: &tehai.TehaiMock{
+				HaisMock: []*hai.Hai{
+					hai.Manzu2, hai.Manzu3, hai.Manzu4, hai.Manzu2, hai.Manzu3, hai.Manzu4,
+					hai.Manzu2, hai.Manzu3, hai.Manzu4, hai.Pinzu2, hai.Pinzu2, hai.Manzu8,
+					hai.Manzu9,
+				},
+			},
+			beforeNaki: &naki.NakiMock{},
+			outBool:    false,
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			p := playerImpl{tehai: c.beforeTehai, naki: c.beforeNaki}
+			ok, err := p.CanPinfu()
+			if err != nil {
+				assert.Equal(t, c.outError, err)
+				return
+
+			}
+			assert.Equal(t, c.outBool, ok)
+		})
+	}
+}
+
+func TestCanRon(t *testing.T) {
+	cases := []struct {
+		name           string
+		beforeIsRiichi bool
+		beforeTehai    tehai.Tehai
+		beforeNaki     naki.Naki
+		inHai          *hai.Hai
+		outBool        bool
+		outError       error
+	}{
+		{
+			name:           "successs: riichi",
+			beforeIsRiichi: true,
+			beforeTehai:    &tehai.TehaiMock{BoolMock: true},
+			beforeNaki:     &naki.NakiMock{},
+			inHai:          hai.Pinzu1,
+			outBool:        true,
+		},
+		{
+			name:        "successs: tanyao",
+			beforeTehai: &tehai.TehaiMock{BoolMock: true},
+			beforeNaki: &naki.NakiMock{
+				ChiisMock: [][3]*hai.Hai{{hai.Pinzu2, hai.Pinzu3, hai.Pinzu4}},
+			},
+			inHai:   hai.Pinzu7,
+			outBool: true,
+		},
+		{
+			name:        "failure",
+			beforeTehai: &tehai.TehaiMock{BoolMock: true},
+			beforeNaki: &naki.NakiMock{
+				ChiisMock: [][3]*hai.Hai{{hai.Pinzu2, hai.Pinzu3, hai.Pinzu1}},
+			},
+			inHai:   hai.Pinzu7,
+			outBool: false,
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			p := playerImpl{tehai: c.beforeTehai, naki: c.beforeNaki, isRiichi: c.beforeIsRiichi}
+			ok, err := p.CanRon(c.inHai)
+			if err != nil {
+				assert.Equal(t, c.outError, err)
+				return
+			}
+			assert.Equal(t, c.outBool, ok)
+		})
+	}
 }

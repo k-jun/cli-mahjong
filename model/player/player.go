@@ -2,6 +2,7 @@ package player
 
 import (
 	"mahjong/model/hai"
+	"mahjong/model/hai/attribute"
 	"mahjong/model/kawa"
 	"mahjong/model/naki"
 	"mahjong/model/tehai"
@@ -20,10 +21,18 @@ type Player interface {
 	// setter
 	SetYama(yama.Yama) error
 
-	// judger
+	// my turn
 	CanRiichi() (bool, error)
 	CanTsumoAgari() (bool, error)
 	CanAnKan() (bool, error)
+	// not my turn
+	CanChii(*hai.Hai) (bool, error)
+	CanPon(*hai.Hai) (bool, error)
+	CanMinKan(*hai.Hai) (bool, error)
+	CanRon(*hai.Hai) (bool, error)
+
+	CanTanyao(*hai.Hai) (bool, error)
+	CanPinfu() (bool, error)
 
 	Tsumo() error
 	Dahai(*hai.Hai) error
@@ -150,7 +159,7 @@ func (c *playerImpl) Haipai() error {
 		return PlayerAlreadyDidHaipaiErr
 	}
 
-	for i := 0; i < tehai.MaxHaisLen; i++ {
+	for i := 0; i < tehai.MaxHaisLen-1; i++ {
 		tsumoHai, err := c.yama.Draw()
 		if err != nil {
 			return err
@@ -248,7 +257,7 @@ func (c *playerImpl) CanRiichi() (bool, error) {
 	cntChii := len(c.naki.Chiis())
 	cntPon := len(c.naki.Pons())
 	cntKan := len(c.naki.MinKans())
-	if cntChii == 0 && cntPon == 0 && cntKan == 0 {
+	if cntChii == 0 && cntPon == 0 && cntKan == 0 && c.isRiichi == false {
 		return c.tehai.CanRiichi(c.tsumohai)
 	}
 
@@ -256,5 +265,201 @@ func (c *playerImpl) CanRiichi() (bool, error) {
 }
 
 func (c *playerImpl) CanTsumoAgari() (bool, error) {
-	return c.tehai.CanRon(c.tsumohai)
+	if c.isRiichi {
+		return c.tehai.CanRon(c.tsumohai)
+	} else {
+		ron, err := c.tehai.CanRon(c.tsumohai)
+		if err != nil {
+			return false, err
+		}
+		tanyao, err := c.CanTanyao(c.tsumohai)
+		if err != nil {
+			return false, err
+		}
+		pinfu, err := c.CanPinfu()
+		if err != nil {
+			return false, err
+		}
+		return ron && (tanyao || pinfu), nil
+	}
+}
+
+func (c *playerImpl) CanRon(inHai *hai.Hai) (bool, error) {
+	if c.isRiichi {
+		return c.tehai.CanRon(inHai)
+	} else {
+		ron, err := c.tehai.CanRon(inHai)
+		if err != nil {
+			return false, err
+		}
+		tanyao, err := c.CanTanyao(inHai)
+		if err != nil {
+			return false, err
+		}
+		pinfu, err := c.CanPinfu()
+		if err != nil {
+			return false, err
+		}
+		return ron && (tanyao || pinfu), nil
+	}
+}
+
+func (c *playerImpl) CanChii(inHai *hai.Hai) (bool, error) {
+	if c.isRiichi {
+		return false, nil
+	}
+	return c.tehai.CanChii(inHai)
+}
+
+func (p *playerImpl) CanPon(inHai *hai.Hai) (bool, error) {
+	if p.isRiichi {
+		return false, nil
+	}
+	return p.tehai.CanPon(inHai)
+}
+
+func (c *playerImpl) CanMinKan(inHai *hai.Hai) (bool, error) {
+	if c.isRiichi {
+		return false, nil
+	}
+	return c.tehai.CanMinKan(inHai)
+}
+
+func (p *playerImpl) CanTanyao(inHai *hai.Hai) (bool, error) {
+
+	hais := []*hai.Hai{}
+	hais = append(hais, p.tehai.Hais()...)
+	for _, set := range p.naki.Chiis() {
+		hais = append(hais, set[0], set[1], set[2])
+	}
+	for _, set := range p.naki.Pons() {
+		hais = append(hais, set[0], set[1], set[2])
+	}
+	for _, set := range p.naki.MinKans() {
+		hais = append(hais, set[0], set[1], set[2], set[3])
+	}
+	for _, set := range p.naki.AnKans() {
+		hais = append(hais, set[0], set[1], set[2], set[3])
+	}
+
+outer:
+	for _, h := range hais {
+		for _, num := range attribute.Numbers[1:8] {
+			if h.HasAttribute(num) {
+				continue outer
+			}
+		}
+		return false, nil
+
+	}
+	return true, nil
+}
+
+func (p *playerImpl) CanPinfu() (bool, error) {
+	cntChii := len(p.naki.Chiis())
+	cntPon := len(p.naki.Pons())
+	cntKan := len(p.naki.MinKans())
+	if cntChii != 0 || cntPon != 0 || cntKan != 0 {
+		return false, nil
+	}
+	tehaiObj := tehai.New()
+	tehaiObj.Adds(p.Tehai().Hais())
+
+	// count by hai
+	haisMap := map[*hai.Hai]int{}
+	for _, h := range tehaiObj.Hais() {
+		haisMap[h]++
+	}
+	for k, v := range haisMap {
+		if v < 2 || k.HasAttribute(&attribute.Sangen) {
+			continue
+		}
+		// deep copy
+		tehaiObj2 := tehai.New()
+		tehaiObj2.Adds(tehaiObj.Hais())
+
+		if _, err := tehaiObj2.Removes([]*hai.Hai{k, k}); err != nil {
+			return false, err
+		}
+
+		// shuntsu
+		pairs, err := tehai.Shuntsu(tehaiObj2.Hais())
+		if err != nil {
+			return false, err
+		}
+		// remove
+		for j := 0; j < len(pairs); j++ {
+			if !(tehaiObj2.HasHai(pairs[j][0]) && tehaiObj2.HasHai(pairs[j][1]) && tehaiObj2.HasHai(pairs[j][2])) {
+				continue
+			}
+			if _, err := tehaiObj2.Removes(pairs[j]); err != nil {
+				return false, err
+			}
+		}
+
+		// machi check
+		if len(tehaiObj2.Hais()) == 2 {
+			a := tehaiObj2.Hais()[0]
+			b := tehaiObj2.Hais()[1]
+			ok, err := isRyanmen(a, b)
+			if err != nil {
+				return false, err
+			}
+			if ok {
+				return true, nil
+			}
+		}
+	}
+
+	return false, nil
+}
+
+func isRyanmen(a *hai.Hai, b *hai.Hai) (bool, error) {
+	found := false
+	for _, x := range attribute.Suits {
+		if a.HasAttribute(x) && b.HasAttribute(x) {
+			found = true
+		}
+	}
+	if !found {
+		return false, nil
+	}
+
+	if !a.HasAttribute(&attribute.Suhai) || !b.HasAttribute(&attribute.Suhai) {
+		return false, nil
+	}
+
+	ai, err := hai.HaitoI(a)
+	if err != nil {
+		return false, err
+	}
+	bi, err := hai.HaitoI(b)
+	if err != nil {
+		return false, err
+	}
+
+	if abs(ai, bi) != 1 || min(ai, bi) == 1 || max(ai, bi) == 9 {
+		return false, nil
+	}
+	return true, nil
+}
+
+func abs(a int, b int) int {
+	return max(a, b) - min(a, b)
+}
+
+func min(a int, b int) int {
+	if a <= b {
+		return a
+	} else {
+		return b
+	}
+}
+
+func max(a int, b int) int {
+	if a >= b {
+		return a
+	} else {
+		return b
+	}
 }

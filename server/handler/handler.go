@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"log"
 	"mahjong/model/kawa"
 	"mahjong/model/naki"
@@ -35,7 +34,6 @@ func (h *handlerImpl) Run() {
 	user := user.New(h.id.String())
 
 	roomId, err := h.matchUsecase.JoinRandomRoom(user)
-	fmt.Println("roomId: ", roomId)
 	if err != nil {
 		log.Println(err)
 		return

@@ -88,3 +88,7 @@ func (t *TehaiMock) CanRiichi(_ *hai.Hai) (bool, error) {
 func (t *TehaiMock) CanRon(_ *hai.Hai) (bool, error) {
 	return t.BoolMock, t.ErrorMock
 }
+
+func (t *TehaiMock) HasHai(_ *hai.Hai) bool {
+	return t.BoolMock
+}

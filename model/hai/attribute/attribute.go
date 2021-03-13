@@ -35,4 +35,5 @@ var (
 
 var (
 	Numbers = []*Attribute{&One, &Two, &Three, &Four, &Five, &Six, &Seven, &Eight, &Nine}
+	Suits   = []*Attribute{&Pinzu, &Souzu, &Manzu}
 )

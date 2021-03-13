@@ -115,6 +115,13 @@ func (gu *gameUsecaseImpl) Tsumo(b board.Board, p player.Player, ic *InputComman
 }
 
 func (gu *gameUsecaseImpl) Riichi(b board.Board, p player.Player, ic *InputCommand) error {
+	ok, err := p.CanRiichi()
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return GameUsecaseInvalidActionErr
+	}
 	hais, err := p.Tehai().RiichiHais(p.Tsumohai())
 	if err != nil {
 		return err
@@ -134,6 +141,13 @@ func (gu *gameUsecaseImpl) Riichi(b board.Board, p player.Player, ic *InputComma
 }
 
 func (gu *gameUsecaseImpl) AnKan(b board.Board, p player.Player, ic *InputCommand) error {
+	ok, err := p.CanAnKan()
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return GameUsecaseInvalidActionErr
+	}
 	pairs, err := p.Tehai().AnKanPairs(p.Tsumohai())
 	if err != nil {
 		return err
@@ -157,6 +171,13 @@ func (gu *gameUsecaseImpl) AnKan(b board.Board, p player.Player, ic *InputComman
 
 func (gu *gameUsecaseImpl) Chii(b board.Board, p player.Player, ic *InputCommand) error {
 	return b.TakeAction(p, func(inHai *hai.Hai) error {
+		ok, err := p.CanChii(inHai)
+		if err != nil {
+			return err
+		}
+		if !ok {
+			return GameUsecaseInvalidActionErr
+		}
 		pairs, err := p.Tehai().ChiiPairs(inHai)
 		if err != nil {
 			return err
@@ -176,6 +197,13 @@ func (gu *gameUsecaseImpl) Chii(b board.Board, p player.Player, ic *InputCommand
 
 func (gu *gameUsecaseImpl) Pon(b board.Board, p player.Player, ic *InputCommand) error {
 	return b.TakeAction(p, func(inHai *hai.Hai) error {
+		ok, err := p.CanPon(inHai)
+		if err != nil {
+			return err
+		}
+		if !ok {
+			return GameUsecaseInvalidActionErr
+		}
 		pairs, err := p.Tehai().PonPairs(inHai)
 		if err != nil {
 			return err
@@ -195,6 +223,13 @@ func (gu *gameUsecaseImpl) Pon(b board.Board, p player.Player, ic *InputCommand)
 
 func (gu *gameUsecaseImpl) MinKan(b board.Board, p player.Player, ic *InputCommand) error {
 	return b.TakeAction(p, func(inHai *hai.Hai) error {
+		ok, err := p.CanMinKan(inHai)
+		if err != nil {
+			return err
+		}
+		if !ok {
+			return GameUsecaseInvalidActionErr
+		}
 		pairs, err := p.Tehai().MinKanPairs(inHai)
 		if err != nil {
 			return err
@@ -220,6 +255,10 @@ func (gu *gameUsecaseImpl) Ron(b board.Board, p player.Player, ic *InputCommand)
 		}
 		if !ok {
 			return GameUsecaseInvalidActionErr
+		}
+
+		if err := p.Tehai().Add(inHai); err != nil {
+			return err
 		}
 		if err := b.SetWinner(p); err != nil {
 			return err
@@ -347,7 +386,7 @@ func (gu *gameUsecaseImpl) MinKanChoice(b board.Board, p player.Player) (string,
 		return str, err
 	}
 	if len(pairs) != 0 {
-		str += "\n" + "kan>> "
+		str += "\nkan>> "
 		for i, h := range pairs {
 			str += strconv.Itoa(i) + ": (" + h[0].Name() + " " + h[1].Name() + " " + h[2].Name() + ") "
 		}
@@ -362,7 +401,7 @@ func (gu *gameUsecaseImpl) AnKanChoice(b board.Board, p player.Player) (string, 
 		return str, err
 	}
 	if len(hais) != 0 {
-		str += "\n" + "kan>> "
+		str += "\nkan>> "
 		for i, h := range hais {
 			str += strconv.Itoa(i) + ": (" + h[0].Name() + " " + h[1].Name() + " " + h[2].Name() + ") "
 		}
@@ -381,7 +420,7 @@ func (gu *gameUsecaseImpl) RiichiChoice(b board.Board, p player.Player) (string,
 		return str, err
 	}
 	if len(hais) != 0 {
-		str += "\n" + "riichi>> "
+		str += "\nriichi>> "
 		for i, h := range hais {
 			str += strconv.Itoa(i) + ": (" + h.Name() + ") "
 		}
@@ -396,7 +435,7 @@ func (gu *gameUsecaseImpl) TsumoAgariChoice(b board.Board, p player.Player) (str
 		return str, err
 	}
 	if ok {
-		str += "\n" + "tsumo>> "
+		str += "\ntsumo>> "
 	}
 	return str, nil
 }
@@ -411,13 +450,7 @@ func (gu *gameUsecaseImpl) OutputController(id string, p player.Player, channel 
 		winner := b.Winner()
 		if winner != nil {
 			str := "GAME SET!!\n"
-			lastHai, err := b.LastKawa()
-			if err != nil {
-				return err
-			}
 
-			winner.Tehai().Add(lastHai)
-			winner.Tehai().Sort()
 			str = view.TehaiOpen(winner).String()
 			if err := gu.write(str); err != nil {
 				log.Println(err)
@@ -481,7 +514,7 @@ func (gu *gameUsecaseImpl) OutputController(id string, p player.Player, channel 
 				case board.Kan:
 					choice, err = gu.MinKanChoice(b, p)
 				case board.Ron:
-					choice = "ron>> "
+					choice = "\nron>> "
 				}
 				if err != nil {
 					return err

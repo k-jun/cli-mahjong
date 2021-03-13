@@ -230,12 +230,12 @@ func (t *boardImpl) setActionPlayer() error {
 		}
 		args := []Arg{}
 		if i == t.NextTurn() {
-			ok, err := tc.Tehai().CanChii(inHai)
+			ok, err := tc.CanChii(inHai)
 			args = append(args, Arg{ok, err, Chii})
 		}
-		ok, err := tc.Tehai().CanPon(inHai)
+		ok, err := tc.CanPon(inHai)
 		args = append(args, Arg{ok, err, Pon})
-		ok, err = tc.Tehai().CanMinKan(inHai)
+		ok, err = tc.CanMinKan(inHai)
 		args = append(args, Arg{ok, err, Kan})
 		ok, err = tc.Tehai().CanRon(inHai)
 		args = append(args, Arg{ok, err, Ron})

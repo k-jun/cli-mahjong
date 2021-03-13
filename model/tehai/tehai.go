@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	MaxHaisLen = 13
+	MaxHaisLen = 14
 )
 
 type Tehai interface {
@@ -33,6 +33,7 @@ type Tehai interface {
 	CanRon(*hai.Hai) (bool, error)
 
 	Sort() error
+	HasHai(*hai.Hai) bool
 }
 
 type tehaiImpl struct {
@@ -134,15 +135,15 @@ func (t *tehaiImpl) ChiiPairs(inHai *hai.Hai) ([][2]*hai.Hai, error) {
 	}
 
 	//  right pair
-	if num >= 3 && t.hasHai(suit[num-3]) && t.hasHai(suit[num-2]) {
+	if num >= 3 && t.HasHai(suit[num-3]) && t.HasHai(suit[num-2]) {
 		pairs = append(pairs, [2]*hai.Hai{suit[num-3], suit[num-2]})
 	}
 	//  center pair
-	if num >= 2 && num <= 8 && t.hasHai(suit[num-2]) && t.hasHai(suit[num]) {
+	if num >= 2 && num <= 8 && t.HasHai(suit[num-2]) && t.HasHai(suit[num]) {
 		pairs = append(pairs, [2]*hai.Hai{suit[num-2], suit[num]})
 	}
 	//  left pair
-	if num <= 7 && t.hasHai(suit[num]) && t.hasHai(suit[num+1]) {
+	if num <= 7 && t.HasHai(suit[num]) && t.HasHai(suit[num+1]) {
 		pairs = append(pairs, [2]*hai.Hai{suit[num], suit[num+1]})
 	}
 
@@ -263,7 +264,7 @@ func (t *tehaiImpl) CanRon(inHai *hai.Hai) (bool, error) {
 			}
 			// remove
 			for j := 0; j < len(pairs); j++ {
-				if !(tehai.hasHai(pairs[j][0]) && tehai.hasHai(pairs[j][1]) && tehai.hasHai(pairs[j][2])) {
+				if !(tehai.HasHai(pairs[j][0]) && tehai.HasHai(pairs[j][1]) && tehai.HasHai(pairs[j][2])) {
 					continue
 				}
 				if _, err := tehai.Removes(pairs[j]); err != nil {
@@ -329,7 +330,7 @@ func (t *tehaiImpl) Machihai() ([]*hai.Hai, error) {
 	return machihai, nil
 }
 
-func (t *tehaiImpl) hasHai(inHai *hai.Hai) bool {
+func (t *tehaiImpl) HasHai(inHai *hai.Hai) bool {
 	for _, h := range t.hais {
 		if h == inHai {
 			return true

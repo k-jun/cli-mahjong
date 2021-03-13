@@ -27,7 +27,7 @@ netcat localhost 8080
 
 ## playing
 
-this is game screen. the player having `>>` is the turn player and can discard a tile by typing tile's name
+this is game screen. the player having `>>` marker is the turn player and can discard a tile by typing tile's name
 
 ```
                             ┌──┐┌──┐┌──┐┌──┐┌──┐┌──┐┌──┐┌──┐┌──┐┌──┐┌──┐┌──┐┌──┐
@@ -84,63 +84,13 @@ this is game screen. the player having `>>` is the turn player and can discard a
 ```
 
 you can take huro actions (chii, pon, kan) in other player's turn. 
-chooing huro action can be done by typing action name (chii, pon, kan), and index. 
-in the below example, you would make s7,s8, and s6 meld as your tiles
+chooing huro action can be done by typing action name (chii, pon, kan, ron riichi, tsumo), and index. 
+in the below example, you would do riichi by discarding `p1`.
 
 
 ```bash
-                            ┌──┐┌──┐┌──┐┌──┐┌──┐┌──┐┌──┐┌──┐┌──┐┌──┐┌──┐┌──┐┌──┐
-                            │  ││  ││  ││  ││  ││  ││  ││  ││  ││  ││  ││  ││  │
-                            └──┘└──┘└──┘└──┘└──┘└──┘└──┘└──┘└──┘└──┘└──┘└──┘└──┘
-┌──┐
-│  │
-└──┘
-│  │
-└──┘
-│  │
-└──┘
-│  │
-└──┘
-│  │
-└──┘
-│  │
-└──┘                                            ┌──┐
-│  │                                            │中│
-└──┘                    ┌──┐                    └──┘                        ┌──┐
-│  │                    │s6│                    └──┘                        │  │
-└──┘                    └──┘                                                └──┘
-│  │                    └──┘                                                │  │
-└──┘                                                                        └──┘
-│  │                                                                        │  │
-└──┘                                                                        └──┘
-│  │                                                                        │  │
-└──┘                                                                        └──┘
-│  │                                                                        │  │
-└──┘                                                ┌──┐                    └──┘
-│  │                                                │南│                    │  │
-└──┘                        ┌──┐                    └──┘                    └──┘
-└──┘                        │発│                    └──┘                    │  │
-                            └──┘                                            └──┘
-                            └──┘                                            │  │
-                                                                            └──┘
-                                                                            │  │
-                                                                            └──┘
-                                                                            │  │
-                                                                            └──┘
-                                                                            │  │
-                                                                            └──┘
-                                                                            │  │
-                                                                            └──┘
-                                                                            │  │
-                                                                            └──┘
-                                                                            └──┘
-                                                                    ┌──┐┌──┐┌──┐
-┌──┐┌──┐┌──┐┌──┐┌──┐┌──┐┌──┐┌──┐┌──┐┌──┐                            │西││西││西│
-│m5││m6││p2││s3││s4││s5││s6││s7││s8││s8│                            └──┘└──┘└──┘
-└──┘└──┘└──┘└──┘└──┘└──┘└──┘└──┘└──┘└──┘                            └──┘└──┘└──┘
-
-do you do Chii 0: s4,s5   1: s5,s7   2: s7,s8
-chii2
+riichi>> 0: (m9) 1: (m9) 2: (p1) 3: (p1)
+>>riichi 3
 ```
 
 

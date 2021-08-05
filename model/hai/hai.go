@@ -139,7 +139,7 @@ var (
 	}
 	Hatsu = &Hai{
 		attributes: []*attribute.Attribute{&attribute.Jihai, &attribute.Sangen, &attribute.Hatsu},
-		name:       "発",
+		name:       "發",
 	}
 	Haku = &Hai{
 		attributes: []*attribute.Attribute{&attribute.Jihai, &attribute.Sangen, &attribute.Haku},
